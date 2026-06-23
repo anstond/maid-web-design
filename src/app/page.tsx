@@ -38,10 +38,9 @@ const partners = [
 ];
 
 const services = [
-  { num: "01", title: "Commercial Cleaning",  seed: "commercial-office-bright"     },
-  { num: "02", title: "Regular Cleaning",     seed: "apartment-clean-living-room"  },
-  { num: "03", title: "Kitchen Cleaning",     seed: "kitchen-spotless-modern"      },
-  { num: "04", title: "Move-In / Out",        seed: "empty-bright-apartment-clean" },
+  { num: "01", title: "Commercial Cleaning", seed: "commercial-office-bright"    },
+  { num: "02", title: "Regular Cleaning",    seed: "apartment-clean-living-room" },
+  { num: "03", title: "Kitchen Cleaning",    seed: "kitchen-spotless-modern"     },
 ];
 
 const featurePoints = [
@@ -54,7 +53,7 @@ const featurePoints = [
 
 const featureStats = [
   { value: "150k+",  label: "Cleanings done"     },
-  { value: "4.8★",   label: "Average rating"     },
+  { value: "4.8 / 5", label: "Average rating"     },
   { value: "1,460+", label: "Vetted pros"         },
 ];
 
@@ -76,30 +75,74 @@ const steps = [
   },
 ];
 
+const featuredPlan = {
+  name: "Weekly",
+  price: "$89",
+  period: "per visit",
+  badge: "Most Popular",
+  description: "Our best per-visit rate. A spotless home, every single week — guaranteed.",
+  features: [
+    "Weekly visit guaranteed",
+    "Free re-clean within 24 hrs",
+    "Dedicated account manager",
+    "Eco-friendly products included",
+  ],
+  cta: "Go Weekly",
+};
+
+const sidePlans = [
+  {
+    name: "One-Time",
+    price: "$149",
+    period: "/ visit",
+    description: "Perfect for a deep clean or special occasion.",
+    features: ["Standard clean", "Up to 2-hour session", "Vetted pro"],
+    cta: "Book Now",
+  },
+  {
+    name: "Monthly",
+    price: "$129",
+    period: "/ visit",
+    description: "One thorough cleaning per month at a reduced rate.",
+    features: ["Priority scheduling", "Same-day availability", "Dedicated pro"],
+    cta: "Start Monthly",
+  },
+  {
+    name: "Biweekly",
+    price: "$109",
+    period: "/ visit",
+    description: "Two cleanings per month — a steady routine.",
+    features: ["Everything in Monthly", "Flexible rescheduling", "Dedicated pro"],
+    cta: "Start Biweekly",
+  },
+  {
+    name: "Custom",
+    price: "Flexible",
+    period: "your schedule",
+    description: "Pick any number of days per week. We build around you.",
+    features: ["2–5 days/week", "Mixed session lengths", "Tailored checklist"],
+    cta: "Get a Quote",
+  },
+];
+
 const testimonials = [
   {
     text: "ApartmentMaid is genuinely the best cleaning service I have ever used. My tenants constantly compliment how pristine the units are between occupancies — it has become a true differentiator for my listings.",
     name: "Sarah J.",
     role: "Property Manager",
-    location: "New York City",
     seed: "sarah-property-nyc",
-    featured: true,
   },
   {
     text: "I have tried four other services and none come close. The booking is effortless and my apartment looks better than when I moved in.",
     name: "Marcus R.",
     role: "Busy Professional",
-    location: "Brooklyn",
     seed: "marcus-brooklyn-r",
-    featured: false,
   },
   {
     text: "Helped me get my full security deposit back. The team documented everything with photos. Absolutely professional.",
     name: "Priya K.",
     role: "Landlord",
-    location: "Miami",
     seed: "priya-miami-landlord",
-    featured: false,
   },
 ];
 
@@ -426,7 +469,7 @@ export default function Home() {
           </div>
 
           {/* Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-5" style={{ gap: 12 }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 16 }}>
             {services.map((svc) => (
               <div
                 key={svc.num}
@@ -675,6 +718,202 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Subscriptions ────────────────────────────────────────────────── */}
+      <section style={{ background: T.soft, padding: "88px 32px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+
+          {/* Header */}
+          <div
+            className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-end"
+            style={{ marginBottom: 44 }}
+          >
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: T.primary, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 14 }}>
+                Subscriptions
+              </p>
+              <h2 style={{
+                fontSize: "clamp(28px, 3.5vw, 48px)",
+                fontWeight: 700,
+                lineHeight: "1.1",
+                letterSpacing: "-0.03em",
+                color: T.ink,
+                margin: 0,
+              }}>
+                Plans That Fit Your Life
+              </h2>
+            </div>
+            <p style={{ fontSize: 15, lineHeight: "24px", color: T.body, maxWidth: 340, margin: 0 }}>
+              Save more the more you book. Pause or cancel anytime — no contracts, no fine print.
+            </p>
+          </div>
+
+          {/* Bento grid — featured Weekly left (2×2), four side plans right */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr]" style={{ gap: 16 }}>
+
+            {/* Featured — Weekly */}
+            <div
+              className="lg:col-span-2 lg:row-span-2"
+              style={{
+                borderRadius: 20,
+                background: T.primary,
+                padding: 2,
+                boxShadow: "0 24px 64px rgba(21,94,99,0.24)",
+              }}
+            >
+              <div style={{
+                borderRadius: 18,
+                background: "#0e4247",
+                padding: "36px 32px",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                boxSizing: "border-box",
+              }}>
+                {/* Top */}
+                <div>
+                  <span style={{
+                    display: "inline-block",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: "0.10em",
+                    textTransform: "uppercase",
+                    color: T.ink,
+                    background: T.accentW,
+                    padding: "5px 14px",
+                    borderRadius: 999,
+                    marginBottom: 32,
+                  }}>
+                    {featuredPlan.badge}
+                  </span>
+
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.04em", marginBottom: 10 }}>
+                    {featuredPlan.name}
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
+                    <span style={{ fontSize: "clamp(52px, 5vw, 72px)", fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: "#fff" }}>
+                      {featuredPlan.price}
+                    </span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.40)" }}>{featuredPlan.period}</span>
+                  </div>
+
+                  <p style={{ fontSize: 15, lineHeight: "24px", color: "rgba(255,255,255,0.55)", margin: "0 0 32px", maxWidth: 320 }}>
+                    {featuredPlan.description}
+                  </p>
+
+                  <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 28 }} />
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {featuredPlan.features.map((f) => (
+                      <div key={f} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          background: "rgba(255,255,255,0.10)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}>
+                          <Check size={11} color={T.accentW} strokeWidth={2.5} />
+                        </div>
+                        <span style={{ fontSize: 14, color: "rgba(255,255,255,0.75)", lineHeight: "22px" }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <a href="#" style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 36,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  padding: "14px 28px",
+                  borderRadius: 999,
+                  textDecoration: "none",
+                  background: T.accentW,
+                  color: T.ink,
+                  width: "fit-content",
+                }}>
+                  {featuredPlan.cta}
+                  <ArrowRight size={14} strokeWidth={2.5} />
+                </a>
+              </div>
+            </div>
+
+            {/* Four side plans */}
+            {sidePlans.map((plan) => (
+              <div key={plan.name} style={{
+                borderRadius: 16,
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                padding: "24px 22px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: T.body, letterSpacing: "0.04em", marginBottom: 8 }}>
+                    {plan.name}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
+                    <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: T.ink }}>
+                      {plan.price}
+                    </span>
+                    <span style={{ fontSize: 12, color: T.muted }}>{plan.period}</span>
+                  </div>
+                  <p style={{ fontSize: 13, lineHeight: "20px", color: T.body, margin: "0 0 18px" }}>
+                    {plan.description}
+                  </p>
+                  <div style={{ height: 1, background: T.border, marginBottom: 16 }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {plan.features.map((f) => (
+                      <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          background: T.accentS,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}>
+                          <Check size={9} color={T.primary} strokeWidth={2.5} />
+                        </div>
+                        <span style={{ fontSize: 13, color: T.ink, lineHeight: "20px" }}>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <a href="#" style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginTop: 22,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: T.primary,
+                  textDecoration: "none",
+                }}>
+                  {plan.cta}
+                  <ArrowRight size={13} strokeWidth={2.5} />
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ fontSize: 13, color: T.muted, marginTop: 28 }}>
+            All plans include eco-friendly supplies and a vetted professional. Pause or cancel anytime.
+          </p>
+        </div>
+      </section>
+
       {/* ── Testimonials ──────────────────────────────────────────────────── */}
       <section style={{ background: T.soft, padding: "88px 32px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -761,7 +1000,7 @@ export default function Home() {
                 }}>
                   <div style={{ display: "flex", gap: 3, marginBottom: 12 }}>
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={12} style={{ color: "#F59E0B", fill: "#F59E0B" }} />
+                      <Star key={i} size={12} style={{ color: T.accentW, fill: T.accentW }} />
                     ))}
                   </div>
                   <p style={{ fontSize: 14, lineHeight: "22px", color: T.ink, margin: "0 0 16px" }}>
@@ -1005,7 +1244,7 @@ export default function Home() {
             gap: 16,
           }}>
             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: "20px" }}>
-              © 2026 MAID. All rights reserved.
+              © 2026 ApartmentMaid. All rights reserved.
             </span>
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
               {["Privacy Policy", "Terms of Service", "Cookie Settings"].map((item) => (
