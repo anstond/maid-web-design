@@ -223,23 +223,46 @@ export default function Home() {
       </nav>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section style={{ background: T.canvas, padding: "72px 32px 0", overflow: "hidden" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+      <section style={{ background: T.canvas, minHeight: "88vh", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}>
 
-          {/* Text block — centered */}
-          <div style={{ textAlign: "center", maxWidth: 700, margin: "0 auto 56px" }}>
+        {/* Full-bleed image — right half, fades into canvas on the left */}
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "62%", zIndex: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/hero-maid.png"
+            alt="ApartmentMaid professional cleaning a home"
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
+          />
+          {/* Left-edge gradient blend — matches canvas exactly */}
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            background: `linear-gradient(to right, ${T.canvas} 0%, ${T.canvas} 8%, rgba(252,251,248,0.85) 28%, rgba(252,251,248,0.30) 50%, transparent 70%)`,
+          }} />
+          {/* Bottom fade so the section edge is clean */}
+          <div style={{
+            position: "absolute",
+            bottom: 0, left: 0, right: 0,
+            height: "20%",
+            background: `linear-gradient(to top, ${T.canvas}, transparent)`,
+          }} />
+        </div>
+
+        {/* Content */}
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto", padding: "80px 32px", width: "100%" }}>
+          <div style={{ maxWidth: 560 }}>
             <p style={{
               fontSize: 12,
               fontWeight: 600,
               color: T.primary,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              marginBottom: 16,
+              marginBottom: 20,
             }}>
               Professional Home Cleaning
             </p>
             <h1 style={{
-              fontSize: "clamp(40px, 5.5vw, 68px)",
+              fontSize: "clamp(40px, 5.2vw, 68px)",
               fontWeight: 700,
               lineHeight: "1.1",
               letterSpacing: "-0.03em",
@@ -248,11 +271,7 @@ export default function Home() {
             }}>
               Creating Comfort<br />
               Through{" "}
-              <em style={{
-                fontStyle: "italic",
-                color: T.primary,
-                fontWeight: 700,
-              }}>
+              <em style={{ fontStyle: "italic", color: T.primary, fontWeight: 700 }}>
                 Cleanliness
               </em>
             </h1>
@@ -260,128 +279,109 @@ export default function Home() {
               fontSize: 17,
               lineHeight: "27px",
               color: T.body,
-              margin: "0 0 32px",
+              margin: "0 0 36px",
             }}>
               From homes to offices — we bring spotless perfection and peace of mind
               through trusted, professional cleaning services.
             </p>
-            <a href="#" style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              background: T.ink,
-              color: "#fff",
-              fontSize: 15,
-              fontWeight: 600,
-              padding: "13px 26px",
-              borderRadius: 999,
-              textDecoration: "none",
-            }}>
-              <CalendarCheck size={15} />
-              Book a Cleaning
-            </a>
-          </div>
 
-          {/* Visual stage */}
-          <div style={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "flex-end", minHeight: 420 }}>
-
-            {/* Teal arc / circle behind figure */}
-            <div style={{
-              position: "absolute",
-              bottom: 0,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 380,
-              height: 380,
-              borderRadius: "50%",
-              background: T.primary,
-            }} />
-
-            {/* Cleaning professional image */}
-            <div style={{
-              position: "relative",
-              zIndex: 2,
-              width: 340,
-              height: 440,
-              borderRadius: "200px 200px 0 0",
-              overflow: "hidden",
-              flexShrink: 0,
-            }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://picsum.photos/seed/apartment-cleaning-professional/340/440"
-                alt="Professional cleaner"
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              />
-            </div>
-
-            {/* Floating badge — left */}
-            <div style={{
-              position: "absolute",
-              bottom: "30%",
-              left: "calc(50% - 260px)",
-              background: T.surface,
-              borderRadius: 999,
-              padding: "8px 16px 8px 10px",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              boxShadow: "0 4px 20px rgba(0,0,0,0.10)",
-              zIndex: 3,
-            }}>
-              {/* Avatars */}
-              <div style={{ display: "flex" }}>
-                {["seed-a1", "seed-b2", "seed-c3"].map((s, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={s}
-                    src={`https://picsum.photos/seed/${s}/28/28`}
-                    alt=""
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      border: `2px solid ${T.surface}`,
-                      marginLeft: i > 0 ? -8 : 0,
-                      objectFit: "cover",
-                    }}
-                  />
-                ))}
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: T.ink, lineHeight: "18px" }}>250+</div>
-                <div style={{ fontSize: 11, color: T.body, lineHeight: "15px" }}>Happy Customers</div>
-              </div>
-            </div>
-
-            {/* Floating feature badges — right */}
-            <div style={{
-              position: "absolute",
-              top: "10%",
-              right: "calc(50% - 300px)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              zIndex: 3,
-            }}>
+            {/* Feature badge pills */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 40 }}>
               {heroBadges.map((b) => (
                 <div key={b.label} style={{
                   background: T.surface,
+                  border: `1px solid ${T.border}`,
                   borderRadius: 999,
                   padding: "9px 16px",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.09)",
                   fontSize: 13,
                   fontWeight: 600,
                   color: T.ink,
-                  whiteSpace: "nowrap",
                 }}>
                   <span style={{ color: T.primary }}>{b.icon}</span>
                   {b.label}
                 </div>
               ))}
+            </div>
+
+            {/* CTAs */}
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <a href="#" style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                background: T.ink,
+                color: "#fff",
+                fontSize: 15,
+                fontWeight: 600,
+                padding: "14px 28px",
+                borderRadius: 999,
+                textDecoration: "none",
+              }}>
+                <CalendarCheck size={15} />
+                Book a Cleaning
+              </a>
+              <a href="#" style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 14,
+                fontWeight: 600,
+                color: T.body,
+                textDecoration: "none",
+              }}>
+                See our services
+                <ArrowRight size={14} strokeWidth={2.5} />
+              </a>
+            </div>
+          </div>
+
+          {/* Floating stat badges — positioned over the image area */}
+          <div style={{
+            position: "absolute",
+            bottom: 80,
+            right: "8%",
+            zIndex: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }} className="hidden lg:flex">
+            <div style={{
+              background: T.surface,
+              borderRadius: 14,
+              padding: "12px 18px",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.11)",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}>
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                background: T.accentS,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <Star size={14} style={{ color: T.primary, fill: T.primary }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.ink, lineHeight: "20px" }}>4.9 / 5.0</div>
+                <div style={{ fontSize: 11, color: T.body, lineHeight: "16px" }}>4,849+ Happy Residents</div>
+              </div>
+            </div>
+            <div style={{
+              background: T.primary,
+              borderRadius: 14,
+              padding: "12px 18px",
+              boxShadow: "0 8px 24px rgba(21,94,99,0.28)",
+            }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", lineHeight: "24px" }}>150k+</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: "16px" }}>Cleanings Completed</div>
             </div>
           </div>
         </div>
