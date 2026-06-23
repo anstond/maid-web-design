@@ -9,6 +9,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
+import QuoteGenerator from "@/components/QuoteGenerator";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -351,7 +352,7 @@ export default function Home() {
 
             {/* CTAs */}
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-              <a href="#" style={{
+              <a href="#quote-generator" style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
@@ -826,7 +827,7 @@ export default function Home() {
                 </div>
 
                 {/* CTA */}
-                <a href="#" style={{
+                <a href="#quote-generator" style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
@@ -891,7 +892,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <a href="#" style={{
+                <a href="#quote-generator" style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
@@ -913,6 +914,9 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {/* ── Live Quote Generator ─────────────────────────────────────────── */}
+      <QuoteGenerator />
 
       {/* ── Testimonials ──────────────────────────────────────────────────── */}
       <section style={{ background: T.soft, padding: "88px 32px" }}>
@@ -1164,7 +1168,7 @@ export default function Home() {
               <Mail size={14} />
               Email Us
             </a>
-            <a href="#" style={{
+            <a href="#quote-generator" style={{
               background: T.primary,
               color: T.onPrimary,
               fontSize: 15,
