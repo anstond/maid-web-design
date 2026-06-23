@@ -1,0 +1,211 @@
+{
+    "brand": "ApartmentMaid",
+    "brandPromise": "Your home is taken care of.",
+    "colorSystem": {
+        "lightMode": [
+            {
+                "token": "Primary",
+                "color": "Deep Teal",
+                "hex": "#155E63",
+                "usage": "Primary buttons, links, active states"
+            },
+            {
+                "token": "Primary Hover",
+                "color": "Dark Teal",
+                "hex": "#124A54",
+                "usage": "Hover & pressed states"
+            },
+            {
+                "token": "Accent Warm",
+                "color": "Warm Sand",
+                "hex": "#D9C7A3",
+                "usage": "Highlights, badges, promotional cards"
+            },
+            {
+                "token": "Accent Soft",
+                "color": "Soft Sand",
+                "hex": "#EFE6D3",
+                "usage": "Background accents, empty states"
+            },
+            {
+                "token": "Background",
+                "color": "Warm White",
+                "hex": "#FCFBF8",
+                "usage": "Main page background"
+            },
+            {
+                "token": "Surface",
+                "color": "Pure White",
+                "hex": "#FFFFFF",
+                "usage": "Cards, sheets, modals"
+            },
+            {
+                "token": "Surface Muted",
+                "color": "Soft Cream",
+                "hex": "#F7F5F1",
+                "usage": "Alternate sections"
+            },
+            {
+                "token": "Text Primary",
+                "color": "Slate Charcoal",
+                "hex": "#1F2937",
+                "usage": "Headlines, body text"
+            },
+            {
+                "token": "Text Secondary",
+                "color": "Cool Gray",
+                "hex": "#6B7280",
+                "usage": "Supporting text"
+            },
+            {
+                "token": "Border",
+                "color": "Warm Border",
+                "hex": "#E5DFD3",
+                "usage": "Dividers, input borders"
+            },
+            {
+                "token": "Success",
+                "color": "Green",
+                "hex": "#16A34A",
+                "usage": "Success states"
+            },
+            {
+                "token": "Warning",
+                "color": "Amber",
+                "hex": "#F59E0B",
+                "usage": "Warning states"
+            },
+            {
+                "token": "Error",
+                "color": "Red",
+                "hex": "#DC2626",
+                "usage": "Errors"
+            },
+            {
+                "token": "Info",
+                "color": "Blue",
+                "hex": "#0284C7",
+                "usage": "Informational alerts"
+            }
+        ],
+        "darkMode": [
+            {
+                "token": "Primary",
+                "color": "Bright Teal",
+                "hex": "#34B5A4",
+                "usage": "Primary buttons, active states"
+            },
+            {
+                "token": "Primary Hover",
+                "color": "Teal Hover",
+                "hex": "#2CA091",
+                "usage": "Hover & pressed states"
+            },
+            {
+                "token": "Accent Warm",
+                "color": "Warm Sand",
+                "hex": "#D9C7A3",
+                "usage": "Highlights, badges"
+            },
+            {
+                "token": "Accent Soft",
+                "color": "Muted Sand",
+                "hex": "#8F7E60",
+                "usage": "Background accents"
+            },
+            {
+                "token": "Background",
+                "color": "Deep Teal Black",
+                "hex": "#081417",
+                "usage": "Main app background"
+            },
+            {
+                "token": "Surface",
+                "color": "Dark Surface",
+                "hex": "#102126",
+                "usage": "Cards, sheets, modals"
+            },
+            {
+                "token": "Surface Elevated",
+                "color": "Elevated Surface",
+                "hex": "#163037",
+                "usage": "Hovered cards, dropdowns"
+            },
+            {
+                "token": "Text Primary",
+                "color": "Warm White",
+                "hex": "#F5F5F2",
+                "usage": "Headlines, body text"
+            },
+            {
+                "token": "Text Secondary",
+                "color": "Muted Gray",
+                "hex": "#B8C0C2",
+                "usage": "Supporting text"
+            },
+            {
+                "token": "Border",
+                "color": "Dark Border",
+                "hex": "#24383D",
+                "usage": "Dividers, input borders"
+            },
+            {
+                "token": "Success",
+                "color": "Green",
+                "hex": "#4ADE80",
+                "usage": "Success states"
+            },
+            {
+                "token": "Warning",
+                "color": "Amber",
+                "hex": "#FBBF24",
+                "usage": "Warning states"
+            },
+            {
+                "token": "Error",
+                "color": "Soft Red",
+                "hex": "#F87171",
+                "usage": "Errors"
+            },
+            {
+                "token": "Info",
+                "color": "Sky Blue",
+                "hex": "#38BDF8",
+                "usage": "Informational alerts"
+            }
+        ]
+    },
+    "quickRatio": {
+        "background": {
+            "light": "#FCFBF8",
+            "dark": "#081417"
+        },
+        "surface": {
+            "light": "#FFFFFF",
+            "dark": "#102126"
+        },
+        "brandColor": {
+            "light": "#155E63",
+            "dark": "#34B5A4"
+        },
+        "warmAccent": {
+            "light": "#D9C7A3",
+            "dark": "#D9C7A3"
+        },
+        "mainText": {
+            "light": "#1F2937",
+            "dark": "#F5F5F2"
+        },
+        "secondaryText": {
+            "light": "#6B7280",
+            "dark": "#B8C0C2"
+        }
+    },
+    "brandMeaning": {
+        "Deep Teal": "Reliability, calm, competence, care",
+        "Warm Sand": "Comfort, home, hospitality, warmth",
+        "Warm White": "Cleanliness without feeling clinical",
+        "Slate Text": "Professionalism and clarity",
+        "Semantic Colors": "Universal UX meaning (success, warning, error)"
+    }
+}
