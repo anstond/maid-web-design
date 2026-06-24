@@ -14,6 +14,6 @@ const heroSource = pageSource.slice(
 
 test("homepage quote CTAs lead to the live quote generator", () => {
   assert.match(navSource, /href="#quote-generator"[\s\S]{0,700}>[\s\S]{0,250}Get a quote/);
-  assert.match(heroSource, /href="#quote-generator"[\s\S]{0,700}>[\s\S]{0,250}Get my instant quote/);
+  assert.match(heroSource, /href="#quote-generator"[\s\S]{0,700}>[\s\S]{0,250}Book Now/);
   assert.match(pageSource, /<QuoteGenerator \/>/);
 });

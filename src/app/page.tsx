@@ -6,7 +6,10 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import QuoteGenerator from "@/components/QuoteGenerator";
+import HeroBookingCard from "@/components/HeroBookingCard";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -189,7 +192,7 @@ export default function Home() {
           justifyContent: "space-between",
           height: 66,
         }}>
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
             <div style={{
               width: 32,
               height: 32,
@@ -205,7 +208,7 @@ export default function Home() {
             <span style={{ fontSize: 16, fontWeight: 600, color: T.ink, letterSpacing: "-0.02em" }}>
               ApartmentMaid
             </span>
-          </a>
+          </Link>
 
           <div className="hidden lg:flex" style={{ alignItems: "center", gap: 2 }}>
             {[
@@ -258,150 +261,137 @@ export default function Home() {
       </nav>
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section style={{ background: T.canvas, minHeight: "88vh", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}>
-
-        {/* Full-bleed image — right half, fades into canvas on the left */}
-        <div className="hidden lg:block" style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: "62%", zIndex: 0 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+      <section style={{
+        background: T.canvas,
+        boxSizing: "border-box",
+        minHeight: "calc(100svh - 66px)",
+        padding: "32px",
+        display: "flex",
+        alignItems: "center",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        <div className="hidden lg:block" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "56%" }}>
+          <Image
             src="/images/hero-maid.png"
-            alt="ApartmentMaid professional cleaning a home"
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
+            alt="A cleaning professional preparing a home"
+            fill
+            priority
+            sizes="56vw"
+            style={{ objectFit: "cover", objectPosition: "center" }}
           />
-          {/* Left-edge gradient blend — matches warm canvas */}
-          <div style={{
-            position: "absolute",
-            inset: 0,
-            background: `linear-gradient(to right, ${T.canvas} 0%, ${T.canvas} 6%, rgba(252,251,248,0.85) 28%, rgba(252,251,248,0.30) 50%, transparent 70%)`,
-          }} />
-          {/* Bottom fade so the section edge is clean */}
-          <div style={{
-            position: "absolute",
-            bottom: 0, left: 0, right: 0,
-            height: "20%",
-            background: `linear-gradient(to top, ${T.canvas}, transparent)`,
-          }} />
-          <div className="hidden lg:block" style={{
-            position: "absolute",
-            right: 48,
-            bottom: 48,
-            zIndex: 1,
-            width: 238,
-            padding: "18px 20px",
-            borderRadius: 16,
-            background: "rgba(18, 74, 84, 0.94)",
-            boxShadow: "0 16px 40px rgba(18, 74, 84, 0.24)",
-          }}>
-            <div style={{ fontSize: 16, fontWeight: 700, lineHeight: "22px", color: T.onPrimary, marginBottom: 6 }}>
-              Your quote, in under a minute
-            </div>
-            <div style={{ fontSize: 13, lineHeight: "19px", color: "rgba(255,255,255,0.78)" }}>
-              Clear, tailored pricing. No account required.
-            </div>
-          </div>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(180deg, rgba(18,74,84,0.22) 0%, rgba(18,74,84,0.64) 100%)",
+            }}
+          />
         </div>
 
-        {/* Content */}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1280, margin: "0 auto", padding: "80px 32px", width: "100%" }}>
-          <div style={{ maxWidth: 560 }}>
-            <p style={{
-              fontSize: 12,
-              fontWeight: 600,
-              color: T.primary,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              marginBottom: 20,
-            }}>
-              Professional Home Cleaning
-            </p>
-            <h1 style={{
-              fontSize: "clamp(40px, 5.2vw, 68px)",
-              fontWeight: 700,
-              lineHeight: "1.05",
-              letterSpacing: "-0.04em",
-              color: T.ink,
-              margin: "0 0 20px",
-            }}>
-              A spotless home<br />
-              starts with a{" "}
-              <em style={{ fontStyle: "italic", color: T.primary, fontWeight: 700 }}>
-                clear price.
-              </em>
-            </h1>
-            <p style={{
-              fontSize: 17,
-              lineHeight: "27px",
-              color: T.body,
-              margin: "0 0 32px",
-              maxWidth: 480,
-            }}>
-              Choose your service and get a tailored quote in under a minute.
-            </p>
+        <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16" style={{ alignItems: "center" }}>
 
-            {/* Conversion actions */}
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-              <a href="#quote-generator" className="shadow-sm hover:opacity-90 active:scale-[0.98] transition-all" style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: T.primary,
-                color: T.onPrimary,
-                fontSize: 15,
-                fontWeight: 600,
-                padding: "14px 24px",
-                borderRadius: 999,
-                textDecoration: "none",
-              }}>
-                Get my instant quote
-                <ArrowRight size={15} strokeWidth={2.5} />
-              </a>
-              <a href="#how-it-works" className="group" style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 15,
-                fontWeight: 600,
+            {/* ── Left column: primary message ───────────────────────── */}
+            <div className="lg:col-span-6">
+              {/* Category label */}
+              <p style={{
+                fontSize: 11,
+                fontWeight: 700,
                 color: T.primary,
-                textDecoration: "none",
-                transition: "all 0.2s",
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                marginBottom: 18,
               }}>
-                How it works
-                <span className="group-hover:translate-x-1.5 transition-transform duration-200" style={{ display: "inline-flex" }}>
+                Professional Home Cleaning
+              </p>
+
+              {/* Headline */}
+              <h1 style={{
+                fontSize: "clamp(40px, 4vw, 52px)",
+                fontWeight: 700,
+                lineHeight: "1.23",
+                color: T.ink,
+                margin: "0 0 18px",
+              }}>
+                Your home, <span style={{ color: T.primary }}>spotless.</span>
+                <br />
+                On your schedule.
+              </h1>
+
+              {/* Sub-headline */}
+              <p style={{
+                fontSize: 18,
+                fontWeight: 500,
+                lineHeight: "24px",
+                color: T.body,
+                margin: "0 0 32px",
+                maxWidth: 460,
+              }}>
+                Trusted cleaning professionals, clear pricing, and a booking flow that takes less than a minute.
+              </p>
+
+              {/* Primary action */}
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <a
+                  href="#quote-generator"
+                  className="shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    background: T.primary,
+                    color: T.onPrimary,
+                    fontSize: 16,
+                    fontWeight: 500,
+                    padding: "12px 16px",
+                    borderRadius: 999,
+                    textDecoration: "none",
+                  }}
+                >
+                  Get my quote
                   <ArrowRight size={15} strokeWidth={2.5} />
-                </span>
-              </a>
+                </a>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, fontSize: 13, color: T.body }}>
+                <div style={{ display: "flex", gap: 2, color: "#B7791F" }} aria-label="Rated 4.8 out of 5 stars">
+                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill="currentColor" strokeWidth={0} />)}
+                </div>
+                <span>Trusted by <strong style={{ color: T.ink }}>4,849+ residents</strong></span>
+              </div>
+
+              <div
+                className="grid grid-cols-3"
+                style={{
+                  maxWidth: 460,
+                  borderTop: `1px solid ${T.border}`,
+                  marginTop: 28,
+                }}
+              >
+                {featureStats.map(({ value, label }, index) => (
+                  <div
+                    key={label}
+                    style={{
+                      padding: "18px 0",
+                      textAlign: index === 0 ? "left" : "center",
+                      borderLeft: index === 0 ? "none" : `1px solid ${T.border}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 20, fontWeight: 700, color: T.ink, lineHeight: "28px" }}>{value}</div>
+                    <div style={{ fontSize: 12, color: T.body, marginTop: 4 }}>{label}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Proof */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginTop: 20,
-              fontSize: 13,
-              color: T.body,
-              flexWrap: "wrap",
-            }}>
-              <span style={{ color: "#B78B2F", fontWeight: 700 }}>4.9★</span>
-              <span>from 4,849 residents</span>
-              <span style={{ color: T.border }}>·</span>
-              <span>Background-checked professionals</span>
+            {/* ── Quote card bridges the canvas and photo panels ───────── */}
+            <div className="lg:col-span-5 lg:col-start-7 lg:-translate-x-16">
+              <HeroBookingCard />
             </div>
 
-            <div className="lg:hidden" style={{
-              height: 240,
-              marginTop: 40,
-              borderRadius: 16,
-              overflow: "hidden",
-            }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/hero-maid.png"
-                alt="ApartmentMaid professional cleaning a home"
-                style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center" }}
-              />
-            </div>
           </div>
+
         </div>
       </section>
 
@@ -411,9 +401,9 @@ export default function Home() {
           <span style={{ fontSize: 12, fontWeight: 600, color: T.muted, letterSpacing: "0.08em", textTransform: "uppercase", flexShrink: 0 }}>
             Trusted by tenants at
           </span>
-          {partners.map((p) => (
-            <span key={p} style={{ fontSize: 16, fontWeight: 700, color: T.muted, letterSpacing: "-0.02em", fontStyle: "italic" }}>
-              {p}
+          {partners.map((partner) => (
+            <span key={partner} style={{ fontSize: 16, fontWeight: 700, color: T.muted, letterSpacing: "-0.02em", fontStyle: "italic" }}>
+              {partner}
             </span>
           ))}
         </div>
