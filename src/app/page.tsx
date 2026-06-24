@@ -12,6 +12,7 @@ import Image from "next/image";
 import Link from "next/link";
 import QuoteGenerator from "@/components/QuoteGenerator";
 import HeroInteractiveQuote from "@/components/HeroInteractiveQuote";
+import HeroTestimonialsCarousel from "@/components/HeroTestimonialsCarousel";
 
 
 const heroStyles = `
@@ -54,9 +55,9 @@ const partners = [
 ];
 
 const services = [
-  { num: "01", title: "Commercial Cleaning", seed: "commercial-office-bright" },
-  { num: "02", title: "Regular Cleaning", seed: "apartment-clean-living-room" },
-  { num: "03", title: "Kitchen Cleaning", seed: "kitchen-spotless-modern" },
+  { num: "01", title: "Commercial Cleaning", seed: "commercial-office-bright", price: "$199", period: "/2hrs", description: "Professional office & commercial spaces" },
+  { num: "02", title: "Regular Cleaning", seed: "apartment-clean-living-room", price: "$89", period: "/visit", description: "Thorough apartment & home cleaning" },
+  { num: "03", title: "Kitchen Cleaning", seed: "kitchen-spotless-modern", price: "$129", period: "/visit", description: "Deep kitchen sanitization & detail work" },
 ];
 
 const featurePoints = [
@@ -483,9 +484,10 @@ export default function Home() {
           {/* Right: floating interactive quote card */}
           <div
             className="hero-card"
-            style={{ flex: "1 1 0", display: "flex", justifyContent: "center", alignItems: "center" }}
+            style={{ flex: "1 1 0", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 16 }}
           >
             <HeroInteractiveQuote />
+            <HeroTestimonialsCarousel />
           </div>
         </div>
 
@@ -596,13 +598,23 @@ export default function Home() {
             {services.map((svc) => (
               <div
                 key={svc.num}
-                className="col-span-1"
+                className="col-span-1 group"
                 style={{
                   position: "relative",
                   borderRadius: 16,
                   overflow: "hidden",
                   aspectRatio: "3/4",
                   cursor: "pointer",
+                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 32px rgba(0,0,0,0.16)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -611,19 +623,86 @@ export default function Home() {
                   alt={svc.title}
                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                 />
-                {/* Overlay gradient */}
+                {/* Dark overlay */}
                 <div style={{
                   position: "absolute",
                   inset: 0,
-                  background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 55%)",
+                  background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.9) 100%)",
                 }} />
-                {/* Text */}
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 16 }}>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 600, marginBottom: 4 }}>
-                    {svc.num}/
+
+                {/* Top badge with service number */}
+                <div style={{
+                  position: "absolute",
+                  top: 16,
+                  left: 16,
+                  background: "rgba(255,255,255,0.15)",
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  borderRadius: 999,
+                  padding: "6px 14px",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#fff",
+                  letterSpacing: "0.05em",
+                }}>
+                  SERVICE {svc.num}
+                </div>
+
+                {/* Bottom content container */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+                  {/* Title */}
+                  <div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: "22px", marginBottom: 6 }}>
+                      {svc.title}
+                    </div>
+                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.70)", fontWeight: 400, lineHeight: "18px" }}>
+                      {svc.description}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>
-                    {svc.title}
+
+                  {/* Pricing card */}
+                  <div style={{
+                    background: T.accentW,
+                    borderRadius: 12,
+                    padding: "10px 14px",
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    gap: 8,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: T.body, lineHeight: "14px", marginBottom: 2 }}>
+                        Starting at
+                      </div>
+                      <div style={{
+                        fontSize: 22,
+                        fontWeight: 700,
+                        color: T.ink,
+                        lineHeight: 1,
+                        letterSpacing: "-0.02em",
+                      }}>
+                        {svc.price}
+                        <span style={{ fontSize: 13, fontWeight: 500, marginLeft: 4 }}>
+                          {svc.period}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 36,
+                      height: 36,
+                      borderRadius: 999,
+                      background: T.primary,
+                      color: "#fff",
+                      flexShrink: 0,
+                      transition: "transform 0.2s ease",
+                    }}
+                    className="group-hover:scale-110"
+                    >
+                      <ArrowUpRight size={18} strokeWidth={2.5} />
+                    </div>
                   </div>
                 </div>
               </div>
