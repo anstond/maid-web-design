@@ -84,15 +84,15 @@ export default function Navigation() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <a href="#" className="hidden md:inline" style={{
+          <Link href="/login" className="hidden md:inline" style={{
             fontSize: 14,
             fontWeight: 500,
             color: T.body,
             textDecoration: "none",
           }}>
             Log in
-          </a>
-          <a href="#" style={{
+          </Link>
+          <a href="/booking" style={{
             background: T.primary,
             color: T.onPrimary,
             fontSize: 14,

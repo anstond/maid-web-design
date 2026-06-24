@@ -368,7 +368,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
           </div>
         </div>
 
-        <a href="#" style={{
+        <a href={`/booking?service=${service.id}`} style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -402,7 +402,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
 }
 
 export default function ServicesPage() {
-  const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   return (
     <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, color: T.ink }}>
@@ -633,7 +633,7 @@ export default function ServicesPage() {
             </div>
 
             <a
-              href="#quote-generator"
+              href="/booking"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -656,7 +656,7 @@ export default function ServicesPage() {
                 (e.currentTarget as HTMLElement).style.transform = "scale(1)";
               }}
             >
-              Calculate Price
+              Start Booking
               <ArrowRight size={16} strokeWidth={2.5} />
             </a>
           </div>
@@ -1269,7 +1269,7 @@ export default function ServicesPage() {
               <Phone size={14} />
               Call Us
             </a>
-            <a href="#" style={{
+            <a href="/booking" style={{
               background: T.primary,
               color: T.onPrimary,
               fontSize: 15,
