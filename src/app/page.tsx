@@ -262,134 +262,133 @@ export default function Home() {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section style={{
-        background: T.canvas,
+        background: T.ink,
         boxSizing: "border-box",
         minHeight: "calc(100svh - 66px)",
-        padding: "32px",
+        padding: "24px 20px 32px",
         display: "flex",
         alignItems: "center",
         position: "relative",
         overflow: "hidden",
       }}>
-        <div className="hidden lg:block" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "56%" }}>
+        {/* Full-bleed background image + gradient overlays */}
+        <div style={{ position: "absolute", inset: 0 }}>
           <Image
             src="/images/hero-maid.png"
-            alt="A cleaning professional preparing a home"
+            alt=""
             fill
             priority
-            sizes="56vw"
+            sizes="100vw"
             style={{ objectFit: "cover", objectPosition: "center" }}
           />
+          {/* Left-to-right gradient overlay for left-side copy protection */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(180deg, rgba(18,74,84,0.22) 0%, rgba(18,74,84,0.64) 100%)",
+              background: "linear-gradient(90deg, rgba(8,43,48,0.96) 0%, rgba(8,43,48,0.88) 42%, rgba(8,43,48,0.42) 68%, rgba(8,43,48,0.12) 100%)",
+            }}
+          />
+          {/* Dark scrim in bottom-right for card protection */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "radial-gradient(circle at bottom right, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%)",
+              pointerEvents: "none",
             }}
           />
         </div>
 
+        {/* Main content wrapper with relative positioning for floating elements */}
         <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16" style={{ alignItems: "center" }}>
+          
+          {/* Left-side content floats top-left */}
+          <div style={{ maxWidth: 540 }}>
+            {/* Eyebrow */}
+            <p style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#A7E0D8",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              marginBottom: 18,
+            }}>
+              Professional Home Cleaning
+            </p>
 
-            {/* ── Left column: primary message ───────────────────────── */}
-            <div className="lg:col-span-6">
-              {/* Category label */}
-              <p style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: T.primary,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                marginBottom: 18,
-              }}>
-                Professional Home Cleaning
-              </p>
+            {/* Headline */}
+            <h1 style={{
+              fontSize: "clamp(40px, 4vw, 52px)",
+              fontWeight: 700,
+              lineHeight: "1.23",
+              color: T.onPrimary,
+              margin: "0 0 18px",
+            }}>
+              Your home, <span style={{ color: "#A7E0D8" }}>spotless.</span>
+              <br />
+              On your schedule.
+            </h1>
 
-              {/* Headline */}
-              <h1 style={{
-                fontSize: "clamp(40px, 4vw, 52px)",
-                fontWeight: 700,
-                lineHeight: "1.23",
-                color: T.ink,
-                margin: "0 0 18px",
-              }}>
-                Your home, <span style={{ color: T.primary }}>spotless.</span>
-                <br />
-                On your schedule.
-              </h1>
+            {/* Sub-headline */}
+            <p style={{
+              fontSize: 18,
+              fontWeight: 500,
+              lineHeight: "24px",
+              color: "rgba(255,255,255,0.78)",
+              margin: 0,
+              maxWidth: 460,
+              marginBottom: 30,
+            }}>
+              Trusted professionals, clear pricing, instant booking.
+            </p>
 
-              {/* Sub-headline */}
-              <p style={{
-                fontSize: 18,
-                fontWeight: 500,
-                lineHeight: "24px",
-                color: T.body,
-                margin: "0 0 32px",
-                maxWidth: 460,
-              }}>
-                Trusted cleaning professionals, clear pricing, and a booking flow that takes less than a minute.
-              </p>
+            {/* Trust signal with stars */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32, fontSize: 13, color: "rgba(255,255,255,0.78)" }}>
+              <div style={{ display: "flex", gap: 2, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
+                {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill="currentColor" strokeWidth={0} />)}
+              </div>
+              <span>Trusted by <strong style={{ color: T.onPrimary }}>4,849+ residents</strong></span>
+            </div>
 
-              {/* Primary action */}
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <a
-                  href="#quote-generator"
-                  className="shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+            {/* Stats grid */}
+            <div
+              className="grid grid-cols-3"
+              style={{
+                maxWidth: 500,
+                borderTop: "1px solid rgba(255,255,255,0.38)",
+                paddingTop: 32,
+              }}
+            >
+              {featureStats.map(({ value, label }, index) => (
+                <div
+                  key={label}
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    background: T.primary,
-                    color: T.onPrimary,
-                    fontSize: 16,
-                    fontWeight: 500,
-                    padding: "12px 16px",
-                    borderRadius: 999,
-                    textDecoration: "none",
+                    padding: "0 12px",
+                    textAlign: index === 0 ? "left" : "center",
+                    borderLeft: index === 0 ? "none" : "1px solid rgba(255,255,255,0.38)",
                   }}
                 >
-                  Get my quote
-                  <ArrowRight size={15} strokeWidth={2.5} />
-                </a>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 20, fontSize: 13, color: T.body }}>
-                <div style={{ display: "flex", gap: 2, color: "#B7791F" }} aria-label="Rated 4.8 out of 5 stars">
-                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill="currentColor" strokeWidth={0} />)}
+                  <div style={{ fontSize: 24, fontWeight: 700, color: T.onPrimary, lineHeight: "30px" }}>{value}</div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.76)", marginTop: 5 }}>{label}</div>
                 </div>
-                <span>Trusted by <strong style={{ color: T.ink }}>4,849+ residents</strong></span>
-              </div>
-
-              <div
-                className="grid grid-cols-3"
-                style={{
-                  maxWidth: 460,
-                  borderTop: `1px solid ${T.border}`,
-                  marginTop: 28,
-                }}
-              >
-                {featureStats.map(({ value, label }, index) => (
-                  <div
-                    key={label}
-                    style={{
-                      padding: "18px 0",
-                      textAlign: index === 0 ? "left" : "center",
-                      borderLeft: index === 0 ? "none" : `1px solid ${T.border}`,
-                    }}
-                  >
-                    <div style={{ fontSize: 20, fontWeight: 700, color: T.ink, lineHeight: "28px" }}>{value}</div>
-                    <div style={{ fontSize: 12, color: T.body, marginTop: 4 }}>{label}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
+          </div>
 
-            {/* ── Quote card bridges the canvas and photo panels ───────── */}
-            <div className="lg:col-span-5 lg:col-start-7 lg:-translate-x-16">
-              <HeroBookingCard />
-            </div>
+          {/* Quote card floats bottom-right on desktop, stacks on mobile */}
+          <div className="hidden lg:block" style={{
+            position: "absolute",
+            bottom: 32,
+            right: 32,
+            maxWidth: 380,
+          }}>
+            <HeroBookingCard />
+          </div>
 
+          {/* Mobile card - stacks below content */}
+          <div className="lg:hidden" style={{ marginTop: 40 }}>
+            <HeroBookingCard />
           </div>
 
         </div>
