@@ -49,7 +49,7 @@ export default function HeroBookingCard() {
       {/* ── Card header ─────────────────────────────────────────────────── */}
       <div
         style={{
-          padding:         "28px 28px 22px",
+          padding:         "20px 20px 16px",
           borderBottom:    `1px solid ${T.border}`,
           display:         "flex",
           alignItems:      "flex-start",
@@ -57,66 +57,18 @@ export default function HeroBookingCard() {
         }}
       >
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: T.ink, letterSpacing: "-0.02em", lineHeight: "26px" }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: T.ink, letterSpacing: "-0.02em", lineHeight: "24px" }}>
             Check availability
           </div>
-          <div style={{ fontSize: 13, color: T.body, marginTop: 5 }}>
+          <div style={{ fontSize: 12, color: T.body, marginTop: 3 }}>
             Real-time slots and instant booking.
           </div>
         </div>
       </div>
 
-      {/* ── Service tabs ────────────────────────────────────────────────── */}
-      <div style={{ padding: "22px 28px 0" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.ink, marginBottom: 8 }}>
-          Choose your clean
-        </div>
-        <div
-          style={{
-            display:       "flex",
-            gap:           4,
-            background:    T.soft,
-            borderRadius:  36,
-            padding:       4,
-          }}
-        >
-          {TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setActiveTab(id)}
-              style={{
-                flex:         1,
-                padding:      "8px 0",
-                borderRadius: 36,
-                border:       "none",
-                fontSize:     13,
-                fontWeight:   500,
-                cursor:       "pointer",
-                transition:   "all 0.15s ease",
-                background:   activeTab === id ? T.primary : "transparent",
-                color:        activeTab === id ? T.onPrimary : T.body,
-                boxShadow:    "none",
-                transform:    "scale(1)",
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== id) {
-                  (e.target as HTMLButtonElement).style.transform = "scale(1.02)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.transform = "scale(1)";
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* ── Address / ZIP input ─────────────────────────────────────────── */}
-      <form onSubmit={handleBook} style={{ padding: "22px 28px 28px" }}>
-        <label htmlFor="hero-address" style={{ display: "block", fontSize: 12, fontWeight: 700, color: T.ink, marginBottom: 8 }}>
+      <form onSubmit={handleBook} style={{ padding: "16px 20px 20px" }}>
+        <label htmlFor="hero-address" style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.ink, marginBottom: 6 }}>
           Your ZIP code
         </label>
         <div
@@ -145,10 +97,10 @@ export default function HeroBookingCard() {
             placeholder="ZIP code"
             style={{
               flex:         1,
-              height:       44,
+              height:       40,
               border:       "none",
               background:   "transparent",
-              fontSize:     14,
+              fontSize:     13,
               color:        T.ink,
               outline:      "none",
               fontFamily:   "inherit",
@@ -171,16 +123,16 @@ export default function HeroBookingCard() {
             display:       "flex",
             alignItems:    "center",
             justifyContent: "center",
-            gap:           8,
+            gap:           6,
             width:         "100%",
-            marginTop:     12,
+            marginTop:     10,
             background:    T.primary,
             color:         T.onPrimary,
             border:        "none",
-            borderRadius:  12,
-            fontSize:      16,
+            borderRadius:  10,
+            fontSize:      14,
             fontWeight:    500,
-            padding:       "13px 16px",
+            padding:       "11px 14px",
             cursor:        "pointer",
             transition:    "all 0.2s ease",
             opacity:       1,
@@ -204,7 +156,7 @@ export default function HeroBookingCard() {
           Check availability
           <ArrowRight size={16} strokeWidth={2.5} />
         </button>
-        <p style={{ fontSize: 12, color: T.body, lineHeight: "16px", margin: "10px 0 0", textAlign: "center" }}>
+        <p style={{ fontSize: 11, color: T.body, lineHeight: "14px", margin: "8px 0 0", textAlign: "center" }}>
           Same-day appointments available
         </p>
       </form>

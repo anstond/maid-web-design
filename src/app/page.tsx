@@ -286,7 +286,7 @@ export default function Home() {
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(90deg, rgba(8,43,48,0.58) 0%, rgba(8,43,48,0.40) 35%, rgba(8,43,48,0.18) 60%, rgba(8,43,48,0.05) 85%)",
+              background: "linear-gradient(90deg, rgba(8,43,48,0.42) 0%, rgba(8,43,48,0.28) 35%, rgba(8,43,48,0.08) 60%, rgba(8,43,48,0.00) 85%)",
             }}
           />
         </div>
@@ -319,7 +319,7 @@ export default function Home() {
               Get your <span style={{ color: "#A7E0D8" }}>weekends back.</span>
             </h1>
 
-            {/* Sub-headline — reinforces emotion + specificity */}
+            {/* Sub-headline — trust-focused */}
             <p style={{
               fontSize: 20,
               fontWeight: 500,
@@ -327,35 +327,22 @@ export default function Home() {
               color: "rgba(255,255,255,0.78)",
               margin: 0,
               maxWidth: 520,
-              marginBottom: 8,
-            }}>
-              Apartment cleaning that gives you more time for what matters.
-            </p>
-
-            {/* Emotional bridge */}
-            <p style={{
-              fontSize: 16,
-              fontWeight: 400,
-              lineHeight: "26px",
-              color: "rgba(255,255,255,0.68)",
-              margin: 0,
-              maxWidth: 520,
               marginBottom: 32,
             }}>
-              More time for what matters.
+              Trusted apartment cleaning for busy renters.
             </p>
 
             {/* Trust row — prominent social proof */}
             <div style={{ marginBottom: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontSize: 15, color: "rgba(255,255,255,0.85)" }}>
-                <div style={{ display: "flex", gap: 2, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
-                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={16} fill="currentColor" strokeWidth={0} />)}
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", fontSize: 17, fontWeight: 600, color: "rgba(255,255,255,0.95)" }}>
+                <div style={{ display: "flex", gap: 3, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
+                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={18} fill="currentColor" strokeWidth={0} />)}
                 </div>
                 <span style={{ fontWeight: 700, color: T.onPrimary }}>4.8 on Google</span>
-                <span style={{ color: "rgba(255,255,255,0.60)" }}>·</span>
-                <span style={{ fontWeight: 600 }}>4,849 reviews</span>
-                <span style={{ color: "rgba(255,255,255,0.60)" }}>·</span>
-                <span style={{ fontWeight: 600 }}>150k+ cleaned</span>
+                <span style={{ color: "rgba(255,255,255,0.65)" }}>·</span>
+                <span>4,849 reviews</span>
+                <span style={{ color: "rgba(255,255,255,0.65)" }}>·</span>
+                <span>150k+ apartments cleaned</span>
               </div>
             </div>
           </div>
@@ -363,8 +350,8 @@ export default function Home() {
           {/* Floating card on far right — breathes space for story */}
           <div className="hidden lg:block" style={{
             position: "absolute",
-            top: "52%",
-            right: "1%",
+            top: "48%",
+            right: "-3%",
             width: 450,
             transform: "translateY(-50%)",
             zIndex: 10,
