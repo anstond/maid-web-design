@@ -43,6 +43,7 @@ export default function HeroBookingCard() {
         boxShadow:    "0 24px 56px rgba(0,0,0,0.35), 0 0 0 1px rgba(21,94,99,0.10)",
         overflow:     "hidden",
         fontFamily:   "var(--font-sans)",
+        width:        "100%",
       }}
     >
       {/* ── Card header ─────────────────────────────────────────────────── */}
@@ -57,10 +58,10 @@ export default function HeroBookingCard() {
       >
         <div>
           <div style={{ fontSize: 22, fontWeight: 700, color: T.ink, letterSpacing: "-0.02em", lineHeight: "26px" }}>
-            Get your price
+            Check availability
           </div>
           <div style={{ fontSize: 13, color: T.body, marginTop: 5 }}>
-            Clear pricing in under a minute. No account needed.
+            Real-time slots and instant booking.
           </div>
         </div>
       </div>
@@ -116,7 +117,7 @@ export default function HeroBookingCard() {
       {/* ── Address / ZIP input ─────────────────────────────────────────── */}
       <form onSubmit={handleBook} style={{ padding: "22px 28px 28px" }}>
         <label htmlFor="hero-address" style={{ display: "block", fontSize: 12, fontWeight: 700, color: T.ink, marginBottom: 8 }}>
-          Where should we clean?
+          Your ZIP code
         </label>
         <div
           style={{
@@ -141,7 +142,7 @@ export default function HeroBookingCard() {
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Address or ZIP code"
+            placeholder="ZIP code"
             style={{
               flex:         1,
               height:       44,
@@ -200,11 +201,11 @@ export default function HeroBookingCard() {
             (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
           }}
         >
-          Get my instant quote
+          Check availability
           <ArrowRight size={16} strokeWidth={2.5} />
         </button>
         <p style={{ fontSize: 12, color: T.body, lineHeight: "16px", margin: "10px 0 0", textAlign: "center" }}>
-          Starting at $20/hr · No credit card required
+          Same-day appointments available
         </p>
       </form>
 

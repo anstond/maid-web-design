@@ -13,17 +13,17 @@ import HeroBookingCard from "@/components/HeroBookingCard";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
-  primary:   "#155E63",
-  primaryH:  "#124A54",
-  accentW:   "#D9C7A3",
-  accentS:   "#EFE6D3",
-  ink:       "#1F2937",
-  body:      "#6B7280",
-  muted:     "#B8C0C2",
-  canvas:    "#FCFBF8",
-  surface:   "#FFFFFF",
-  soft:      "#F7F5F1",
-  border:    "#E5DFD3",
+  primary: "#155E63",
+  primaryH: "#124A54",
+  accentW: "#D9C7A3",
+  accentS: "#EFE6D3",
+  ink: "#1F2937",
+  body: "#6B7280",
+  muted: "#B8C0C2",
+  canvas: "#FCFBF8",
+  surface: "#FFFFFF",
+  soft: "#F7F5F1",
+  border: "#E5DFD3",
   onPrimary: "#FFFFFF",
 };
 
@@ -33,9 +33,9 @@ const partners = [
 ];
 
 const services = [
-  { num: "01", title: "Commercial Cleaning", seed: "commercial-office-bright"    },
-  { num: "02", title: "Regular Cleaning",    seed: "apartment-clean-living-room" },
-  { num: "03", title: "Kitchen Cleaning",    seed: "kitchen-spotless-modern"     },
+  { num: "01", title: "Commercial Cleaning", seed: "commercial-office-bright" },
+  { num: "02", title: "Regular Cleaning", seed: "apartment-clean-living-room" },
+  { num: "03", title: "Kitchen Cleaning", seed: "kitchen-spotless-modern" },
 ];
 
 const featurePoints = [
@@ -47,9 +47,9 @@ const featurePoints = [
 ];
 
 const featureStats = [
-  { value: "150k+",  label: "Cleanings done"     },
-  { value: "4.8 / 5", label: "Average rating"     },
-  { value: "1,460+", label: "Vetted pros"         },
+  { value: "150k+", label: "Cleanings done" },
+  { value: "4.8 / 5", label: "Average rating" },
+  { value: "1,460+", label: "Vetted pros" },
 ];
 
 const steps = [
@@ -163,8 +163,8 @@ const blogPosts = [
 ];
 
 const footerLinks: Record<string, string[]> = {
-  Explore:   ["Home", "Book Now", "Services", "About", "Subscriptions", "Blog"],
-  Account:   ["Log in", "Sign up", "Become a Maid", "Register as Landlord"],
+  Explore: ["Home", "Book Now", "Services", "About", "Subscriptions", "Blog"],
+  Account: ["Log in", "Sign up", "Become a Maid", "Register as Landlord"],
   Locations: ["New York City", "Miami", "Los Angeles", "Manhattan", "Brooklyn"],
 };
 
@@ -212,11 +212,11 @@ export default function Home() {
 
           <div className="hidden lg:flex" style={{ alignItems: "center", gap: 2 }}>
             {[
-              { label: "Home",          active: true  },
-              { label: "Services",      active: false },
-              { label: "About Us",      active: false },
+              { label: "Home", active: true },
+              { label: "Services", active: false },
+              { label: "About Us", active: false },
               { label: "Subscriptions", active: false },
-              { label: "Blog",          active: false },
+              { label: "Blog", active: false },
             ].map(({ label, active }) => (
               <a key={label} href="#" style={{
                 fontSize: 14,
@@ -241,7 +241,7 @@ export default function Home() {
             }}>
               Log in
             </a>
-            <a href="#quote-generator" style={{
+            <a href="#" style={{
               background: T.primary,
               color: T.onPrimary,
               fontSize: 14,
@@ -253,7 +253,7 @@ export default function Home() {
               alignItems: "center",
               gap: 6,
             }}>
-              Get a quote
+              Check availability
               <ArrowUpRight size={13} strokeWidth={2.5} />
             </a>
           </div>
@@ -271,40 +271,31 @@ export default function Home() {
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* Full-bleed background image + gradient overlays */}
+        {/* Full-bleed background image with refined overlay */}
         <div style={{ position: "absolute", inset: 0 }}>
           <Image
-            src="/images/hero-maid.png"
+            src="/images/maid-3.png"
             alt=""
             fill
             priority
             sizes="100vw"
             style={{ objectFit: "cover", objectPosition: "center" }}
           />
-          {/* Left-to-right gradient overlay for left-side copy protection */}
+          {/* Gradient overlay for text contrast */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(90deg, rgba(8,43,48,0.96) 0%, rgba(8,43,48,0.88) 42%, rgba(8,43,48,0.42) 68%, rgba(8,43,48,0.12) 100%)",
-            }}
-          />
-          {/* Dark scrim in bottom-right for card protection */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "radial-gradient(circle at bottom right, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 70%)",
-              pointerEvents: "none",
+              background: "linear-gradient(90deg, rgba(8,43,48,0.58) 0%, rgba(8,43,48,0.40) 35%, rgba(8,43,48,0.18) 60%, rgba(8,43,48,0.05) 85%)",
             }}
           />
         </div>
 
-        {/* Main content wrapper with relative positioning for floating elements */}
+        {/* Main content wrapper */}
         <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
-          
-          {/* Left-side content floats top-left */}
-          <div style={{ maxWidth: 540 }}>
+
+          {/* Left-side content */}
+          <div style={{ maxWidth: 580 }}>
             {/* Eyebrow */}
             <p style={{
               fontSize: 12,
@@ -314,80 +305,75 @@ export default function Home() {
               textTransform: "uppercase",
               marginBottom: 18,
             }}>
-              Professional Home Cleaning
+              Apartment Specialists • Same-Day Booking
             </p>
 
             {/* Headline */}
             <h1 style={{
-              fontSize: "clamp(40px, 4vw, 52px)",
+              fontSize: "clamp(48px, 5.5vw, 68px)",
               fontWeight: 700,
-              lineHeight: "1.23",
+              lineHeight: "1.2",
               color: T.onPrimary,
-              margin: "0 0 18px",
+              margin: "0 0 24px",
             }}>
-              Your home, <span style={{ color: "#A7E0D8" }}>spotless.</span>
-              <br />
-              On your schedule.
+              Get your <span style={{ color: "#A7E0D8" }}>weekends back.</span>
             </h1>
 
-            {/* Sub-headline */}
+            {/* Sub-headline — reinforces emotion + specificity */}
             <p style={{
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: 500,
-              lineHeight: "24px",
+              lineHeight: "30px",
               color: "rgba(255,255,255,0.78)",
               margin: 0,
-              maxWidth: 460,
-              marginBottom: 30,
+              maxWidth: 520,
+              marginBottom: 8,
             }}>
-              Trusted professionals, clear pricing, instant booking.
+              Apartment cleaning that gives you more time for what matters.
             </p>
 
-            {/* Trust signal with stars */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32, fontSize: 13, color: "rgba(255,255,255,0.78)" }}>
-              <div style={{ display: "flex", gap: 2, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
-                {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill="currentColor" strokeWidth={0} />)}
-              </div>
-              <span>Trusted by <strong style={{ color: T.onPrimary }}>4,849+ residents</strong></span>
-            </div>
+            {/* Emotional bridge */}
+            <p style={{
+              fontSize: 16,
+              fontWeight: 400,
+              lineHeight: "26px",
+              color: "rgba(255,255,255,0.68)",
+              margin: 0,
+              maxWidth: 520,
+              marginBottom: 32,
+            }}>
+              More time for what matters.
+            </p>
 
-            {/* Stats grid */}
-            <div
-              className="grid grid-cols-3"
-              style={{
-                maxWidth: 500,
-                borderTop: "1px solid rgba(255,255,255,0.38)",
-                paddingTop: 32,
-              }}
-            >
-              {featureStats.map(({ value, label }, index) => (
-                <div
-                  key={label}
-                  style={{
-                    padding: "0 12px",
-                    textAlign: index === 0 ? "left" : "center",
-                    borderLeft: index === 0 ? "none" : "1px solid rgba(255,255,255,0.38)",
-                  }}
-                >
-                  <div style={{ fontSize: 24, fontWeight: 700, color: T.onPrimary, lineHeight: "30px" }}>{value}</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.76)", marginTop: 5 }}>{label}</div>
+            {/* Trust row — prominent social proof */}
+            <div style={{ marginBottom: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontSize: 15, color: "rgba(255,255,255,0.85)" }}>
+                <div style={{ display: "flex", gap: 2, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
+                  {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={16} fill="currentColor" strokeWidth={0} />)}
                 </div>
-              ))}
+                <span style={{ fontWeight: 700, color: T.onPrimary }}>4.8 on Google</span>
+                <span style={{ color: "rgba(255,255,255,0.60)" }}>·</span>
+                <span style={{ fontWeight: 600 }}>4,849 reviews</span>
+                <span style={{ color: "rgba(255,255,255,0.60)" }}>·</span>
+                <span style={{ fontWeight: 600 }}>150k+ cleaned</span>
+              </div>
             </div>
           </div>
 
-          {/* Quote card floats bottom-right on desktop, stacks on mobile */}
+          {/* Floating card on far right — breathes space for story */}
           <div className="hidden lg:block" style={{
             position: "absolute",
-            bottom: 32,
-            right: 32,
-            maxWidth: 380,
+            top: "52%",
+            right: "1%",
+            width: 450,
+            transform: "translateY(-50%)",
+            zIndex: 10,
           }}>
             <HeroBookingCard />
           </div>
 
-          {/* Mobile card - stacks below content */}
-          <div className="lg:hidden" style={{ marginTop: 40 }}>
+          {/* Mobile card - stacks below */}
+          <div className="lg:hidden" style={{ marginTop: 28 }}>
             <HeroBookingCard />
           </div>
 
