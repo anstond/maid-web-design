@@ -371,8 +371,8 @@ export default function Home() {
                 margin:        "0 0 12px",
               }}
             >
-              Exact pricing.<br />
-              <span style={{ color: T.accentW }}>Zero guesswork.</span>
+              Your home cleaning<br />
+              <span style={{ color: T.accentW }}>made simple</span>
             </h1>
 
             {/* Instruction line — ties headline to the card */}
@@ -386,7 +386,7 @@ export default function Home() {
                 maxWidth:   400,
               }}
             >
-              Pick your service and home size — your exact price unlocks in the card instantly. No sign-up.
+              Trusted cleaner. Transparent pricing. Book under a minute. If there's any problem with our cleaning, we will re-clean it for free.
             </p>
 
             {/* Social proof */}
@@ -516,8 +516,8 @@ export default function Home() {
                 margin:        "0 0 14px",
               }}
             >
-              Exact pricing.<br />
-              <span style={{ color: T.accentW }}>Zero guesswork.</span>
+              Your home cleaning<br />
+              <span style={{ color: T.accentW }}>made simple</span>
             </h1>
             <p
               className="hero-subtext"
@@ -529,7 +529,7 @@ export default function Home() {
                 maxWidth:   320,
               }}
             >
-              Select your service and size to reveal your exact price.
+              Trusted cleaner. Transparent pricing. Book under a minute. If there's any problem with our cleaning, we will re-clean it for free.
             </p>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
               <div style={{ display: "flex", gap: 2 }}>

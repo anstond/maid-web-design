@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Pause, RotateCcw } from "lucide-react";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -134,7 +134,7 @@ export default function HeroInteractiveQuote() {
             Your instant quote
           </div>
           <div style={{ fontSize: 12, color: T.body, lineHeight: "17px" }}>
-            Pick a service + home size — price unlocks instantly, no sign-up needed.
+            Pick your location and cleaning duration.
           </div>
         </div>
 
@@ -327,19 +327,25 @@ export default function HeroInteractiveQuote() {
           {/* ── Competitive pricing badge ───────────────────────────────── */}
           {targetPrice && (
             <div style={{
-              background:    "rgba(21,94,99,0.08)",
-              border:        `1px solid rgba(21,94,99,0.16)`,
-              borderRadius:  8,
-              padding:       "10px 14px",
+              background:    "transparent",
+              padding:       "10px 0",
               marginBottom:  12,
               display:       "flex",
               alignItems:    "center",
               gap:           8,
               justifyContent: "center",
             }}>
-              <span style={{ color: T.primary, fontSize: 12, fontWeight: 700 }}>✓</span>
-              <span style={{ fontSize: 12, fontWeight: 500, color: T.ink }}>
-                Would be ${Math.round(displayPrice / 0.8)} with competitors
+              <span style={{ fontSize: 13, fontWeight: 500, color: T.body }}>competitors charge</span>
+              <span style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: T.body,
+                textDecoration: "line-through",
+                textDecorationColor: T.accentW,
+                textDecorationThickness: "2px",
+                textUnderlineOffset: "4px"
+              }}>
+                ${Math.round(displayPrice / 0.8)}
               </span>
             </div>
           )}
@@ -392,19 +398,24 @@ export default function HeroInteractiveQuote() {
             display:         "flex",
             alignItems:      "center",
             justifyContent:  "center",
-            gap:             16,
+            gap:             20,
             flexWrap:        "wrap",
+            marginTop:       4,
           }}>
-            {["No contracts", "Cancel anytime", "Free re-clean"].map((item) => (
-              <span key={item} style={{
+            {[
+              { icon: Lock, label: "No contracts" },
+              { icon: Pause, label: "Cancel anytime" },
+              { icon: RotateCcw, label: "Free re-clean" }
+            ].map(({ icon: Icon, label }) => (
+              <span key={label} style={{
                 fontSize:   11,
                 color:      T.body,
                 display:    "flex",
                 alignItems: "center",
-                gap:        4,
+                gap:        6,
               }}>
-                <span style={{ color: T.primary, fontWeight: 700, fontSize: 12 }}>✓</span>
-                {item}
+                <Icon size={14} strokeWidth={2} color={T.primary} />
+                {label}
               </span>
             ))}
           </div>
