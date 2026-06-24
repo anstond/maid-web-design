@@ -303,7 +303,7 @@ export default function HeroInteractiveQuote() {
                 <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", color: "rgba(255,255,255,0.60)", textTransform: "uppercase", marginBottom: 8 }}>
                   Starting from
                 </div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 5 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
                   <span style={{
                     fontSize:      46,
                     fontWeight:    700,
@@ -312,6 +312,16 @@ export default function HeroInteractiveQuote() {
                     lineHeight:    1,
                   }}>
                     ${displayPrice}
+                  </span>
+                  <span style={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: T.accentW,
+                    textDecoration: "line-through",
+                    textDecorationColor: T.accentW,
+                    textDecorationThickness: "1.5px",
+                  }}>
+                    ${Math.round(displayPrice / 0.8)} competitors
                   </span>
                   <span style={{ fontSize: 14, color: "rgba(255,255,255,0.60)" }}>
                     / visit
@@ -323,32 +333,6 @@ export default function HeroInteractiveQuote() {
               </div>
             )}
           </div>
-
-          {/* ── Competitive pricing badge ───────────────────────────────── */}
-          {targetPrice && (
-            <div style={{
-              background:    "transparent",
-              padding:       "10px 0",
-              marginBottom:  12,
-              display:       "flex",
-              alignItems:    "center",
-              gap:           8,
-              justifyContent: "center",
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 500, color: T.body }}>competitors charge</span>
-              <span style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: T.body,
-                textDecoration: "line-through",
-                textDecorationColor: T.accentW,
-                textDecorationThickness: "2px",
-                textUnderlineOffset: "4px"
-              }}>
-                ${Math.round(displayPrice / 0.8)}
-              </span>
-            </div>
-          )}
 
           {/* ── CTA ─────────────────────────────────────────────────────── */}
           {targetPrice && (
