@@ -1,13 +1,9 @@
-import type { Metadata } from "next";
+"use client";
+
 import { ArrowRight, Clock3, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-export const metadata: Metadata = {
-  title: "Cleaning tips and home care guides | ApartmentMaid",
-  description:
-    "Practical cleaning tips, home care guides, and expert routines from ApartmentMaid.",
-};
+import Navigation from "@/components/Navigation";
 
 type Article = {
   title: string;
@@ -111,41 +107,7 @@ function ArticleMeta({ category, readTime }: Pick<Article, "category" | "readTim
 export default function BlogPage() {
   return (
     <div className="min-h-screen bg-background text-text-primary">
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-3 sm:px-8 lg:min-h-[72px] lg:flex-nowrap lg:gap-6 lg:py-0 lg:px-10">
-          <Link
-            className="shrink-0 text-xl font-bold tracking-[-0.04em] text-primary outline-none transition-opacity hover:opacity-80 focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
-            href="/"
-          >
-            ApartmentMaid
-          </Link>
-          <nav aria-label="Primary navigation" className="order-3 flex w-full items-center gap-1 overflow-x-auto pb-1 lg:order-none lg:w-auto lg:pb-0">
-            {navItems.map((item) => {
-              const isActive = item.href === "/blog";
-              return (
-                <Link
-                  aria-current={isActive ? "page" : undefined}
-                  className={`rounded-full px-3 py-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-text-secondary hover:bg-surface-muted hover:text-text-primary"
-                  }`}
-                  href={item.href}
-                  key={item.label}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-          <Link
-            className="inline-flex shrink-0 items-center rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground outline-none transition-colors hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 active:translate-y-px sm:px-5"
-            href="/#booking"
-          >
-            Check availability
-          </Link>
-        </div>
-      </header>
+      <Navigation />
 
       <main>
         <section className="mx-auto max-w-7xl px-5 pb-12 pt-16 sm:px-8 sm:pb-16 sm:pt-24 lg:px-10">

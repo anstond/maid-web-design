@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import QuoteGenerator from "@/components/QuoteGenerator";
 import HeroInteractiveQuote from "@/components/HeroInteractiveQuote";
+import Navigation from "@/components/Navigation";
 
 
 const heroStyles = `
@@ -205,92 +206,7 @@ export default function Home() {
     <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, color: T.ink }}>
       <style>{heroStyles}</style>
 
-      {/* ── Navigation ────────────────────────────────────────────────────── */}
-      <nav style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "rgba(252,251,248,0.94)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${T.border}`,
-      }}>
-        <div style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          padding: "0 32px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: 66,
-        }}>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 999,
-              background: T.primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <span style={{ color: T.onPrimary, fontSize: 13, fontWeight: 700 }}>M</span>
-            </div>
-            <span style={{ fontSize: 16, fontWeight: 600, color: T.ink, letterSpacing: "-0.02em" }}>
-              ApartmentMaid
-            </span>
-          </Link>
-
-          <div className="hidden lg:flex" style={{ alignItems: "center", gap: 2 }}>
-            {[
-              { label: "Home", href: "/", active: true },
-              { label: "Services", href: "/services", active: false },
-              { label: "About Us", href: "#", active: false },
-              { label: "Subscriptions", href: "#", active: false },
-              { label: "Blog", href: "/blog", active: false },
-            ].map(({ label, href, active }) => (
-              <Link key={label} href={href} style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: active ? T.ink : T.body,
-                textDecoration: "none",
-                padding: "7px 14px",
-                borderRadius: 999,
-                background: active ? T.soft : "transparent",
-              }}>
-                {label}
-              </Link>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <a href="#" className="hidden md:inline" style={{
-              fontSize: 14,
-              fontWeight: 500,
-              color: T.body,
-              textDecoration: "none",
-            }}>
-              Log in
-            </a>
-            <a href="#" style={{
-              background: T.primary,
-              color: T.onPrimary,
-              fontSize: 14,
-              fontWeight: 600,
-              padding: "9px 20px",
-              borderRadius: 999,
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-            }}>
-              Check availability
-              <ArrowUpRight size={13} strokeWidth={2.5} />
-            </a>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* ── Hero — Full-bleed dark with interactive price-reveal card ──────── */}
       <section style={{

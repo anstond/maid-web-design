@@ -639,3 +639,7 @@ The pill `button-primary` renders at ~44 px tall (10 px vertical padding + 24 px
 - Don't reduce the brand to its illustration system alone. The pill geometry + black/white duet carries the brand even without illustrations.
 - Don't tighten or loosen letter-spacing on the display face. The brand never letter-spaces; default tracking is part of the voice.
 - Don't use `{rounded.full}` 9999 px for square cards — the pill 999 px and full 9999 px effects are identical for interactive elements, but cards stay at `{rounded.xl}` 16 px.
+
+### Blog page pattern
+
+Editorial resource pages use the warm `{colors.canvas}` base with a static semantic topic list, one two-column featured article, and a three-column guide grid. Follow with a deep-teal booking CTA; cards use `{rounded.xl}` (16 px), while every interactive control uses `{rounded.pill}`.
