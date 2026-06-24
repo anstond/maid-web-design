@@ -67,19 +67,19 @@ export default function HeroBookingCard() {
       </div>
 
       {/* ── Address / ZIP input ─────────────────────────────────────────── */}
-      <form onSubmit={handleBook} style={{ padding: "16px 20px 20px" }}>
-        <label htmlFor="hero-address" style={{ display: "block", fontSize: 11, fontWeight: 700, color: T.ink, marginBottom: 6 }}>
+      <form onSubmit={handleBook} style={{ padding: "24px 20px" }}>
+        <label htmlFor="hero-address" style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.ink, marginBottom: 10, letterSpacing: "-0.01em" }}>
           Your ZIP code
         </label>
         <div
           style={{
             display:       "flex",
             alignItems:    "center",
-            gap:           8,
+            gap:           10,
             background:    T.soft,
-            border:        `1px solid ${T.border}`,
-            borderRadius:  8,
-            padding:       "0 12px",
+            border:        `1.5px solid ${T.border}`,
+            borderRadius:  12,
+            padding:       "0 14px",
             transition:    "border-color 0.2s, box-shadow 0.2s",
           }}
           onFocus={(e) => {
@@ -97,10 +97,10 @@ export default function HeroBookingCard() {
             placeholder="ZIP code"
             style={{
               flex:         1,
-              height:       40,
+              height:       44,
               border:       "none",
               background:   "transparent",
-              fontSize:     13,
+              fontSize:     14,
               color:        T.ink,
               outline:      "none",
               fontFamily:   "inherit",
@@ -125,14 +125,14 @@ export default function HeroBookingCard() {
             justifyContent: "center",
             gap:           6,
             width:         "100%",
-            marginTop:     10,
+            marginTop:     12,
             background:    T.primary,
             color:         T.onPrimary,
             border:        "none",
-            borderRadius:  10,
+            borderRadius:  999,
             fontSize:      14,
             fontWeight:    500,
-            padding:       "11px 14px",
+            padding:       "12px 18px",
             cursor:        "pointer",
             transition:    "all 0.2s ease",
             opacity:       1,
@@ -156,7 +156,7 @@ export default function HeroBookingCard() {
           Check availability
           <ArrowRight size={16} strokeWidth={2.5} />
         </button>
-        <p style={{ fontSize: 11, color: T.body, lineHeight: "14px", margin: "8px 0 0", textAlign: "center" }}>
+        <p style={{ fontSize: 12, color: T.body, lineHeight: "16px", margin: "12px 0 0", textAlign: "center" }}>
           Same-day appointments available
         </p>
       </form>

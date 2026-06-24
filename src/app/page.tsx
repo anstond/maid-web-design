@@ -11,6 +11,50 @@ import Link from "next/link";
 import QuoteGenerator from "@/components/QuoteGenerator";
 import HeroBookingCard from "@/components/HeroBookingCard";
 
+const heroStyles = `
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .hero-eyebrow {
+    animation: fadeInUp 0.6s ease-out 0.1s both;
+  }
+
+  .hero-headline {
+    animation: fadeInUp 0.6s ease-out 0.2s both;
+  }
+
+  .hero-subtext {
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+  }
+
+  .hero-proof {
+    animation: fadeInUp 0.6s ease-out 0.4s both;
+  }
+
+  .hero-card {
+    animation: fadeInScale 0.6s ease-out 0.5s both;
+  }
+`;
+
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
   primary: "#155E63",
@@ -172,6 +216,7 @@ const footerLinks: Record<string, string[]> = {
 export default function Home() {
   return (
     <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, color: T.ink }}>
+      <style>{heroStyles}</style>
 
       {/* ── Navigation ────────────────────────────────────────────────────── */}
       <nav style={{
@@ -274,7 +319,7 @@ export default function Home() {
         {/* Full-bleed background image with refined overlay */}
         <div style={{ position: "absolute", inset: 0 }}>
           <Image
-            src="/images/maid-3.png"
+            src="/images/hero-3-final.png"
             alt=""
             fill
             priority
@@ -286,7 +331,7 @@ export default function Home() {
             style={{
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(90deg, rgba(8,43,48,0.42) 0%, rgba(8,43,48,0.28) 35%, rgba(8,43,48,0.08) 60%, rgba(8,43,48,0.00) 85%)",
+              background: "linear-gradient(90deg, rgba(8,43,48,0.32) 0%, rgba(8,43,48,0.18) 35%, rgba(8,43,48,0.04) 60%, rgba(8,43,48,0.00) 85%)",
             }}
           />
         </div>
@@ -295,9 +340,9 @@ export default function Home() {
         <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
 
           {/* Left-side content */}
-          <div style={{ maxWidth: 580 }}>
+          <div style={{ maxWidth: 580, marginLeft: "100px" }}>
             {/* Eyebrow */}
-            <p style={{
+            <p className="hero-eyebrow" style={{
               fontSize: 12,
               fontWeight: 700,
               color: "#A7E0D8",
@@ -309,18 +354,18 @@ export default function Home() {
             </p>
 
             {/* Headline */}
-            <h1 style={{
+            <h1 className="hero-headline" style={{
               fontSize: "clamp(48px, 5.5vw, 68px)",
               fontWeight: 700,
               lineHeight: "1.2",
               color: T.onPrimary,
               margin: "0 0 24px",
             }}>
-              Get your <span style={{ color: "#A7E0D8" }}>weekends back.</span>
+              Get your weekends back.
             </h1>
 
             {/* Sub-headline — trust-focused */}
-            <p style={{
+            <p className="hero-subtext" style={{
               fontSize: 20,
               fontWeight: 500,
               lineHeight: "30px",
@@ -333,8 +378,8 @@ export default function Home() {
             </p>
 
             {/* Trust row — prominent social proof */}
-            <div style={{ marginBottom: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", fontSize: 17, fontWeight: 600, color: "rgba(255,255,255,0.95)" }}>
+            <div className="hero-proof" style={{ marginBottom: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", fontSize: 19, fontWeight: 600, color: "rgba(255,255,255,0.95)" }}>
                 <div style={{ display: "flex", gap: 3, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
                   {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={18} fill="currentColor" strokeWidth={0} />)}
                 </div>
@@ -348,9 +393,9 @@ export default function Home() {
           </div>
 
           {/* Floating card on far right — breathes space for story */}
-          <div className="hidden lg:block" style={{
+          <div className="hidden lg:block hero-card" style={{
             position: "absolute",
-            top: "48%",
+            top: "38%",
             right: "-3%",
             width: 450,
             transform: "translateY(-50%)",
