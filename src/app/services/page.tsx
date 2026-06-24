@@ -8,6 +8,10 @@ import {
   Phone,
   Mail,
   ChevronDown,
+  Heart,
+  Home,
+  User,
+  Clock,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,11 +30,13 @@ const heroStyles = `
   .hero-eyebrow  { animation: fadeInUp    0.55s ease-out 0.05s both; }
   .hero-headline { animation: fadeInUp    0.60s ease-out 0.15s both; }
   .hero-subtext  { animation: fadeInUp    0.60s ease-out 0.25s both; }
+  .hero-cta      { animation: fadeInUp    0.60s ease-out 0.35s both; }
 `;
 
 const T = {
   primary: "#155E63",
   primaryH: "#124A54",
+  primaryLight: "#1f8c94",
   accentW: "#D9C7A3",
   accentS: "#EFE6D3",
   ink: "#1F2937",
@@ -246,18 +252,18 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
         display: "flex",
         flexDirection: "column",
         transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
         cursor: "pointer",
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = "0 16px 40px rgba(21,94,99,0.12)";
-        el.style.transform = "translateY(-2px)";
+        el.style.boxShadow = "0 12px 32px rgba(21,94,99,0.10)";
+        el.style.transform = "translateY(-3px)";
         el.style.borderColor = T.accentW;
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = "0 4px 20px rgba(0,0,0,0.07)";
+        el.style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)";
         el.style.transform = "translateY(0)";
         el.style.borderColor = T.border;
       }}
@@ -265,18 +271,18 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
       <div style={{ padding: "28px 28px 24px", display: "flex", flexDirection: "column", gap: 0, flex: 1 }}>
         <div style={{ marginBottom: 20 }}>
           <h3 style={{
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: 700,
             color: T.ink,
-            margin: "0 0 8px",
+            margin: "0 0 6px",
             letterSpacing: "-0.02em",
-            lineHeight: 1.2,
+            lineHeight: 1.3,
           }}>
             {service.title}
           </h3>
           <div style={{
             height: 2,
-            width: 32,
+            width: 28,
             background: T.accentW,
             borderRadius: 1,
             marginBottom: 12,
@@ -318,7 +324,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                marginTop: 1,
+                marginTop: 2,
               }}>
                 <Check size={12} color={T.primary} strokeWidth={2.5} />
               </div>
@@ -332,7 +338,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
           padding: 0,
           marginTop: "auto",
           marginBottom: 20,
-          borderTop: `2px solid ${T.accentW}`,
+          borderTop: `1px solid ${T.accentS}`,
           paddingTop: 18,
         }}>
           <div style={{
@@ -347,7 +353,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
             <span style={{
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: 700,
               color: T.ink,
               letterSpacing: "-0.03em",
@@ -370,7 +376,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
           color: T.onPrimary,
           fontSize: 14,
           fontWeight: 600,
-          padding: "13px 20px",
+          padding: "12px 20px",
           borderRadius: 999,
           textDecoration: "none",
           transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -387,7 +393,7 @@ function ServiceCard({ service, T }: { service: typeof services[0]; T: any }) {
         }}
         >
           Book Now
-          <ArrowRight size={16} strokeWidth={2.5} />
+          <ArrowRight size={15} strokeWidth={2.5} />
         </a>
       </div>
     </div>
@@ -444,7 +450,7 @@ export default function ServicesPage() {
               { label: "Services", href: "/services", active: true },
               { label: "About Us", href: "#", active: false },
               { label: "Subscriptions", href: "#", active: false },
-              { label: "Blog", href: "#", active: false },
+              { label: "Blog", href: "/blog", active: false },
             ].map(({ label, href, active }) => (
               <Link key={label} href={href} style={{
                 fontSize: 14,
@@ -454,6 +460,7 @@ export default function ServicesPage() {
                 padding: "7px 14px",
                 borderRadius: 999,
                 background: active ? T.soft : "transparent",
+                transition: "all 0.25s ease",
               }}>
                 {label}
               </Link>
@@ -480,7 +487,15 @@ export default function ServicesPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-            }}>
+              transition: "all 0.25s ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = T.primaryH;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = T.primary;
+            }}
+            >
               Book now
               <ArrowUpRight size={13} strokeWidth={2.5} />
             </a>
@@ -491,359 +506,637 @@ export default function ServicesPage() {
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <section style={{
         background: T.ink,
-        minHeight: "400px",
+        minHeight: "480px",
         display: "flex",
         alignItems: "center",
-        padding: "64px 32px",
+        padding: "80px 32px",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", width: "100%" }}>
+        <div style={{
+          position: "absolute",
+          right: "-20%",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "500px",
+          height: "500px",
+          background: `radial-gradient(circle, ${T.primary}20 0%, transparent 70%)`,
+          borderRadius: "50%",
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ maxWidth: 1280, margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
           <div className="hero-eyebrow" style={{
             display: "inline-flex",
             alignItems: "center",
             gap: 8,
-            background: "rgba(255,255,255,0.10)",
-            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(255,255,255,0.08)",
+            border: `1px solid ${T.accentW}40`,
             borderRadius: 999,
-            padding: "5px 14px",
-            marginBottom: 20,
+            padding: "6px 16px",
+            marginBottom: 24,
             width: "fit-content",
           }}>
-            <div style={{
-              background: T.primary,
-              borderRadius: "50%",
-              width: 20,
-              height: 20,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 }}>✓</span>
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.80)", letterSpacing: "0.04em" }}>
-              150,000+ cleanings delivered
+            <span style={{ fontSize: 12, fontWeight: 600, color: T.accentW, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              Professional cleaning
             </span>
           </div>
 
           <h1 className="hero-headline" style={{
-            fontSize: "clamp(38px, 4vw, 60px)",
+            fontSize: "clamp(40px, 5vw, 64px)",
             fontWeight: 700,
-            lineHeight: "1.07",
+            lineHeight: "1.1",
             letterSpacing: "-0.035em",
             color: "#fff",
-            margin: "0 0 20px",
+            margin: "0 0 24px",
             maxWidth: 700,
           }}>
-            Clean Spaces Made <span style={{ color: T.accentW }}>Simple</span>
+            Your home, <span style={{ color: T.accentW }}>spotless</span>
           </h1>
 
           <p className="hero-subtext" style={{
             fontSize: 18,
-            lineHeight: "1.65",
-            color: "rgba(255,255,255,0.70)",
-            margin: "0 0 30px",
-            maxWidth: 600,
+            lineHeight: "1.6",
+            color: "rgba(255,255,255,0.75)",
+            margin: "0 0 32px",
+            maxWidth: 580,
           }}>
-            From regular maintenance to deep cleans, we offer specialized services tailored to every need. Choose your service and book in seconds.
+            From weekly maintenance to seasonal deep cleans. Same-day booking, vetted professionals, 100% satisfaction guaranteed.
           </p>
 
-          <a href="#services" style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: T.primary,
-            color: T.onPrimary,
-            fontSize: 15,
-            fontWeight: 600,
-            padding: "14px 28px",
-            borderRadius: 999,
-            textDecoration: "none",
-          }}>
-            Explore Services
-            <ArrowRight size={16} strokeWidth={2.5} />
-          </a>
+          <div className="hero-cta" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <a href="#services" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: T.accentW,
+              color: T.ink,
+              fontSize: 15,
+              fontWeight: 600,
+              padding: "14px 32px",
+              borderRadius: 999,
+              textDecoration: "none",
+              transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "scale(1.03)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(217,199,163,0.25)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "none";
+            }}
+            >
+              Browse Services
+              <ArrowRight size={16} strokeWidth={2.5} />
+            </a>
+            <a href="tel:+18779905625" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "rgba(255,255,255,0.1)",
+              color: "#fff",
+              fontSize: 15,
+              fontWeight: 600,
+              padding: "14px 32px",
+              borderRadius: 999,
+              textDecoration: "none",
+              border: `1px solid rgba(255,255,255,0.2)`,
+              transition: "all 0.25s ease",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "rgba(255,255,255,0.15)";
+              el.style.borderColor = "rgba(255,255,255,0.3)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "rgba(255,255,255,0.1)";
+              el.style.borderColor = "rgba(255,255,255,0.2)";
+            }}
+            >
+              <Phone size={16} strokeWidth={2} />
+              Call Us
+            </a>
+          </div>
         </div>
       </section>
 
       {/* ── Services Grid ─────────────────────────────────────────────────── */}
-      <section id="services" style={{ padding: "88px 32px" }}>
+      <section id="services" style={{ padding: "96px 32px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-
-          {/* Header row */}
-          <div
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-            style={{ marginBottom: 40, alignItems: "end" }}
-          >
+          <div style={{ marginBottom: 56 }}>
             <h2 style={{
               fontSize: "clamp(28px, 3.5vw, 48px)",
               fontWeight: 700,
-              lineHeight: "1.1",
+              lineHeight: "1.15",
               letterSpacing: "-0.03em",
               color: T.ink,
-              margin: 0,
+              margin: "0 0 16px",
             }}>
-              Our Sparkling Touch
+              Services We Offer
             </h2>
-            <p style={{ fontSize: 16, lineHeight: "26px", color: T.body, margin: 0, maxWidth: 400 }}>
-              We deliver spotless spaces with care, precision, and a touch of sparkle — every single time.
+            <p style={{ fontSize: 16, lineHeight: "26px", color: T.body, margin: 0, maxWidth: 680 }}>
+              Tailored cleaning solutions for every home and lifestyle.
             </p>
           </div>
 
-          {/* Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-4" style={{ gap: 16 }}>
+          {/* Cards Grid - Clean 3 Column Layout */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: 24,
+            marginBottom: 56,
+          }}>
             {services.map((svc) => (
-              <div key={svc.num} className="col-span-1">
+              <div key={svc.id}>
                 <ServiceCard service={svc} T={T} />
               </div>
             ))}
-
-            {/* Marketing Content Card — Live Quote Generator */}
-            <div style={{
-              borderRadius: 16,
-              background: T.primary,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              padding: 32,
-              gap: 20,
-              cursor: "pointer",
-              transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-              boxShadow: "0 4px 20px rgba(21,94,99,0.15)",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.boxShadow = "0 16px 40px rgba(21,94,99,0.25)";
-              el.style.transform = "translateY(-2px)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.boxShadow = "0 4px 20px rgba(21,94,99,0.15)";
-              el.style.transform = "translateY(0)";
-            }}
-            >
-              <div>
-                <h3 style={{
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: T.onPrimary,
-                  margin: "0 0 12px",
-                  letterSpacing: "-0.02em",
-                }}>
-                  Get Your Instant Quote
-                </h3>
-                <p style={{
-                  fontSize: 14,
-                  lineHeight: "22px",
-                  color: "rgba(255,255,255,0.85)",
-                  margin: 0,
-                }}>
-                  See exactly what your cleaning will cost in seconds. No hidden fees, transparent pricing.
-                </p>
-              </div>
-
-              <a
-                href="#quote-generator"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: T.accentW,
-                  color: T.ink,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  padding: "12px 20px",
-                  borderRadius: 999,
-                  textDecoration: "none",
-                  transition: "all 0.25s ease",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = "scale(1.05)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = "scale(1)";
-                }}
-              >
-                Calculate Price
-                <ArrowRight size={14} strokeWidth={2.5} />
-              </a>
-            </div>
           </div>
-        </div>
-      </section>
 
-      {/* ── Why Choose Us — Marketing Section ─────────────────────────────── */}
-      <section style={{ background: T.soft, padding: "88px 32px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left — Content */}
+          {/* Quote CTA Card - Full Width */}
+          <div style={{
+            borderRadius: 16,
+            background: T.primary,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            padding: "48px",
+            gap: 24,
+            cursor: "pointer",
+            transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+            boxShadow: "0 4px 24px rgba(21,94,99,0.15)",
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.boxShadow = "0 16px 48px rgba(21,94,99,0.25)";
+            el.style.transform = "translateY(-3px)";
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLElement;
+            el.style.boxShadow = "0 4px 24px rgba(21,94,99,0.15)";
+            el.style.transform = "translateY(0)";
+          }}
+          >
             <div>
-              <h2 style={{
-                fontSize: "clamp(28px, 3.5vw, 48px)",
+              <h3 style={{
+                fontSize: 24,
                 fontWeight: 700,
-                lineHeight: "1.15",
-                letterSpacing: "-0.03em",
-                color: T.ink,
-                margin: "0 0 20px",
+                color: T.onPrimary,
+                margin: "0 0 12px",
+                letterSpacing: "-0.02em",
               }}>
-                Why ApartmentMaid Stands Out
-              </h2>
-              <p style={{ fontSize: 16, lineHeight: "26px", color: T.body, margin: "0 0 28px", maxWidth: 480 }}>
-                We're not just a cleaning service. We're a trusted partner committed to making your space pristine and your life easier.
+                Get Your Instant Quote
+              </h3>
+              <p style={{
+                fontSize: 16,
+                lineHeight: "24px",
+                color: "rgba(255,255,255,0.85)",
+                margin: 0,
+                maxWidth: 500,
+              }}>
+                See exactly what your cleaning will cost. No hidden fees, transparent pricing.
               </p>
+            </div>
 
-              {/* Feature list */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 32 }}>
-                {[
-                  "Vetted professionals with background checks",
-                  "ISO-certified cleaning protocols",
-                  "Same-day booking available nationwide",
-                  "100% satisfaction or free re-clean",
-                ].map((f) => (
-                  <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                    <Check size={20} color={T.primary} strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ fontSize: 14, lineHeight: "22px", color: T.ink }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-
-              <a href="#quote-generator" style={{
+            <a
+              href="#quote-generator"
+              style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                background: T.primary,
-                color: T.onPrimary,
-                fontSize: 15,
+                background: T.accentW,
+                color: T.ink,
+                fontSize: 14,
                 fontWeight: 600,
-                padding: "14px 28px",
+                padding: "12px 24px",
                 borderRadius: 999,
                 textDecoration: "none",
                 transition: "all 0.25s ease",
               }}
               onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "scale(1.02)";
+                (e.currentTarget as HTMLElement).style.transform = "scale(1.05)";
               }}
               onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.transform = "scale(1)";
+                (e.currentTarget as HTMLElement).style.transform = "scale(1)";
               }}
-              >
-                Get Your Estimate
-                <ArrowRight size={16} strokeWidth={2.5} />
-              </a>
+            >
+              Calculate Price
+              <ArrowRight size={14} strokeWidth={2.5} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Why ApartmentMaid Stands Out ──────────────────────────────── */}
+      <section style={{ background: T.soft, padding: "120px 32px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{ marginBottom: 72 }}>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: T.primary,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: 16,
+            }}>
+              Why Choose Us
+            </div>
+            <h2 style={{
+              fontSize: "clamp(36px, 5vw, 56px)",
+              fontWeight: 700,
+              lineHeight: "1.1",
+              letterSpacing: "-0.035em",
+              color: T.ink,
+              margin: "0 0 20px",
+              maxWidth: 680,
+            }}>
+              The ApartmentMaid Difference
+            </h2>
+            <p style={{
+              fontSize: 16,
+              lineHeight: "26px",
+              color: T.body,
+              margin: 0,
+              maxWidth: 680,
+            }}>
+              What sets us apart from everyone else in the cleaning industry.
+            </p>
+          </div>
+
+          {/* Content Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "start" }}>
+            {/* Left: Differentiators */}
+            <div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {[
+                  { icon: "shield", title: "Vetted Professionals", desc: "Every cleaner passes multi-stage background checks and ongoing professional training." },
+                  { icon: "check", title: "ISO-Certified Standards", desc: "Enterprise-grade protocols ensure consistent, professional results every single time." },
+                  { icon: "clock", title: "Same-Day Booking", desc: "Real-time availability across major areas means you can book within hours." },
+                  { icon: "heart", title: "100% Satisfaction", desc: "Not happy? We return free within 24 hours. Your satisfaction is our promise." },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: T.surface,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: 16,
+                      padding: "28px",
+                      display: "flex",
+                      gap: 16,
+                      alignItems: "flex-start",
+                      transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.boxShadow = "0 12px 32px rgba(21,94,99,0.08)";
+                      el.style.transform = "translateY(-3px)";
+                      el.style.borderColor = T.accentW;
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLElement;
+                      el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
+                      el.style.transform = "translateY(0)";
+                      el.style.borderColor = T.border;
+                    }}
+                  >
+                    <div style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      background: T.accentS,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "all 0.25s ease",
+                    }}>
+                      {item.icon === "shield" && <Check size={24} color={T.primary} strokeWidth={1.5} />}
+                      {item.icon === "check" && <Check size={24} color={T.primary} strokeWidth={1.5} />}
+                      {item.icon === "clock" && <Clock size={24} color={T.primary} strokeWidth={1.5} />}
+                      {item.icon === "heart" && <Heart size={24} color={T.primary} strokeWidth={1.5} />}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: 17, fontWeight: 700, color: T.ink, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
+                        {item.title}
+                      </h3>
+                      <p style={{ fontSize: 14, lineHeight: "22px", color: T.body, margin: 0 }}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Right — Stats */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              {[
-                { value: "150k+", label: "Cleanings completed" },
-                { value: "4.8 / 5", label: "Average rating" },
-                { value: "1,460+", label: "Vetted professionals" },
-              ].map((s) => (
-                <div key={s.label} style={{
-                  background: T.surface,
-                  border: `1px solid ${T.border}`,
-                  borderRadius: 16,
-                  padding: "24px 20px",
+            {/* Right: Stats & Proof */}
+            <div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                {/* Top: Big featured stat */}
+                <div style={{
+                  background: `linear-gradient(135deg, ${T.primary}, ${T.primaryLight})`,
+                  borderRadius: 20,
+                  padding: "48px 32px",
+                  color: T.onPrimary,
                   textAlign: "center",
+                  boxShadow: "0 16px 40px rgba(21,94,99,0.20)",
                 }}>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: T.ink, lineHeight: "32px", letterSpacing: "-0.04em", marginBottom: 6 }}>
-                    {s.value}
+                  <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12, opacity: 0.9 }}>
+                    Trusted by
                   </div>
-                  <div style={{ fontSize: 13, color: T.body, lineHeight: "18px" }}>{s.label}</div>
+                  <div style={{ fontSize: "clamp(40px, 6vw, 56px)", fontWeight: 700, lineHeight: 1, letterSpacing: "-0.04em", marginBottom: 8 }}>
+                    150k+
+                  </div>
+                  <div style={{ fontSize: 16, lineHeight: "24px", opacity: 0.95 }}>
+                    Happy apartment dwellers
+                  </div>
                 </div>
-              ))}
+
+                {/* Bottom: Stats grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  {[
+                    { value: "4.8", label: "Average Rating", sublabel: "★" },
+                    { value: "1,460+", label: "Vetted Pros", sublabel: "In Your Area" },
+                    { value: "24/7", label: "Support", sublabel: "Always Available" },
+                    { value: "100%", label: "Satisfaction", sublabel: "Guaranteed" },
+                  ].map((stat, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: T.surface,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: 16,
+                        padding: "24px",
+                        textAlign: "center",
+                        transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                        cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLElement;
+                        el.style.boxShadow = "0 8px 24px rgba(21,94,99,0.08)";
+                        el.style.transform = "translateY(-2px)";
+                        el.style.borderColor = T.accentW;
+                      }}
+                      onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLElement;
+                        el.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
+                        el.style.transform = "translateY(0)";
+                        el.style.borderColor = T.border;
+                      }}
+                    >
+                      <div style={{
+                        fontSize: 28,
+                        fontWeight: 700,
+                        color: T.primary,
+                        lineHeight: 1,
+                        letterSpacing: "-0.03em",
+                        marginBottom: 6,
+                      }}>
+                        {stat.value}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.ink, marginBottom: 2 }}>
+                        {stat.label}
+                      </div>
+                      <div style={{ fontSize: 12, color: T.body, lineHeight: "16px" }}>
+                        {stat.sublabel}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Service Details ────────────────────────────────────────────────── */}
-      <section style={{ background: T.soft, padding: "88px 32px" }}>
+      {/* ── What's Included ────────────────────────────────────────────────── */}
+      <section style={{ background: T.canvas, padding: "120px 32px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <h2 style={{
-            fontSize: "clamp(28px, 3.5vw, 48px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            color: T.ink,
-            margin: "0 0 56px",
-          }}>
-            What's Included in Every Service
-          </h2>
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 64 }}>
+            <div style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: T.primary,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: 16,
+            }}>
+              What's Included
+            </div>
+            <h2 style={{
+              fontSize: "clamp(36px, 5vw, 56px)",
+              fontWeight: 700,
+              lineHeight: "1.1",
+              letterSpacing: "-0.035em",
+              color: T.ink,
+              margin: "0 0 20px",
+              maxWidth: 700,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}>
+              Everything We Handle, Before We Enter Your Home
+            </h2>
+            <p style={{
+              fontSize: 16,
+              lineHeight: "26px",
+              color: T.body,
+              margin: 0,
+              maxWidth: 660,
+              marginLeft: "auto",
+              marginRight: "auto",
+            }}>
+              Background checked professionals. Fully insured. Satisfaction guaranteed. Same-day availability.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 32, marginBottom: 56 }}>
+          {/* 4-Column Icon Grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: 32,
+            marginBottom: 80,
+          }}>
             {[
-              {
-                title: "Professional Standards",
-                items: [
-                  "Multi-stage background checks on every pro",
-                  "ISO-certified cleaning protocols",
-                  "Professional-grade equipment & supplies",
-                  "Uniform and ID verification",
-                ],
-              },
-              {
-                title: "Your Protection",
-                items: [
-                  "100% satisfaction guarantee with free re-clean",
-                  "Full liability insurance coverage",
-                  "Real-time GPS tracking",
-                  "Direct communication with your assigned pro",
-                ],
-              },
-              {
-                title: "Convenience",
-                items: [
-                  "Same-day booking available",
-                  "Flexible scheduling options",
-                  "Easy rescheduling anytime",
-                  "No long-term contracts",
-                ],
-              },
-              {
-                title: "Eco-Friendly",
-                items: [
-                  "EPA-approved, non-toxic products",
-                  "Biodegradable cleaning solutions",
-                  "Safe for families and pets",
-                  "Fragrance-free options available",
-                ],
-              },
-            ].map((section) => (
-              <div key={section.title} style={{
-                background: T.surface,
-                borderRadius: 16,
-                border: `1px solid ${T.border}`,
-                padding: 32,
-              }}>
+              { icon: "shield", title: "Background Checked", desc: "Every cleaner passes a multi-step screening, including criminal record checks and ID verification." },
+              { icon: "heart", title: "Satisfaction Guaranteed", desc: "Not happy? We'll make it right. Your satisfaction is our top priority." },
+              { icon: "home", title: "Fully Insured", desc: "Every booking is backed by comprehensive insurance for complete peace of mind." },
+              { icon: "clock", title: "Same-Day Available", desc: "Book in minutes and get a professional cleaner to your door, often within hours." },
+            ].map((item, i) => (
+              <div key={i} style={{ textAlign: "center" }}>
+                <div style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: "50%",
+                  background: T.accentS,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 24px",
+                  cursor: "pointer",
+                  transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "scale(1.08)";
+                  el.style.background = T.accentW;
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.transform = "scale(1)";
+                  el.style.background = T.accentS;
+                }}
+                >
+                  {item.icon === "shield" && <Check size={40} color={T.primary} strokeWidth={1.5} />}
+                  {item.icon === "heart" && <Heart size={40} color={T.primary} strokeWidth={1.5} />}
+                  {item.icon === "home" && <Home size={40} color={T.primary} strokeWidth={1.5} />}
+                  {item.icon === "clock" && <Clock size={40} color={T.primary} strokeWidth={1.5} />}
+                </div>
+
                 <h3 style={{
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: 700,
                   color: T.ink,
-                  margin: "0 0 20px",
+                  margin: "0 0 12px",
                   letterSpacing: "-0.02em",
                 }}>
-                  {section.title}
+                  {item.title}
                 </h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                  {section.items.map((item, i) => (
-                    <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                      <Check size={16} color={T.primary} strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 1 }} />
-                      <span style={{ fontSize: 14, lineHeight: "22px", color: T.body }}>{item}</span>
-                    </div>
-                  ))}
-                </div>
+                <p style={{
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  color: T.body,
+                  margin: 0,
+                }}>
+                  {item.desc}
+                </p>
               </div>
             ))}
+          </div>
+
+          {/* Trusted By Section */}
+          <div style={{
+            background: T.surface,
+            borderRadius: 24,
+            padding: "64px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 64,
+            alignItems: "center",
+            marginBottom: 64,
+          }}>
+            {/* Stats */}
+            <div>
+              <h3 style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: T.ink,
+                margin: "0 0 40px",
+                letterSpacing: "-0.02em",
+              }}>
+                Trusted by thousands of residents
+              </h3>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                {[
+                  { icon: "users", value: "15,000+", label: "Apartments Cleaned" },
+                  { icon: "star", value: "4.9", label: "Average Rating" },
+                  { icon: "check", value: "100%", label: "Satisfaction Guarantee" },
+                  { icon: "shield", value: "Fully", label: "Insured for Your Protection" },
+                ].map((stat, i) => (
+                  <div key={i} style={{ textAlign: "center" }}>
+                    <div style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: "50%",
+                      background: T.accentS,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      margin: "0 auto 12px",
+                    }}>
+                      {stat.icon === "users" && <User size={28} color={T.primary} strokeWidth={1.5} />}
+                      {stat.icon === "star" && <Star size={28} color={T.primary} strokeWidth={1.5} />}
+                      {stat.icon === "check" && <Check size={28} color={T.primary} strokeWidth={1.5} />}
+                      {stat.icon === "shield" && <Check size={28} color={T.primary} strokeWidth={1.5} />}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: T.ink, marginBottom: 4 }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.body, lineHeight: "16px", maxWidth: 100, margin: "0 auto" }}>
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Image Placeholder */}
+            <div style={{
+              borderRadius: 20,
+              background: `linear-gradient(135deg, ${T.accentS}, ${T.accentW})`,
+              height: 400,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: T.primary,
+              fontSize: 14,
+            }}>
+              Professional cleaner at home
+            </div>
+          </div>
+
+          {/* Trust Statement */}
+          <div style={{
+            background: `linear-gradient(135deg, ${T.accentS}40, ${T.accentW}40)`,
+            border: `1px solid ${T.accentW}`,
+            borderRadius: 16,
+            padding: "40px",
+            display: "flex",
+            gap: 24,
+            alignItems: "flex-start",
+          }}>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              background: T.primary,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <Check size={24} color={T.onPrimary} strokeWidth={2} />
+            </div>
+            <div>
+              <h4 style={{
+                fontSize: 20,
+                fontWeight: 700,
+                color: T.ink,
+                margin: "0 0 8px",
+                letterSpacing: "-0.02em",
+              }}>
+                Your home. Your trust. Our priority.
+              </h4>
+              <p style={{
+                fontSize: 15,
+                lineHeight: "24px",
+                color: T.body,
+                margin: 0,
+              }}>
+                We treat your home with the same care and respect we would our own. That's the ApartmentMaid promise.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Service Comparison ────────────────────────────────────────────── */}
-      <section style={{ background: T.canvas, padding: "88px 32px" }}>
+      <section style={{ background: T.canvas, padding: "96px 32px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <h2 style={{
             fontSize: "clamp(28px, 3.5vw, 48px)",
@@ -905,7 +1198,7 @@ export default function ServicesPage() {
       </section>
 
       {/* ── FAQ ────────────────────────────────────────────────────────────── */}
-      <section style={{ background: T.soft, padding: "88px 32px" }}>
+      <section style={{ background: T.soft, padding: "96px 32px" }}>
         <div style={{ maxWidth: 800, margin: "0 auto" }}>
           <h2 style={{
             fontSize: "clamp(28px, 3.5vw, 48px)",
@@ -942,6 +1235,13 @@ export default function ServicesPage() {
                     justifyContent: "space-between",
                     gap: 16,
                     textAlign: "left",
+                    transition: "background 0.25s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = T.soft;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
                   }}
                 >
                   <span style={{
@@ -1020,7 +1320,19 @@ export default function ServicesPage() {
               border: "1px solid rgba(255,255,255,0.20)",
               textDecoration: "none",
               whiteSpace: "nowrap",
-            }}>
+              transition: "all 0.25s ease",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "rgba(255,255,255,0.1)";
+              el.style.borderColor = "rgba(255,255,255,0.3)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = "transparent";
+              el.style.borderColor = "rgba(255,255,255,0.2)";
+            }}
+            >
               <Phone size={14} />
               Call Us
             </a>
@@ -1037,7 +1349,19 @@ export default function ServicesPage() {
               gap: 8,
               whiteSpace: "nowrap",
               flexShrink: 0,
-            }}>
+              transition: "all 0.25s ease",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = T.primaryH;
+              el.style.transform = "scale(1.02)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.background = T.primary;
+              el.style.transform = "scale(1)";
+            }}
+            >
               Book Now
               <ArrowRight size={15} strokeWidth={2.5} />
             </a>

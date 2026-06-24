@@ -248,7 +248,7 @@ export default function Home() {
               { label: "Services", href: "/services", active: false },
               { label: "About Us", href: "#", active: false },
               { label: "Subscriptions", href: "#", active: false },
-              { label: "Blog", href: "#", active: false },
+              { label: "Blog", href: "/blog", active: false },
             ].map(({ label, href, active }) => (
               <Link key={label} href={href} style={{
                 fontSize: 14,
@@ -1519,4 +1519,3 @@ export default function Home() {
     </div>
   );
 }
-
