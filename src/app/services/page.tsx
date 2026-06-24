@@ -417,14 +417,14 @@ export default function ServicesPage() {
         WebkitBackdropFilter: "blur(16px)",
         borderBottom: `1px solid ${T.border}`,
       }}>
-        <div style={{
+        <div className="flex flex-wrap lg:flex-nowrap" style={{
           maxWidth: 1280,
           margin: "0 auto",
           padding: "0 32px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          height: 66,
+          minHeight: 66,
         }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
             <div style={{
@@ -444,7 +444,7 @@ export default function ServicesPage() {
             </span>
           </Link>
 
-          <div className="hidden lg:flex" style={{ alignItems: "center", gap: 2 }}>
+          <div className="order-last flex basis-full shrink-0 overflow-x-auto lg:order-none lg:basis-auto lg:flex-1 lg:shrink" style={{ alignItems: "center", gap: 2, WebkitOverflowScrolling: "touch" }}>
             {[
               { label: "Home", href: "/", active: false },
               { label: "Services", href: "/services", active: true },
@@ -623,21 +623,32 @@ export default function ServicesPage() {
       </section>
 
       {/* ── Services Grid ─────────────────────────────────────────────────── */}
-      <section id="services" style={{ padding: "96px 32px" }}>
+      <section id="services" style={{ padding: "120px 32px", background: T.canvas }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ marginBottom: 56 }}>
-            <h2 style={{
-              fontSize: "clamp(28px, 3.5vw, 48px)",
+          <div style={{ marginBottom: 72 }}>
+            <div style={{
+              fontSize: 12,
               fontWeight: 700,
-              lineHeight: "1.15",
-              letterSpacing: "-0.03em",
-              color: T.ink,
-              margin: "0 0 16px",
+              color: T.primary,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: 16,
             }}>
-              Services We Offer
+              Our Services
+            </div>
+            <h2 style={{
+              fontSize: "clamp(36px, 5vw, 56px)",
+              fontWeight: 700,
+              lineHeight: "1.1",
+              letterSpacing: "-0.035em",
+              color: T.ink,
+              margin: "0 0 20px",
+              maxWidth: 680,
+            }}>
+              Cleaning Services Built for Every Need
             </h2>
             <p style={{ fontSize: 16, lineHeight: "26px", color: T.body, margin: 0, maxWidth: 680 }}>
-              Tailored cleaning solutions for every home and lifestyle.
+              From weekly maintenance to seasonal deep cleans, we have a service tailored to your home and lifestyle.
             </p>
           </div>
 
@@ -655,49 +666,62 @@ export default function ServicesPage() {
             ))}
           </div>
 
-          {/* Quote CTA Card - Full Width */}
+          {/* Quote CTA Card - Full Width Premium */}
           <div style={{
-            borderRadius: 16,
-            background: T.primary,
+            borderRadius: 20,
+            background: `linear-gradient(135deg, ${T.primary}, ${T.primaryLight})`,
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            padding: "48px",
-            gap: 24,
+            padding: "56px",
+            gap: 28,
             cursor: "pointer",
             transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-            boxShadow: "0 4px 24px rgba(21,94,99,0.15)",
+            boxShadow: "0 16px 48px rgba(21,94,99,0.20)",
+            position: "relative",
+            overflow: "hidden",
           }}
           onMouseEnter={(e) => {
             const el = e.currentTarget as HTMLElement;
-            el.style.boxShadow = "0 16px 48px rgba(21,94,99,0.25)";
-            el.style.transform = "translateY(-3px)";
+            el.style.boxShadow = "0 24px 64px rgba(21,94,99,0.30)";
+            el.style.transform = "translateY(-4px)";
           }}
           onMouseLeave={(e) => {
             const el = e.currentTarget as HTMLElement;
-            el.style.boxShadow = "0 4px 24px rgba(21,94,99,0.15)";
+            el.style.boxShadow = "0 16px 48px rgba(21,94,99,0.20)";
             el.style.transform = "translateY(0)";
           }}
           >
-            <div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.75)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 12,
+              }}>
+                Transparent Pricing
+              </div>
               <h3 style={{
-                fontSize: 24,
+                fontSize: "clamp(28px, 4vw, 36px)",
                 fontWeight: 700,
                 color: T.onPrimary,
                 margin: "0 0 12px",
                 letterSpacing: "-0.02em",
+                lineHeight: 1.2,
               }}>
                 Get Your Instant Quote
               </h3>
               <p style={{
                 fontSize: 16,
-                lineHeight: "24px",
-                color: "rgba(255,255,255,0.85)",
+                lineHeight: "26px",
+                color: "rgba(255,255,255,0.90)",
                 margin: 0,
-                maxWidth: 500,
+                maxWidth: 560,
               }}>
-                See exactly what your cleaning will cost. No hidden fees, transparent pricing.
+                See exactly what your cleaning will cost. No hidden fees, no surprises, just transparent pricing you can trust.
               </p>
             </div>
 
@@ -709,12 +733,14 @@ export default function ServicesPage() {
                 gap: 8,
                 background: T.accentW,
                 color: T.ink,
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: 600,
-                padding: "12px 24px",
+                padding: "14px 28px",
                 borderRadius: 999,
                 textDecoration: "none",
-                transition: "all 0.25s ease",
+                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                position: "relative",
+                zIndex: 1,
               }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.transform = "scale(1.05)";
@@ -724,7 +750,7 @@ export default function ServicesPage() {
               }}
             >
               Calculate Price
-              <ArrowRight size={14} strokeWidth={2.5} />
+              <ArrowRight size={16} strokeWidth={2.5} />
             </a>
           </div>
         </div>
