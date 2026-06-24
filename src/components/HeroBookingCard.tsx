@@ -24,12 +24,12 @@ const TABS: { id: ServiceType; label: string }[] = [
   { id: "move-out", label: "Move-Out"},
 ];
 
-const SIZES = ["Studio", "1 Bedroom", "2 Bedrooms", "3 Bedrooms", "4+ Bedrooms"];
+const DURATIONS = ["1 hour", "2 hours", "3 hours", "4 hours", "5 hours", "6 hours", "7 hours", "8 hours", "9 hours", "10 hours"];
 
 export default function HeroBookingCard() {
   const [activeTab, setActiveTab] = useState<ServiceType>("home");
   const [address, setAddress]     = useState("");
-  const [size, setSize]           = useState("Studio");
+  const [duration, setDuration]   = useState("1 hour");
 
   function handleBook(e: React.FormEvent) {
     e.preventDefault();
@@ -169,7 +169,7 @@ export default function HeroBookingCard() {
             </div>
           </label>
 
-          {/* Home size */}
+          {/* Duration */}
           <label style={{ display: "block" }}>
             <div style={{
               display:    "flex",
@@ -179,9 +179,9 @@ export default function HeroBookingCard() {
             }}>
               <Home size={16} color={T.primary} strokeWidth={2} style={{ flexShrink: 0 }} />
               <select
-                value={size}
-                onChange={(e) => setSize(e.target.value)}
-                aria-label="Select home size"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                aria-label="Select duration"
                 style={{
                   flex:              1,
                   height:            52,
@@ -196,8 +196,8 @@ export default function HeroBookingCard() {
                   WebkitAppearance:  "none",
                 }}
               >
-                {SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {DURATIONS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
                 ))}
               </select>
               <span style={{ color: T.muted, fontSize: 11, flexShrink: 0 }}>▾</span>
@@ -246,6 +246,25 @@ export default function HeroBookingCard() {
           See prices
           <ArrowRight size={18} strokeWidth={2.5} />
         </button>
+
+        {/* Competitive pricing badge */}
+        <div style={{
+          background:    "rgba(21,94,99,0.08)",
+          border:        `1px solid rgba(21,94,99,0.16)`,
+          borderRadius:  8,
+          padding:       "10px 14px",
+          marginTop:     12,
+          marginBottom:  12,
+          display:       "flex",
+          alignItems:    "center",
+          gap:           8,
+          justifyContent: "center",
+        }}>
+          <span style={{ color: T.primary, fontSize: 12, fontWeight: 700 }}>✓</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: T.ink }}>
+            This price is <strong>20% cheaper</strong> than competitors
+          </span>
+        </div>
 
         {/* Trust footer */}
         <div style={{
