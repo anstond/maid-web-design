@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -19,7 +19,7 @@ const T = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Service = "standard" | "deep" | "move-out" | "recurring";
-type Duration = "2h" | "4h" | "8h";
+type Duration = "2h" | "3h" | "4h" | "6h" | "7h" | "8h";
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 const SERVICES: { id: Service; label: string; desc: string; icon: string }[] = [
@@ -30,17 +30,20 @@ const SERVICES: { id: Service; label: string; desc: string; icon: string }[] = [
 ];
 
 const DURATIONS: { id: Duration; label: string; sub: string }[] = [
-  { id: "2h", label: "2 hours",  sub: "Standard"   },
-  { id: "4h", label: "4 hours",  sub: "Deep clean" },
-  { id: "8h", label: "8 hours",  sub: "Full day"   },
+  { id: "2h", label: "2 hours",  sub: "Quick tidy"  },
+  { id: "3h", label: "3 hours",  sub: "Standard"    },
+  { id: "4h", label: "4 hours",  sub: "Deep clean"  },
+  { id: "6h", label: "6 hours",  sub: "Thorough"    },
+  { id: "7h", label: "7 hours",  sub: "Very deep"   },
+  { id: "8h", label: "8 hours",  sub: "Full day"    },
 ];
 
 // ─── Pricing matrix ───────────────────────────────────────────────────────────
 const PRICES: Record<Service, Record<Duration, number>> = {
-  standard:  { "2h": 39, "4h": 79, "8h": 159 },
-  deep:      { "2h": 59, "4h": 119, "8h": 239 },
-  "move-out":{ "2h": 79, "4h": 159, "8h": 319 },
-  recurring: { "2h": 31, "4h": 63, "8h": 127 },
+  standard:  { "2h": 39, "3h": 59, "4h": 79, "6h": 119, "7h": 139, "8h": 159 },
+  deep:      { "2h": 59, "3h": 89, "4h": 119, "6h": 179, "7h": 209, "8h": 239 },
+  "move-out":{ "2h": 79, "3h": 119, "4h": 159, "6h": 239, "7h": 279, "8h": 319 },
+  recurring: { "2h": 31, "3h": 47, "4h": 63, "6h": 95, "7h": 111, "8h": 127 },
 };
 
 // ─── Counter animation hook ───────────────────────────────────────────────────
@@ -88,9 +91,12 @@ export default function HeroInteractiveQuote() {
   const [duration, setDuration] = useState<Duration | null>(null);
   const [zipCode, setZipCode] = useState("");
 
-  const targetPrice  = zipCode && duration ? PRICES[service][duration] : null;
-  const displayPrice = useCountUp(targetPrice);
-  const priceReady   = targetPrice !== null && displayPrice === targetPrice;
+  const selectedPrice = zipCode && duration ? PRICES[service][duration] : null;
+  const startingPrice = zipCode ? 31 : null; // Cheapest across all options (recurring 2h)
+  const targetPrice   = selectedPrice ?? startingPrice;
+  const displayPrice  = useCountUp(targetPrice);
+  const priceReady    = targetPrice !== null && displayPrice === targetPrice;
+  const isStarting    = !selectedPrice && zipCode;
 
   // Inline keyframes injected once
   const styles = `
@@ -248,7 +254,7 @@ export default function HeroInteractiveQuote() {
 
           {/* ── Price reveal panel ──────────────────────────────────────── */}
           <div
-            className={priceReady ? "iq-price-ring" : ""}
+            className={priceReady && selectedPrice ? "iq-price-ring" : ""}
             style={{
               borderRadius: 14,
               padding:      "18px 20px",
@@ -267,14 +273,13 @@ export default function HeroInteractiveQuote() {
                   width:           42,
                   height:          42,
                   borderRadius:    "50%",
-                  background:      T.border,
+                  background:      "rgba(184,192,194,0.20)",
                   display:         "flex",
                   alignItems:      "center",
                   justifyContent:  "center",
                   flexShrink:      0,
-                  fontSize:        20,
                 }}>
-                  🔒
+                  <Lock size={20} strokeWidth={2} color={T.muted} />
                 </div>
                 <div>
                   <div style={{
@@ -285,20 +290,18 @@ export default function HeroInteractiveQuote() {
                     lineHeight:    1,
                     marginBottom:  4,
                   }}>
-                    $– –
+                    —
                   </div>
                   <div style={{ fontSize: 12, color: T.muted }}>
-                    {!zipCode
-                      ? "Enter your ZIP code above to unlock"
-                      : "Now pick a duration →"}
+                    Enter your ZIP code above to get started
                   </div>
                 </div>
               </div>
             ) : (
-              /* Revealed state */
+              /* Price revealed state */
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", color: "rgba(255,255,255,0.60)", textTransform: "uppercase", marginBottom: 8 }}>
-                  Your price
+                  Starting from
                 </div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 5 }}>
                   <span style={{
@@ -315,9 +318,7 @@ export default function HeroInteractiveQuote() {
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: "18px" }}>
-                  {service === "recurring"
-                    ? "Billed per visit · Cancel anytime · No contracts"
-                    : "One-time clean · Free re-clean if not 100% happy"}
+                  Standard clean · No contracts · Free re-clean
                 </div>
               </div>
             )}
@@ -338,12 +339,12 @@ export default function HeroInteractiveQuote() {
             }}>
               <span style={{ color: T.primary, fontSize: 12, fontWeight: 700 }}>✓</span>
               <span style={{ fontSize: 12, fontWeight: 500, color: T.ink }}>
-                This price is <strong>20% cheaper</strong> than competitors
+                Would be ${Math.round(displayPrice / 0.8)} with competitors
               </span>
             </div>
           )}
 
-          {/* ── CTA — only mounts when price is revealed ────────────────── */}
+          {/* ── CTA ─────────────────────────────────────────────────────── */}
           {targetPrice && (
             <button
               className="iq-cta"
@@ -381,7 +382,7 @@ export default function HeroInteractiveQuote() {
                 (e.currentTarget as HTMLButtonElement).style.transform   = "translateY(-1px)";
               }}
             >
-              Book this clean
+              {selectedPrice ? "Book this clean" : "See detailed quote"}
               <ArrowRight size={17} strokeWidth={2.5} />
             </button>
           )}
