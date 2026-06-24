@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, MapPin, Calendar, Home } from "lucide-react";
 
 const T = {
   primary:   "#155E63",
@@ -10,157 +10,270 @@ const T = {
   body:      "#6B7280",
   muted:     "#B8C0C2",
   canvas:    "#FCFBF8",
-  surface:   "#FFFFFF",
   soft:      "#F7F5F1",
+  softer:    "#EFE6D3",
   border:    "#E5DFD3",
   onPrimary: "#FFFFFF",
 };
 
-type Tab = "hourly" | "deep" | "recurring";
+type ServiceType = "home" | "office" | "move-out";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "hourly",    label: "Hourly"     },
-  { id: "deep",      label: "Deep Clean" },
-  { id: "recurring", label: "Recurring"  },
+const TABS: { id: ServiceType; label: string }[] = [
+  { id: "home",     label: "Home"    },
+  { id: "office",   label: "Office"  },
+  { id: "move-out", label: "Move-Out"},
 ];
 
+const SIZES = ["Studio", "1 Bedroom", "2 Bedrooms", "3 Bedrooms", "4+ Bedrooms"];
+
 export default function HeroBookingCard() {
-  const [activeTab, setActiveTab]   = useState<Tab>("hourly");
-  const [address,   setAddress]     = useState("");
+  const [activeTab, setActiveTab] = useState<ServiceType>("home");
+  const [address, setAddress]     = useState("");
+  const [size, setSize]           = useState("Studio");
 
   function handleBook(e: React.FormEvent) {
     e.preventDefault();
-    // Smooth-scroll to the full quote generator below
     document.getElementById("quote-generator")?.scrollIntoView({ behavior: "smooth" });
   }
 
   return (
-    <div
-      style={{
-        background:   "#fafaf9",
-        borderRadius: 16,
-        border:       "1px solid rgba(255,255,255,0.25)",
-        boxShadow:    "0 24px 56px rgba(0,0,0,0.35), 0 0 0 1px rgba(21,94,99,0.10)",
-        overflow:     "hidden",
-        fontFamily:   "var(--font-sans)",
-        width:        "100%",
-      }}
-    >
+    <div style={{
+      background:   T.canvas,
+      borderRadius: 16,
+      boxShadow:    "rgba(0,0,0,0.16) 0px 8px 40px 0px, rgba(0,0,0,0.06) 0px 2px 8px 0px",
+      overflow:     "hidden",
+      fontFamily:   "var(--font-sans)",
+      width:        "100%",
+    }}>
       {/* ── Card header ─────────────────────────────────────────────────── */}
-      <div
-        style={{
-          padding:         "20px 20px 16px",
-          borderBottom:    `1px solid ${T.border}`,
-          display:         "flex",
-          alignItems:      "flex-start",
-          justifyContent:  "space-between",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: T.ink, letterSpacing: "-0.02em", lineHeight: "24px" }}>
-            Check availability
-          </div>
-          <div style={{ fontSize: 12, color: T.body, marginTop: 3 }}>
-            Real-time slots and instant booking.
-          </div>
+      <div style={{
+        padding:      "22px 22px 18px",
+        borderBottom: `1px solid ${T.border}`,
+      }}>
+        <div style={{
+          fontSize:      18,
+          fontWeight:    700,
+          color:         T.ink,
+          letterSpacing: "-0.02em",
+          lineHeight:    "24px",
+          marginBottom:  3,
+        }}>
+          Book your cleaning
+        </div>
+        <div style={{ fontSize: 13, color: T.body, lineHeight: "18px" }}>
+          Real-time availability · Same-day slots in 50+ cities
         </div>
       </div>
 
-      {/* ── Address / ZIP input ─────────────────────────────────────────── */}
-      <form onSubmit={handleBook} style={{ padding: "24px 20px" }}>
-        <label htmlFor="hero-address" style={{ display: "block", fontSize: 12, fontWeight: 600, color: T.ink, marginBottom: 10, letterSpacing: "-0.01em" }}>
-          Your ZIP code
-        </label>
-        <div
-          style={{
-            display:       "flex",
-            alignItems:    "center",
-            gap:           10,
-            background:    T.soft,
-            border:        `1.5px solid ${T.border}`,
-            borderRadius:  12,
-            padding:       "0 14px",
-            transition:    "border-color 0.2s, box-shadow 0.2s",
-          }}
-          onFocus={(e) => {
-            if (e.currentTarget === e.target) return;
-            (e.currentTarget as HTMLDivElement).style.borderColor = T.primary;
-            (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 2px rgba(21,94,99,0.1)`;
-          }}
-        >
-          <MapPin size={17} strokeWidth={2} style={{ color: T.primary, flexShrink: 0 }} />
-          <input
-            id="hero-address"
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="ZIP code"
+      {/* ── Service type tabs ───────────────────────────────────────────── */}
+      <div style={{
+        padding:    "10px 10px 0",
+        background: T.soft,
+        display:    "flex",
+        gap:        4,
+      }}>
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
             style={{
-              flex:         1,
-              height:       44,
-              border:       "none",
-              background:   "transparent",
-              fontSize:     14,
-              color:        T.ink,
-              outline:      "none",
-              fontFamily:   "inherit",
+              flex:       1,
+              padding:    "10px 0",
+              border:     "none",
+              borderRadius: 36,
+              fontSize:   14,
+              fontWeight: activeTab === id ? 600 : 400,
+              cursor:     "pointer",
+              background: activeTab === id ? T.canvas : "transparent",
+              color:      activeTab === id ? T.ink : T.body,
+              boxShadow:  activeTab === id
+                ? "0 1px 6px rgba(0,0,0,0.10)"
+                : "none",
+              transition: "all 0.15s ease",
             }}
-            onFocus={(e) => {
-              const parent = e.currentTarget.parentElement as HTMLDivElement;
-              parent.style.borderColor = T.primary;
-              parent.style.boxShadow = `0 0 0 2px rgba(21,94,99,0.1)`;
-            }}
-            onBlur={(e) => {
-              const parent = e.currentTarget.parentElement as HTMLDivElement;
-              parent.style.borderColor = T.border;
-              parent.style.boxShadow = "none";
-            }}
-          />
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Form ────────────────────────────────────────────────────────── */}
+      <form onSubmit={handleBook} style={{ padding: "16px" }}>
+
+        {/* Stacked input rows */}
+        <div style={{
+          background:    T.soft,
+          borderRadius:  12,
+          overflow:      "hidden",
+          border:        `1px solid ${T.border}`,
+          marginBottom:  12,
+        }}>
+
+          {/* ZIP / Address */}
+          <label style={{ display: "block" }}>
+            <div style={{
+              display:     "flex",
+              alignItems:  "center",
+              gap:         12,
+              padding:     "0 16px",
+              borderBottom: `1px solid ${T.border}`,
+            }}>
+              <MapPin size={16} color={T.primary} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder="ZIP code or full address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                aria-label="Enter your ZIP code or address"
+                style={{
+                  flex:       1,
+                  height:     52,
+                  border:     "none",
+                  background: "transparent",
+                  fontSize:   14,
+                  color:      T.ink,
+                  outline:    "none",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+          </label>
+
+          {/* Date & time */}
+          <label style={{ display: "block" }}>
+            <div style={{
+              display:     "flex",
+              alignItems:  "center",
+              gap:         12,
+              padding:     "0 16px",
+              borderBottom: `1px solid ${T.border}`,
+            }}>
+              <Calendar size={16} color={T.primary} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <input
+                type="text"
+                placeholder="When? (date &amp; time)"
+                aria-label="Select date and time"
+                onFocus={(e) => { e.target.type = "datetime-local"; }}
+                onBlur={(e)  => { if (!e.target.value) e.target.type = "text"; }}
+                style={{
+                  flex:       1,
+                  height:     52,
+                  border:     "none",
+                  background: "transparent",
+                  fontSize:   14,
+                  color:      T.ink,
+                  outline:    "none",
+                  fontFamily: "inherit",
+                }}
+              />
+            </div>
+          </label>
+
+          {/* Home size */}
+          <label style={{ display: "block" }}>
+            <div style={{
+              display:    "flex",
+              alignItems: "center",
+              gap:        12,
+              padding:    "0 16px",
+            }}>
+              <Home size={16} color={T.primary} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                aria-label="Select home size"
+                style={{
+                  flex:              1,
+                  height:            52,
+                  border:            "none",
+                  background:        "transparent",
+                  fontSize:          14,
+                  color:             T.ink,
+                  outline:           "none",
+                  fontFamily:        "inherit",
+                  cursor:            "pointer",
+                  appearance:        "none",
+                  WebkitAppearance:  "none",
+                }}
+              >
+                {SIZES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <span style={{ color: T.muted, fontSize: 11, flexShrink: 0 }}>▾</span>
+            </div>
+          </label>
         </div>
+
+        {/* Primary CTA — pill */}
         <button
           type="submit"
           style={{
-            display:       "flex",
-            alignItems:    "center",
-            justifyContent: "center",
-            gap:           6,
-            width:         "100%",
-            marginTop:     12,
-            background:    T.primary,
-            color:         T.onPrimary,
-            border:        "none",
-            borderRadius:  999,
-            fontSize:      14,
-            fontWeight:    500,
-            padding:       "12px 18px",
-            cursor:        "pointer",
-            transition:    "all 0.2s ease",
-            opacity:       1,
-            boxShadow:     "0 4px 12px rgba(21,94,99,0.15)",
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
+            gap:             8,
+            width:           "100%",
+            background:      T.primary,
+            color:           T.onPrimary,
+            border:          "none",
+            borderRadius:    999,
+            fontSize:        16,
+            fontWeight:      600,
+            padding:         "16px 28px",
+            cursor:          "pointer",
+            letterSpacing:   "-0.01em",
+            boxShadow:       "0 4px 16px rgba(21,94,99,0.25)",
+            transition:      "all 0.2s ease",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.opacity = "0.95";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(21,94,99,0.25)";
+            (e.currentTarget as HTMLButtonElement).style.background  = T.primaryH;
+            (e.currentTarget as HTMLButtonElement).style.boxShadow   = "0 8px 28px rgba(21,94,99,0.35)";
+            (e.currentTarget as HTMLButtonElement).style.transform   = "translateY(-1px)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(21,94,99,0.15)";
+            (e.currentTarget as HTMLButtonElement).style.background  = T.primary;
+            (e.currentTarget as HTMLButtonElement).style.boxShadow   = "0 4px 16px rgba(21,94,99,0.25)";
+            (e.currentTarget as HTMLButtonElement).style.transform   = "translateY(0)";
           }}
           onMouseDown={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.98)";
+            (e.currentTarget as HTMLButtonElement).style.transform   = "scale(0.98)";
           }}
           onMouseUp={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            (e.currentTarget as HTMLButtonElement).style.transform   = "translateY(-1px)";
           }}
         >
-          Check availability
-          <ArrowRight size={16} strokeWidth={2.5} />
+          See prices
+          <ArrowRight size={18} strokeWidth={2.5} />
         </button>
-        <p style={{ fontSize: 12, color: T.body, lineHeight: "16px", margin: "12px 0 0", textAlign: "center" }}>
-          Same-day appointments available
-        </p>
-      </form>
 
+        {/* Trust footer */}
+        <div style={{
+          display:         "flex",
+          alignItems:      "center",
+          justifyContent:  "center",
+          gap:             16,
+          marginTop:       14,
+          flexWrap:        "wrap",
+        }}>
+          {["No contracts", "Cancel anytime", "Free re-clean"].map((item) => (
+            <span
+              key={item}
+              style={{
+                fontSize:   11,
+                fontWeight: 500,
+                color:      T.body,
+                display:    "flex",
+                alignItems: "center",
+                gap:        4,
+              }}
+            >
+              <span style={{ color: T.primary, fontSize: 12, fontWeight: 700 }}>✓</span>
+              {item}
+            </span>
+          ))}
+        </div>
+      </form>
     </div>
   );
 }

@@ -7,33 +7,29 @@ import {
   Check,
   Phone,
   Mail,
-  MapPin,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import QuoteGenerator from "@/components/QuoteGenerator";
 import HeroBookingCard from "@/components/HeroBookingCard";
-import { useState } from "react";
+
 
 const heroStyles = `
   @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+  @keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0);    }
   }
 
-  .hero-headline {
-    animation: fadeInUp 0.6s ease-out 0.1s both;
-  }
-
-  .hero-subtext {
-    animation: fadeInUp 0.6s ease-out 0.2s both;
-  }
+  .hero-eyebrow  { animation: fadeInUp    0.55s ease-out 0.05s both; }
+  .hero-headline { animation: fadeInUp    0.60s ease-out 0.15s both; }
+  .hero-subtext  { animation: fadeInUp    0.60s ease-out 0.25s both; }
+  .hero-proof    { animation: fadeInUp    0.60s ease-out 0.35s both; }
+  .hero-chips    { animation: fadeInUp    0.60s ease-out 0.45s both; }
+  .hero-card     { animation: fadeInRight 0.65s ease-out 0.20s both; }
 `;
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -286,77 +282,279 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      {/* ── Hero — Uber-style split layout (hero-band-light) ─────────────── */}
       <section style={{
-        background: T.ink,
-        boxSizing: "border-box",
-        minHeight: "calc(100svh - 66px)",
-        padding: "60px 20px 80px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        position: "relative",
-        overflow: "hidden",
+        background: T.canvas,
+        boxSizing:  "border-box",
+        minHeight:  "calc(100svh - 66px)",
+        display:    "flex",
+        alignItems: "stretch",
+        position:   "relative",
+        overflow:   "hidden",
       }}>
-        {/* Full-bleed background image with refined overlay */}
-        <div style={{ position: "absolute", inset: 0 }}>
-          <Image
-            src="/images/hero-3-final.png"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            style={{ objectFit: "cover", objectPosition: "center" }}
-          />
-          {/* Uniform overlay for text contrast */}
+        {/* ── Left column: headline content on canvas ───────────────────── */}
+        <div
+          className="hidden lg:flex"
+          style={{
+            flex:          "0 0 54%",
+            maxWidth:      "54%",
+            padding:       "72px 48px 72px max(5vw, 40px)",
+            flexDirection: "column",
+            justifyContent:"center",
+            position:      "relative",
+            zIndex:        1,
+          }}
+        >
+          {/* Eyebrow */}
           <div
+            className="hero-eyebrow"
             style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(180deg, rgba(8,43,48,0.62) 0%, rgba(8,43,48,0.58) 50%, rgba(8,43,48,0.62) 100%)",
+              display:      "inline-flex",
+              alignItems:   "center",
+              gap:          8,
+              background:   T.accentS,
+              borderRadius: 999,
+              padding:      "5px 14px 5px 8px",
+              marginBottom: 32,
+              width:        "fit-content",
             }}
-          />
-        </div>
-
-        {/* Centered content wrapper */}
-        <div style={{ maxWidth: 700, width: "100%", position: "relative", zIndex: 1, textAlign: "center" }}>
-          {/* Headline */}
-          <h1 className="hero-headline" style={{
-            fontSize: "clamp(48px, 6vw, 72px)",
-            fontWeight: 700,
-            lineHeight: "1.15",
-            color: T.onPrimary,
-            margin: "0 0 24px",
-            letterSpacing: "-0.02em",
-          }}>
-            Get your <span style={{ fontWeight: 700 }}>weekends</span> back.
-          </h1>
-
-          {/* Sub-headline — trust-focused */}
-          <p className="hero-subtext" style={{
-            fontSize: 20,
-            fontWeight: 500,
-            lineHeight: "32px",
-            color: "rgba(255,255,255,0.92)",
-            margin: "0 0 32px",
-            maxWidth: "100%",
-          }}>
-            Trusted apartment cleaning for busy renters.
-          </p>
-
-          {/* Social proof — compact */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 40, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.95)" }}>
-            <div style={{ display: "flex", gap: 2, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
-              {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill="currentColor" strokeWidth={0} />)}
+          >
+            <div style={{
+              background:   T.primary,
+              borderRadius: "50%",
+              width:        22,
+              height:       22,
+              display:      "flex",
+              alignItems:   "center",
+              justifyContent:"center",
+              flexShrink:   0,
+            }}>
+              <span style={{ color: T.onPrimary, fontSize: 12, fontWeight: 700, lineHeight: 1 }}>✓</span>
             </div>
-            <span>4.8 on Google</span>
-            <span style={{ color: "rgba(255,255,255,0.50)", fontSize: 13 }}>|</span>
-            <span style={{ fontSize: 14 }}>150k+ cleaned</span>
+            <span style={{
+              fontSize:      12,
+              fontWeight:    600,
+              color:         T.primary,
+              letterSpacing: "0.04em",
+            }}>
+              150,000 cleanings delivered
+            </span>
           </div>
 
-          {/* Check Availability Input — hero CTA */}
-          <HeroPriceInput T={T} MapPin={MapPin} ArrowRight={ArrowRight} />
+          {/* Headline */}
+          <h1
+            className="hero-headline"
+            style={{
+              fontSize:      "clamp(40px, 4.2vw, 64px)",
+              fontWeight:    700,
+              lineHeight:    "1.08",
+              letterSpacing: "-0.035em",
+              color:         T.ink,
+              margin:        "0 0 24px",
+            }}
+          >
+            A spotless home,<br />
+            <span style={{ color: T.primary }}>on your schedule.</span>
+          </h1>
+
+          {/* Sub-headline */}
+          <p
+            className="hero-subtext"
+            style={{
+              fontSize:    18,
+              fontWeight:  400,
+              lineHeight:  "1.65",
+              color:       T.body,
+              margin:      "0 0 44px",
+              maxWidth:    440,
+            }}
+          >
+            Background-checked pros. Same-day slots available in 50+ cities.
+            100% satisfaction — or we return at no cost.
+          </p>
+
+          {/* Social proof row */}
+          <div
+            className="hero-proof"
+            style={{
+              display:     "flex",
+              alignItems:  "center",
+              gap:         24,
+              marginBottom: 44,
+              flexWrap:    "wrap",
+            }}
+          >
+            {/* Stars + rating */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", gap: 3 }}>
+                {[1,2,3,4,5].map((i) => (
+                  <Star key={i} size={15} fill="#E4B44B" color="#E4B44B" strokeWidth={0} />
+                ))}
+              </div>
+              <div>
+                <span style={{ fontSize: 15, fontWeight: 700, color: T.ink }}>4.8</span>
+                <span style={{ fontSize: 13, color: T.body, marginLeft: 4 }}>on Google</span>
+              </div>
+            </div>
+
+            <div style={{ width: 1, height: 28, background: T.border, flexShrink: 0 }} />
+
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.ink, lineHeight: "20px" }}>150k+</div>
+              <div style={{ fontSize: 12, color: T.body, lineHeight: "16px" }}>cleanings done</div>
+            </div>
+
+            <div style={{ width: 1, height: 28, background: T.border, flexShrink: 0 }} />
+
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.ink, lineHeight: "20px" }}>1,460+</div>
+              <div style={{ fontSize: 12, color: T.body, lineHeight: "16px" }}>vetted pros</div>
+            </div>
+          </div>
+
+          {/* Service category chips */}
+          <div
+            className="hero-chips"
+            style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            {[
+              { label: "Standard Clean", active: true  },
+              { label: "Deep Clean",     active: false },
+              { label: "Move-Out",       active: false },
+              { label: "Recurring",      active: false },
+            ].map(({ label, active }) => (
+              <div
+                key={label}
+                style={{
+                  display:      "inline-flex",
+                  alignItems:   "center",
+                  gap:          6,
+                  background:   active ? T.ink : T.soft,
+                  color:        active ? "#fff" : T.ink,
+                  fontSize:     13,
+                  fontWeight:   500,
+                  padding:      "8px 16px",
+                  borderRadius: 999,
+                  border:       active ? "none" : `1px solid ${T.border}`,
+                  cursor:       "pointer",
+                  transition:   "all 0.15s ease",
+                }}
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Right column: hero image + floating booking card ──────────── */}
+        <div style={{
+          flex:           "1 1 0",
+          position:       "relative",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "flex-start",
+          padding:        "48px 40px 48px 40px",
+        }}>
+          {/* Full-bleed background image on right half */}
+          <div style={{ position: "absolute", inset: 0 }}>
+            <Image
+              src="/images/hero-3-final.png"
+              alt="Professional cleaner working in a bright apartment"
+              fill
+              priority
+              sizes="48vw"
+              style={{ objectFit: "cover", objectPosition: "center top" }}
+            />
+            {/* Gradient: blends left into canvas, adds depth on right */}
+            <div style={{
+              position:   "absolute",
+              inset:      0,
+              background: "linear-gradient(to right, rgba(252,251,248,1) 0%, rgba(252,251,248,0.55) 22%, rgba(8,43,48,0.38) 70%, rgba(8,43,48,0.52) 100%)",
+            }} />
+          </div>
+
+          {/* Floating booking card */}
+          <div
+            className="hero-card"
+            style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 400 }}
+          >
+            <HeroBookingCard />
+          </div>
+        </div>
+
+        {/* ── Mobile hero (stacked) — shown only on < lg ───────────────── */}
+        <div
+          className="flex lg:hidden"
+          style={{
+            position:       "absolute",
+            inset:          0,
+            flexDirection:  "column",
+            alignItems:     "center",
+            justifyContent: "center",
+            padding:        "48px 20px 64px",
+            zIndex:         1,
+          }}
+        >
+          {/* Mobile background */}
+          <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+            <Image
+              src="/images/hero-3-final.png"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              style={{ objectFit: "cover", objectPosition: "center" }}
+            />
+            <div style={{
+              position:   "absolute",
+              inset:      0,
+              background: "linear-gradient(180deg, rgba(8,43,48,0.70) 0%, rgba(8,43,48,0.65) 60%, rgba(8,43,48,0.80) 100%)",
+            }} />
+          </div>
+
+          {/* Mobile headline */}
+          <div style={{ position: "relative", zIndex: 1, textAlign: "center", marginBottom: 36 }}>
+            <h1
+              className="hero-headline"
+              style={{
+                fontSize:      "clamp(36px, 8vw, 52px)",
+                fontWeight:    700,
+                lineHeight:    "1.1",
+                letterSpacing: "-0.03em",
+                color:         "#fff",
+                margin:        "0 0 16px",
+              }}
+            >
+              A spotless home,<br />on your schedule.
+            </h1>
+            <p
+              className="hero-subtext"
+              style={{
+                fontSize:   16,
+                lineHeight: "1.6",
+                color:      "rgba(255,255,255,0.80)",
+                margin:     "0 0 20px",
+              }}
+            >
+              Background-checked pros. Same-day slots.
+            </p>
+            {/* Mobile social proof */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+              <div style={{ display: "flex", gap: 2 }}>
+                {[1,2,3,4,5].map((i) => (
+                  <Star key={i} size={13} fill="#E4B44B" color="#E4B44B" strokeWidth={0} />
+                ))}
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>
+                4.8 · 150k+ cleaned
+              </span>
+            </div>
+          </div>
+
+          {/* Mobile booking card */}
+          <div className="hero-card" style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 420 }}>
+            <HeroBookingCard />
+          </div>
         </div>
       </section>
 
@@ -1193,96 +1391,3 @@ export default function Home() {
   );
 }
 
-function HeroPriceInput({ T, MapPin, ArrowRight }: any) {
-  const [zip, setZip] = useState("");
-
-  return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: 14,
-      width: "100%",
-      maxWidth: "340px",
-      margin: "0 auto",
-    }}>
-      {/* Input container */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        background: T.surface,
-        border: `1.5px solid ${T.border}`,
-        borderRadius: 12,
-        padding: "0 16px",
-        transition: "border-color 0.2s, box-shadow 0.2s",
-      }}>
-        <MapPin size={17} strokeWidth={2} style={{ color: T.primary, flexShrink: 0 }} />
-        <input
-          id="hero-zip-input"
-          type="text"
-          placeholder="Your ZIP code"
-          value={zip}
-          onChange={(e) => setZip(e.target.value)}
-          aria-label="Enter your ZIP code to check availability"
-          style={{
-            flex: 1,
-            height: 44,
-            border: "none",
-            background: "transparent",
-            fontSize: 14,
-            color: T.ink,
-            outline: "none",
-            fontFamily: "inherit",
-          }}
-        />
-      </div>
-
-      {/* CTA Button */}
-      <button style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        width: "100%",
-        background: T.primary,
-        color: T.onPrimary,
-        border: "none",
-        borderRadius: 999,
-        fontSize: 14,
-        fontWeight: 600,
-        padding: "12px 28px",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        boxShadow: "0 4px 12px rgba(21,94,99,0.15)",
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.opacity = "0.95";
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 8px 24px rgba(21,94,99,0.25)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px rgba(21,94,99,0.15)";
-      }}
-      onMouseDown={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.98)";
-      }}
-      onMouseUp={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-      }}>
-        Check availability
-        <ArrowRight size={16} strokeWidth={2.5} />
-      </button>
-
-      {/* Helper text */}
-      <p style={{
-        fontSize: 12,
-        color: "rgba(255,255,255,0.60)",
-        lineHeight: "16px",
-        margin: 0,
-        textAlign: "center",
-      }}>
-        Same-day availability in 50+ cities
-      </p>
-    </div>
-  );
-}
