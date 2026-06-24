@@ -28,23 +28,34 @@ const T = {
   onPrimary: "#FFFFFF",  // Pure White
 };
 
-const BEDROOM_OPTIONS = [1, 2, 3, 4, 5, 6];
-const BATHROOM_OPTIONS = [1, 1.5, 2, 2.5, 3, 4];
-
-interface FrequencyOption {
+// ─── Options Constants ────────────────────────────────────────────────────────
+interface ServiceOption {
   id: string;
   name: string;
-  discount: number;
+  rate: number; // Hourly rate per maid
   desc: string;
-  badge: string;
 }
 
-const FREQUENCY_OPTIONS: FrequencyOption[] = [
-  { id: "one-time", name: "One-time", discount: 0, desc: "Perfect for deep cleans", badge: "" },
-  { id: "weekly", name: "Weekly", discount: 0.20, desc: "Most popular", badge: "Save 20%" },
-  { id: "biweekly", name: "Biweekly", discount: 0.15, desc: "Great balance", badge: "Save 15%" },
-  { id: "monthly", name: "Monthly", discount: 0.10, desc: "Steady clean", badge: "Save 10%" },
+const SERVICE_OPTIONS: ServiceOption[] = [
+  { id: "regular", name: "Regular cleaning", rate: 30, desc: "Standard dusting, vacuuming & surface wipes" },
+  { id: "deep", name: "Deep cleaning", rate: 45, desc: "Intense clean for baseboards, vents & grime" },
+  { id: "commercial", name: "Commercial cleaning", rate: 50, desc: "Professional office & workspace cleanings" },
 ];
+
+interface LocationOption {
+  id: string;
+  name: string;
+  surcharge: number; // Flat surcharge
+}
+
+const LOCATION_OPTIONS: LocationOption[] = [
+  { id: "nyc", name: "New York City", surcharge: 10 },
+  { id: "miami", name: "Miami", surcharge: 0 },
+  { id: "la", name: "Los Angeles", surcharge: 5 },
+];
+
+const HOUR_OPTIONS = [2, 3, 4, 5, 6, 8];
+const MAID_OPTIONS = [1, 2, 3, 4];
 
 interface AddonOption {
   id: string;
@@ -56,18 +67,19 @@ interface AddonOption {
 
 export default function QuoteGenerator() {
   // ─── State ──────────────────────────────────────────────────────────────────
-  const [bedrooms, setBedrooms] = useState<number>(2);
-  const [bathrooms, setBathrooms] = useState<number>(1.5);
-  const [sqft, setSqft] = useState<number>(1200);
-  const [frequency, setFrequency] = useState<string>("weekly");
+  const [service, setService] = useState<string>("regular");
+  const [location, setLocation] = useState<string>("nyc");
+  const [hours, setHours] = useState<number>(3);
+  const [maids, setMaids] = useState<number>(2);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(["deep_clean"]);
 
+  // ─── Add-on options definition ──────────────────────────────────────────────
   const addonOptions = useMemo<AddonOption[]>(() => [
     {
       id: "deep_clean",
-      name: "Deep cleaning",
+      name: "Deep cleaning upgrade",
       price: 50,
-      desc: "Detailed scrubbing of baseboards, vents & doors",
+      desc: "Additional deep sanitation for detailed areas",
       icon: <Sparkles size={18} />,
     },
     {
@@ -109,38 +121,33 @@ export default function QuoteGenerator() {
 
   // ─── Pricing Logic ──────────────────────────────────────────────────────────
   const pricing = useMemo(() => {
-    const basePrice = 80;
-    const bedroomSurcharge = (bedrooms - 1) * 25;
-    const bathroomSurcharge = (bathrooms - 1) * 30;
-    const sqftSurcharge = Math.max(0, sqft - 1000) * 0.05;
+    const selectedService = SERVICE_OPTIONS.find((s) => s.id === service) || SERVICE_OPTIONS[0];
+    const hourlyRate = selectedService.rate;
 
-    const houseSubtotal = basePrice + bedroomSurcharge + bathroomSurcharge + sqftSurcharge;
+    const baseLabor = hours * maids * hourlyRate;
 
-    const selectedFreq = FREQUENCY_OPTIONS.find((f) => f.id === frequency);
-    const discountRate = selectedFreq ? selectedFreq.discount : 0;
-    const discountAmount = houseSubtotal * discountRate;
+    const selectedLoc = LOCATION_OPTIONS.find((l) => l.id === location) || LOCATION_OPTIONS[0];
+    const locationSurcharge = selectedLoc.surcharge;
 
     const addonsTotal = selectedAddons.reduce((sum, id) => {
       const addon = addonOptions.find((a) => a.id === id);
       return sum + (addon ? addon.price : 0);
     }, 0);
 
-    const subtotal = houseSubtotal + addonsTotal;
-    const total = (houseSubtotal - discountAmount) + addonsTotal;
+    const subtotal = baseLabor + locationSurcharge + addonsTotal;
+    const total = subtotal; // No direct subscription discount here unless we add it, keeps it simple and clean.
 
     return {
-      basePrice,
-      bedroomSurcharge,
-      bathroomSurcharge,
-      sqftSurcharge,
-      houseSubtotal,
-      discountRate,
-      discountAmount,
+      hourlyRate,
+      baseLabor,
+      locationSurcharge,
       addonsTotal,
       subtotal,
       total,
+      serviceName: selectedService.name,
+      locationName: selectedLoc.name,
     };
-  }, [bedrooms, bathrooms, sqft, frequency, selectedAddons, addonOptions]);
+  }, [service, location, hours, maids, selectedAddons, addonOptions]);
 
   const toggleAddon = (id: string) => {
     setSelectedAddons((prev) =>
@@ -152,7 +159,7 @@ export default function QuoteGenerator() {
     <div id="quote-generator" style={{ background: T.canvas, padding: "88px 32px", borderTop: `1px solid ${T.border}`, fontFamily: "var(--font-sans)" }}>
       <div style={{ maxWidth: 1280, margin: "0 auto" }}>
         
-        {/* Section Header (Sentence-case, No decorative icons/accent overlays) */}
+        {/* Section Header */}
         <div style={{ marginBottom: 56 }}>
           <p style={{
             fontSize: 12,
@@ -175,17 +182,17 @@ export default function QuoteGenerator() {
             Live quote generator
           </h2>
           <p style={{ fontSize: 16, color: T.body, maxWidth: 600, margin: 0, lineHeight: "26px" }}>
-            Select your preferences below to instantly calculate your custom quote. No commitments, no hidden fees.
+            Configure your cleaning needs below to view your custom pricing in real-time. No commitments, transparent billing.
           </p>
         </div>
 
-        {/* Form & Receipt Grid (Level 0 flat cards, strictly styled by DESIGN.md) */}
+        {/* Form & Receipt Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-10 items-start">
           
           {/* Left: Input Stack (Flat card-content borders, zero shadows) */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             
-            {/* Card 1: Space Details */}
+            {/* Card 1: Service & Location Selection */}
             <div style={{
               background: T.surface,
               border: `1px solid ${T.border}`,
@@ -193,164 +200,148 @@ export default function QuoteGenerator() {
               padding: 32,
             }}>
               <h3 style={{ fontSize: 18, fontWeight: 700, color: T.ink, margin: "0 0 24px" }}>
-                1. Tell us about your space
+                1. Select service & location
               </h3>
 
-              {/* Bedrooms selector (Pill style buttons) */}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 12 }}>
-                  Number of bedrooms
-                </label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {BEDROOM_OPTIONS.map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => setBedrooms(num)}
-                      style={{
-                        padding: "10px 22px",
-                        borderRadius: 999, // Canonical rounded.pill
-                        fontSize: 14,
-                        fontWeight: 600,
-                        border: "1px solid",
-                        borderColor: bedrooms === num ? T.primary : T.border,
-                        background: bedrooms === num ? T.primary : T.soft,
-                        color: bedrooms === num ? T.onPrimary : T.ink,
-                        cursor: "pointer",
-                        fontFamily: "var(--font-sans)",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      {num === 6 ? "6+ beds" : `${num} ${num === 1 ? "bed" : "beds"}`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Bathrooms selector (Pill style buttons) */}
+              {/* Service Selection */}
               <div style={{ marginBottom: 28 }}>
                 <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 12 }}>
-                  Number of bathrooms
+                  Type of service
                 </label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {BATHROOM_OPTIONS.map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => setBathrooms(num)}
-                      style={{
-                        padding: "10px 22px",
-                        borderRadius: 999, // Canonical rounded.pill
-                        fontSize: 14,
-                        fontWeight: 600,
-                        border: "1px solid",
-                        borderColor: bathrooms === num ? T.primary : T.border,
-                        background: bathrooms === num ? T.primary : T.soft,
-                        color: bathrooms === num ? T.onPrimary : T.ink,
-                        cursor: "pointer",
-                        fontFamily: "var(--font-sans)",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      {num === 4 ? "4+ baths" : `${num} ${num === 1 ? "bath" : "baths"}`}
-                    </button>
-                  ))}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                  {SERVICE_OPTIONS.map((opt) => {
+                    const isActive = service === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setService(opt.id)}
+                        style={{
+                          padding: "10px 22px",
+                          borderRadius: 999, // Canonical rounded.pill
+                          fontSize: 14,
+                          fontWeight: 600,
+                          border: "1px solid",
+                          borderColor: isActive ? T.primary : T.border,
+                          background: isActive ? T.primary : T.soft,
+                          color: isActive ? T.onPrimary : T.ink,
+                          cursor: "pointer",
+                          fontFamily: "var(--font-sans)",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {opt.name} (${opt.rate}/hr)
+                      </button>
+                    );
+                  })}
                 </div>
+                <p style={{ fontSize: 12, color: T.body, margin: "6px 0 0" }}>
+                  {SERVICE_OPTIONS.find((s) => s.id === service)?.desc}
+                </p>
               </div>
 
-              <div style={{ height: 1, background: T.border, marginBottom: 24 }} />
-
-              {/* Square Footage Slider (Flat geometry) */}
+              {/* Location Selection */}
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600, color: T.ink }}>
-                    Approximate home size
-                  </label>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: T.primary }}>
-                    {sqft.toLocaleString()} sq. ft.
-                  </span>
-                </div>
-                
-                <input
-                  type="range"
-                  min="500"
-                  max="5000"
-                  step="50"
-                  value={sqft}
-                  onChange={(e) => setSqft(Number(e.target.value))}
-                  style={{
-                    width: "100%",
-                    height: 4,
-                    borderRadius: 0, // Flat geometry for slider track
-                    background: T.border,
-                    outline: "none",
-                    cursor: "pointer",
-                    WebkitAppearance: "none",
-                  }}
-                  className="accent-[#155E63]"
-                />
-                
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: T.body, marginTop: 8 }}>
-                  <span>500 sq ft</span>
-                  <span>1,000 (Base)</span>
-                  <span>3,000 sq ft</span>
-                  <span>5,000 sq ft</span>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 12 }}>
+                  Service location
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {LOCATION_OPTIONS.map((opt) => {
+                    const isActive = location === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setLocation(opt.id)}
+                        style={{
+                          padding: "10px 22px",
+                          borderRadius: 999, // Canonical rounded.pill
+                          fontSize: 14,
+                          fontWeight: 600,
+                          border: "1px solid",
+                          borderColor: isActive ? T.primary : T.border,
+                          background: isActive ? T.primary : T.soft,
+                          color: isActive ? T.onPrimary : T.ink,
+                          cursor: "pointer",
+                          fontFamily: "var(--font-sans)",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {opt.name}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Frequency Selector (Category-button style pills, Level 0) */}
+            {/* Card 2: Hours & Maids Selection */}
             <div style={{
               background: T.surface,
               border: `1px solid ${T.border}`,
               borderRadius: 16,
               padding: 32,
             }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.ink, margin: "0 0 8px" }}>
-                2. Choose frequency
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: T.ink, margin: "0 0 24px" }}>
+                2. Select time & labor
               </h3>
-              <p style={{ fontSize: 13, color: T.body, margin: "0 0 24px" }}>
-                Select a routine scheduling for continuous service discount.
-              </p>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                {FREQUENCY_OPTIONS.map((opt) => {
-                  const isActive = frequency === opt.id;
-                  return (
+              {/* Hours Selection */}
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 12 }}>
+                  Estimated cleaning hours
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {HOUR_OPTIONS.map((num) => (
                     <button
-                      key={opt.id}
-                      onClick={() => setFrequency(opt.id)}
+                      key={num}
+                      onClick={() => setHours(num)}
                       style={{
                         padding: "10px 22px",
                         borderRadius: 999, // Canonical rounded.pill
                         fontSize: 14,
                         fontWeight: 600,
                         border: "1px solid",
-                        borderColor: isActive ? T.primary : T.border,
-                        background: isActive ? T.primary : "transparent",
-                        color: isActive ? T.onPrimary : T.ink,
+                        borderColor: hours === num ? T.primary : T.border,
+                        background: hours === num ? T.primary : T.soft,
+                        color: hours === num ? T.onPrimary : T.ink,
                         cursor: "pointer",
                         fontFamily: "var(--font-sans)",
                         transition: "all 0.15s ease",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
                       }}
                     >
-                      <span>{opt.name}</span>
-                      {opt.badge && (
-                        <span style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          background: isActive ? T.accentW : T.accentS,
-                          color: T.ink,
-                          padding: "2px 8px",
-                          borderRadius: 999,
-                        }}>
-                          {opt.badge}
-                        </span>
-                      )}
+                      {num} {num === 1 ? "hour" : "hours"}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+              </div>
+
+              {/* Maids Selection */}
+              <div>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 12 }}>
+                  Number of cleaning professionals
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {MAID_OPTIONS.map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setMaids(num)}
+                      style={{
+                        padding: "10px 22px",
+                        borderRadius: 999, // Canonical rounded.pill
+                        fontSize: 14,
+                        fontWeight: 600,
+                        border: "1px solid",
+                        borderColor: maids === num ? T.primary : T.border,
+                        background: maids === num ? T.primary : T.soft,
+                        color: maids === num ? T.onPrimary : T.ink,
+                        cursor: "pointer",
+                        fontFamily: "var(--font-sans)",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {num} {num === 1 ? "maid" : "maids"}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -427,49 +418,31 @@ export default function QuoteGenerator() {
               {/* Line Items */}
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 
-                {/* Base clean */}
+                {/* Labour base cost */}
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
                   <div>
-                    <span style={{ fontWeight: 600, color: T.ink }}>Base clean</span>
+                    <span style={{ fontWeight: 600, color: T.ink }}>{pricing.serviceName}</span>
                     <span style={{ fontSize: 12, color: T.body, display: "block", marginTop: 2 }}>
-                      1 bed, 1 bath (up to 1,000 sq ft)
+                      {hours} hours × {maids} {maids === 1 ? "professional" : "professionals"} at ${pricing.hourlyRate}/hr
                     </span>
                   </div>
                   <span style={{ fontWeight: 600, color: T.ink }}>
-                    ${pricing.basePrice.toFixed(2)}
+                    ${pricing.baseLabor.toFixed(2)}
                   </span>
                 </div>
 
-                {/* Additional Rooms */}
-                {(pricing.bedroomSurcharge > 0 || pricing.bathroomSurcharge > 0) && (
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-                    <div>
-                      <span style={{ fontWeight: 600, color: T.ink }}>Room surcharges</span>
-                      <span style={{ fontSize: 12, color: T.body, display: "block", marginTop: 2 }}>
-                        {bedrooms > 1 ? `+${bedrooms - 1} bed(s) ` : ""}
-                        {bathrooms > 1 ? `+${bathrooms - 1} bath(s) ` : ""}
-                      </span>
-                    </div>
-                    <span style={{ fontWeight: 600, color: T.ink }}>
-                      ${(pricing.bedroomSurcharge + pricing.bathroomSurcharge).toFixed(2)}
+                {/* Location surcharge */}
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                  <div>
+                    <span style={{ fontWeight: 600, color: T.ink }}>Service region</span>
+                    <span style={{ fontSize: 12, color: T.body, display: "block", marginTop: 2 }}>
+                      {pricing.locationName} surcharge
                     </span>
                   </div>
-                )}
-
-                {/* Square Footage Surcharge */}
-                {pricing.sqftSurcharge > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-                    <div>
-                      <span style={{ fontWeight: 600, color: T.ink }}>Space adjustment</span>
-                      <span style={{ fontSize: 12, color: T.body, display: "block", marginTop: 2 }}>
-                        +{Math.round(sqft - 1000).toLocaleString()} extra sq. ft.
-                      </span>
-                    </div>
-                    <span style={{ fontWeight: 600, color: T.ink }}>
-                      ${pricing.sqftSurcharge.toFixed(2)}
-                    </span>
-                  </div>
-                )}
+                  <span style={{ fontWeight: 600, color: T.ink }}>
+                    ${pricing.locationSurcharge.toFixed(2)}
+                  </span>
+                </div>
 
                 {/* Selected Add-ons */}
                 {selectedAddons.length > 0 && (
@@ -492,28 +465,6 @@ export default function QuoteGenerator() {
                   </div>
                 )}
 
-                {/* Frequency Discount */}
-                {pricing.discountAmount > 0 && (
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: 13,
-                    background: T.soft,
-                    padding: "10px 14px",
-                    borderRadius: 999, // Pill style tag
-                    color: T.primary,
-                    fontWeight: 600,
-                    marginTop: 4,
-                  }}>
-                    <span>
-                      {FREQUENCY_OPTIONS.find((f) => f.id === frequency)?.name} discount ({(pricing.discountRate * 100)}%)
-                    </span>
-                    <span>
-                      -${pricing.discountAmount.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-
               </div>
 
               {/* Simple Solid Divider */}
@@ -530,7 +481,7 @@ export default function QuoteGenerator() {
                   <div>
                     <span style={{ fontSize: 18, fontWeight: 700, color: T.ink }}>Estimated total</span>
                     <span style={{ display: "block", fontSize: 11, color: T.body, marginTop: 2 }}>
-                      {frequency === "one-time" ? "per visit" : `per ${frequency.replace("ly", "")} visit`}
+                      Total booking cost
                     </span>
                   </div>
                   <span style={{ fontSize: 32, fontWeight: 700, color: T.primary, letterSpacing: "-0.03em" }}>
