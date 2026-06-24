@@ -27,35 +27,12 @@ const heroStyles = `
     }
   }
 
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
-      transform: scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .hero-eyebrow {
+  .hero-headline {
     animation: fadeInUp 0.6s ease-out 0.1s both;
   }
 
-  .hero-headline {
-    animation: fadeInUp 0.6s ease-out 0.2s both;
-  }
-
   .hero-subtext {
-    animation: fadeInUp 0.6s ease-out 0.3s both;
-  }
-
-  .hero-proof {
-    animation: fadeInUp 0.6s ease-out 0.4s both;
-  }
-
-  .hero-card {
-    animation: fadeInScale 0.6s ease-out 0.5s both;
+    animation: fadeInUp 0.6s ease-out 0.2s both;
   }
 `;
 
@@ -344,18 +321,6 @@ export default function Home() {
 
         {/* Centered content wrapper */}
         <div style={{ maxWidth: 700, width: "100%", position: "relative", zIndex: 1, textAlign: "center" }}>
-          {/* Eyebrow */}
-          <p className="hero-eyebrow" style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: "#A7E0D8",
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            marginBottom: 20,
-          }}>
-            Expert Cleaning, Same-Day Available
-          </p>
-
           {/* Headline */}
           <h1 className="hero-headline" style={{
             fontSize: "clamp(48px, 6vw, 72px)",
@@ -374,27 +339,26 @@ export default function Home() {
             fontWeight: 500,
             lineHeight: "32px",
             color: "rgba(255,255,255,0.92)",
-            margin: "0 0 40px",
+            margin: "0 0 32px",
             maxWidth: "100%",
           }}>
             Trusted apartment cleaning for busy renters.
           </p>
 
-          {/* Trust row — prominent social proof */}
-          <div className="hero-proof" style={{ marginBottom: 48, display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap", fontSize: 17, fontWeight: 600, color: "rgba(255,255,255,0.98)" }}>
-            <div style={{ display: "flex", gap: 3, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
-              {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={16} fill="currentColor" strokeWidth={0} />)}
+          {/* Social proof — compact */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 40, fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.95)" }}>
+            <div style={{ display: "flex", gap: 2, color: "#E4B44B" }} aria-label="Rated 4.8 out of 5 stars">
+              {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill="currentColor" strokeWidth={0} />)}
             </div>
-            <span style={{ fontWeight: 700, color: T.onPrimary }}>4.8 on Google</span>
-            <span style={{ color: "rgba(255,255,255,0.60)", fontSize: 14 }}>|</span>
-            <span style={{ fontSize: 16 }}>150k+ cleaned</span>
+            <span>4.8 on Google</span>
+            <span style={{ color: "rgba(255,255,255,0.50)", fontSize: 13 }}>|</span>
+            <span style={{ fontSize: 14 }}>150k+ cleaned</span>
           </div>
 
-          {/* Check Price Input — hero CTA */}
+          {/* Check Availability Input — hero CTA */}
           <HeroPriceInput T={T} MapPin={MapPin} ArrowRight={ArrowRight} />
         </div>
       </section>
-
 
       {/* ── Partner logo strip ────────────────────────────────────────────── */}
       <section style={{ borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`, padding: "28px 32px" }}>
@@ -1236,21 +1200,11 @@ function HeroPriceInput({ T, MapPin, ArrowRight }: any) {
     <div style={{
       display: "flex",
       flexDirection: "column",
-      gap: 12,
+      gap: 14,
       width: "100%",
-      maxWidth: "300px",
+      maxWidth: "340px",
       margin: "0 auto",
     }}>
-      {/* Label */}
-      <label htmlFor="hero-zip-input" style={{
-        fontSize: 12,
-        fontWeight: 600,
-        color: "rgba(255,255,255,0.80)",
-        letterSpacing: "-0.01em",
-      }}>
-        Your ZIP code
-      </label>
-
       {/* Input container */}
       <div style={{
         display: "flex",
@@ -1266,9 +1220,10 @@ function HeroPriceInput({ T, MapPin, ArrowRight }: any) {
         <input
           id="hero-zip-input"
           type="text"
-          placeholder="e.g., 10001"
+          placeholder="Your ZIP code"
           value={zip}
           onChange={(e) => setZip(e.target.value)}
+          aria-label="Enter your ZIP code to check availability"
           style={{
             flex: 1,
             height: 44,
@@ -1294,7 +1249,7 @@ function HeroPriceInput({ T, MapPin, ArrowRight }: any) {
         border: "none",
         borderRadius: 999,
         fontSize: 14,
-        fontWeight: 500,
+        fontWeight: 600,
         padding: "12px 28px",
         cursor: "pointer",
         transition: "all 0.2s ease",
@@ -1321,12 +1276,12 @@ function HeroPriceInput({ T, MapPin, ArrowRight }: any) {
       {/* Helper text */}
       <p style={{
         fontSize: 12,
-        color: "rgba(255,255,255,0.65)",
+        color: "rgba(255,255,255,0.60)",
         lineHeight: "16px",
         margin: 0,
         textAlign: "center",
       }}>
-        Same-day appointments available
+        Same-day availability in 50+ cities
       </p>
     </div>
   );
