@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import QuoteGenerator from "@/components/QuoteGenerator";
 import HeroInteractiveQuote from "@/components/HeroInteractiveQuote";
-import HeroTestimonialsCarousel from "@/components/HeroTestimonialsCarousel";
 
 
 const heroStyles = `
@@ -192,6 +192,15 @@ const footerLinks: Record<string, string[]> = {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, color: T.ink }}>
       <style>{heroStyles}</style>
@@ -235,13 +244,13 @@ export default function Home() {
 
           <div className="hidden lg:flex" style={{ alignItems: "center", gap: 2 }}>
             {[
-              { label: "Home", active: true },
-              { label: "Services", active: false },
-              { label: "About Us", active: false },
-              { label: "Subscriptions", active: false },
-              { label: "Blog", active: false },
-            ].map(({ label, active }) => (
-              <a key={label} href="#" style={{
+              { label: "Home", href: "/", active: true },
+              { label: "Services", href: "/services", active: false },
+              { label: "About Us", href: "#", active: false },
+              { label: "Subscriptions", href: "#", active: false },
+              { label: "Blog", href: "#", active: false },
+            ].map(({ label, href, active }) => (
+              <Link key={label} href={href} style={{
                 fontSize: 14,
                 fontWeight: 500,
                 color: active ? T.ink : T.body,
@@ -251,7 +260,7 @@ export default function Home() {
                 background: active ? T.soft : "transparent",
               }}>
                 {label}
-              </a>
+              </Link>
             ))}
           </div>
 
@@ -325,160 +334,191 @@ export default function Home() {
             zIndex:     1,
           }}
         >
-          {/* Left: headline + social proof */}
-          <div style={{ flex: "0 0 50%", maxWidth: "50%" }}>
+          {/* Left: headline + social proof + testimonials */}
+          <div style={{ flex: "0 0 50%", maxWidth: "50%", display: "flex", flexDirection: "column", gap: 32, paddingTop: 100 }}>
 
-            {/* Eyebrow */}
-            <div
-              className="hero-eyebrow"
-              style={{
-                display:      "inline-flex",
-                alignItems:   "center",
-                gap:          8,
-                background:   "rgba(255,255,255,0.10)",
-                border:       "1px solid rgba(255,255,255,0.16)",
-                borderRadius: 999,
-                padding:      "5px 14px 5px 8px",
-                marginBottom: 28,
-                width:        "fit-content",
-              }}
-            >
-              <div style={{
-                background:    T.primary,
-                borderRadius:  "50%",
-                width:         20,
-                height:        20,
-                display:       "flex",
-                alignItems:    "center",
-                justifyContent:"center",
-                flexShrink:    0,
-              }}>
-                <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 }}>✓</span>
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.80)", letterSpacing: "0.04em" }}>
-                150,000 cleanings delivered
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1
-              className="hero-headline"
-              style={{
-                fontSize:      "clamp(38px, 4vw, 60px)",
-                fontWeight:    700,
-                lineHeight:    "1.07",
-                letterSpacing: "-0.035em",
-                color:         "#fff",
-                margin:        "0 0 12px",
-              }}
-            >
-              Your home cleaning<br />
-              <span style={{ color: T.accentW }}>made simple</span>
-            </h1>
-
-            {/* Instruction line — ties headline to the card */}
-            <p
-              className="hero-subtext"
-              style={{
-                fontSize:   17,
-                lineHeight: "1.65",
-                color:      "rgba(255,255,255,0.68)",
-                margin:     "0 0 44px",
-                maxWidth:   400,
-              }}
-            >
-              Trusted cleaner. Transparent pricing. Book under a minute. If there's any problem with our cleaning, we will re-clean it for free.
-            </p>
-
-            {/* Social proof */}
-            <div
-              className="hero-proof"
-              style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ display: "flex", gap: 3 }}>
-                  {[1,2,3,4,5].map((i) => (
-                    <Star key={i} size={14} fill="#E4B44B" color="#E4B44B" strokeWidth={0} />
-                  ))}
+            <div>
+              {/* Eyebrow */}
+              <div
+                className="hero-eyebrow"
+                style={{
+                  display:      "inline-flex",
+                  alignItems:   "center",
+                  gap:          8,
+                  background:   "rgba(255,255,255,0.10)",
+                  border:       "1px solid rgba(255,255,255,0.16)",
+                  borderRadius: 999,
+                  padding:      "5px 14px 5px 8px",
+                  marginBottom: 28,
+                  width:        "fit-content",
+                }}
+              >
+                <div style={{
+                  background:    T.primary,
+                  borderRadius:  "50%",
+                  width:         20,
+                  height:        20,
+                  display:       "flex",
+                  alignItems:    "center",
+                  justifyContent:"center",
+                  flexShrink:    0,
+                }}>
+                  <span style={{ color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 }}>✓</span>
                 </div>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.80)", letterSpacing: "0.04em" }}>
+                  150,000 cleanings delivered
+                </span>
+              </div>
+
+              {/* Headline */}
+              <h1
+                className="hero-headline"
+                style={{
+                  fontSize:      "clamp(38px, 4vw, 60px)",
+                  fontWeight:    700,
+                  lineHeight:    "1.07",
+                  letterSpacing: "-0.035em",
+                  color:         "#fff",
+                  margin:        "0 0 12px",
+                }}
+              >
+                Your home cleaning<br />
+                <span style={{ color: T.accentW }}>made simple</span>
+              </h1>
+
+              {/* Instruction line — ties headline to the card */}
+              <p
+                className="hero-subtext"
+                style={{
+                  fontSize:   17,
+                  lineHeight: "1.65",
+                  color:      "rgba(255,255,255,0.68)",
+                  margin:     "0 0 44px",
+                  maxWidth:   400,
+                }}
+              >
+                Trusted cleaner. Transparent pricing. Book under a minute. If there's any problem with our cleaning, we will re-clean it for free.
+              </p>
+
+              {/* Social proof */}
+              <div
+                className="hero-proof"
+                style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap", marginBottom: 32 }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 3 }}>
+                    {[1,2,3,4,5].map((i) => (
+                      <Star key={i} size={14} fill="#E4B44B" color="#E4B44B" strokeWidth={0} />
+                    ))}
+                  </div>
+                  <div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>4.8</span>
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.50)", marginLeft: 5 }}>on Google</span>
+                  </div>
+                </div>
+
+                <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+
                 <div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>4.8</span>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.50)", marginLeft: 5 }}>on Google</span>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>150k+</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: "16px" }}>cleanings done</div>
+                </div>
+
+                <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>1,460+</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: "16px" }}>vetted pros</div>
+                </div>
+
+                <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
+
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>20% cheaper</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: "16px" }}>vs competitors</div>
                 </div>
               </div>
 
-              <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
 
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>150k+</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: "16px" }}>cleanings done</div>
-              </div>
-
-              <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>1,460+</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: "16px" }}>vetted pros</div>
-              </div>
-
-              <div style={{ width: 1, height: 26, background: "rgba(255,255,255,0.15)", flexShrink: 0 }} />
-
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>20% cheaper</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: "16px" }}>vs competitors</div>
-              </div>
+              {/* Book Now CTA for returning customers */}
+              <button
+                onClick={() => document.getElementById("quote-generator")?.scrollIntoView({ behavior: "smooth" })}
+                style={{
+                  display:         "inline-flex",
+                  alignItems:      "center",
+                  justifyContent:  "center",
+                  gap:             8,
+                  background:      "#155E63",
+                  color:           "#fff",
+                  border:          "1px solid #155E63",
+                  borderRadius:    999,
+                  fontSize:        14,
+                  fontWeight:      600,
+                  padding:         "12px 28px",
+                  cursor:          "pointer",
+                  letterSpacing:   "-0.01em",
+                  transition:      "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background  = "#124A54";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#124A54";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background  = "#155E63";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#155E63";
+                }}
+              >
+                Book now
+                <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
             </div>
 
-            {/* Hint arrow pointing to the card — subtle directive */}
-            <div
-              className="hero-chips"
-              style={{
-                display:     "flex",
-                alignItems:  "center",
-                gap:         10,
-                marginTop:   40,
-                color:       "rgba(255,255,255,0.35)",
-                fontSize:    13,
-                marginBottom: 28,
-              }}
-            >
-              <div style={{ display: "flex", gap: 4 }}>
-                <span style={{ fontSize: 18, lineHeight: 1 }}>→</span>
-              </div>
-              <span>Select on the right to reveal your price</span>
-            </div>
+            {/* Testimonial card */}
+            {(() => {
+              const t = testimonials[0];
+              return (
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    backdropFilter: "blur(12px)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 16,
+                    padding: "20px 16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  {/* Stars */}
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} size={16} fill="#F4B860" color="#F4B860" strokeWidth={0} />
+                    ))}
+                  </div>
 
-            {/* Book Now CTA for returning customers */}
-            <button
-              onClick={() => document.getElementById("quote-generator")?.scrollIntoView({ behavior: "smooth" })}
-              style={{
-                display:         "inline-flex",
-                alignItems:      "center",
-                justifyContent:  "center",
-                gap:             8,
-                background:      "#155E63",
-                color:           "#fff",
-                border:          "1px solid #155E63",
-                borderRadius:    999,
-                fontSize:        14,
-                fontWeight:      600,
-                padding:         "12px 28px",
-                cursor:          "pointer",
-                letterSpacing:   "-0.01em",
-                transition:      "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background  = "#124A54";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#124A54";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background  = "#155E63";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#155E63";
-              }}
-            >
-              Book now
-              <ArrowRight size={16} strokeWidth={2.5} />
-            </button>
+                  {/* Quote */}
+                  <p style={{
+                    fontSize: 14,
+                    lineHeight: "20px",
+                    color: "rgba(255,255,255,0.85)",
+                    margin: 0,
+                    fontWeight: 400,
+                  }}>
+                    &ldquo;{t.text}&rdquo;
+                  </p>
+
+                  {/* Name */}
+                  <div style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#fff",
+                    lineHeight: "18px",
+                  }}>
+                    {t.name}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Right: floating interactive quote card */}
@@ -487,7 +527,6 @@ export default function Home() {
             style={{ flex: "1 1 0", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: 16 }}
           >
             <HeroInteractiveQuote />
-            <HeroTestimonialsCarousel />
           </div>
         </div>
 
@@ -1119,7 +1158,7 @@ export default function Home() {
       {/* ── Live Quote Generator ─────────────────────────────────────────── */}
       <QuoteGenerator />
 
-      {/* ── Testimonials ──────────────────────────────────────────────────── */}
+      {/* ── Testimonials (Carousel) ───────────────────────────────────────── */}
       <section style={{ background: T.soft, padding: "88px 32px" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div
@@ -1141,91 +1180,107 @@ export default function Home() {
                 Hear From Our Happy Customers
               </h2>
             </div>
-            <p style={{ fontSize: 14, lineHeight: "22px", color: T.body, maxWidth: 300, margin: 0 }}>
-              Real stories from satisfied customers who experienced exceptional cleaning and reliable service.
-            </p>
+            <a href="#" style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 14,
+              fontWeight: 600,
+              color: T.primary,
+              textDecoration: "none",
+            }}>
+              View all reviews
+              <ArrowRight size={14} strokeWidth={2.5} />
+            </a>
           </div>
 
-          {/* Featured quote + side cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
-
-            {/* Featured */}
-            {(() => {
-              const t = testimonials[0];
-              return (
+          {/* Rotating testimonial card */}
+          {(() => {
+            const t = testimonials[currentTestimonial];
+            return (
+              <div style={{
+                background: T.primary,
+                borderRadius: 20,
+                padding: "48px 40px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                minHeight: 280,
+                position: "relative",
+                overflow: "hidden",
+                boxShadow: "0 16px 48px rgba(21,94,99,0.20)",
+              }}>
+                {/* Decorative accent */}
                 <div style={{
-                  background: T.primary,
-                  borderRadius: 20,
-                  padding: "40px 40px 32px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  minHeight: 280,
-                }}>
-                  <div style={{ display: "flex", gap: 3, marginBottom: 24 }}>
+                  position: "absolute",
+                  top: -40,
+                  right: -40,
+                  width: 200,
+                  height: 200,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.05)",
+                  pointerEvents: "none",
+                }} />
+
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  {/* Rating */}
+                  <div style={{ display: "flex", gap: 3, marginBottom: 28, alignItems: "center" }}>
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={14} style={{ color: T.accentW, fill: T.accentW }} />
+                      <Star key={i} size={16} style={{ color: T.accentW, fill: T.accentW }} />
                     ))}
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.50)", marginLeft: 8 }}>
+                      5.0 Rating
+                    </span>
                   </div>
+
+                  {/* Quote */}
                   <p style={{
-                    fontSize: 18,
-                    lineHeight: "30px",
-                    color: "rgba(255,255,255,0.92)",
-                    flex: 1,
-                    margin: "0 0 32px",
+                    fontSize: 19,
+                    lineHeight: "32px",
+                    color: "rgba(255,255,255,0.95)",
+                    margin: "0 0 40px",
                     fontWeight: 400,
+                    letterSpacing: "-0.01em",
                   }}>
                     &ldquo;{t.text}&rdquo;
                   </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`https://picsum.photos/seed/${t.seed}/48/48`}
-                      alt={t.name}
-                      style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.25)" }}
-                    />
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", lineHeight: "20px" }}>{t.name}</div>
-                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.60)", lineHeight: "18px" }}>{t.role}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
 
-            {/* Two side cards */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {testimonials.slice(1).map((t) => (
-                <div key={t.name} style={{
-                  background: T.surface,
-                  borderRadius: 16,
-                  padding: 24,
-                  border: `1px solid ${T.border}`,
-                  flex: 1,
-                }}>
-                  <div style={{ display: "flex", gap: 3, marginBottom: 12 }}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} size={12} style={{ color: T.accentW, fill: T.accentW }} />
-                    ))}
-                  </div>
-                  <p style={{ fontSize: 14, lineHeight: "22px", color: T.ink, margin: "0 0 16px" }}>
-                    &ldquo;{t.text}&rdquo;
-                  </p>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {/* Author */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`https://picsum.photos/seed/${t.seed}/40/40`}
+                      src={`https://picsum.photos/seed/${t.seed}/56/56`}
                       alt={t.name}
-                      style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
+                      style={{ width: 52, height: 52, borderRadius: "50%", objectFit: "cover", border: "3px solid rgba(255,255,255,0.20)" }}
                     />
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: T.ink, lineHeight: "18px" }}>{t.name}</div>
-                      <div style={{ fontSize: 11, color: T.body, lineHeight: "16px" }}>{t.role}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: "20px" }}>{t.name}</div>
+                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: "18px" }}>{t.role}</div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            );
+          })()}
+
+          {/* Carousel indicators */}
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 24 }}>
+            {testimonials.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentTestimonial(i)}
+                style={{
+                  width: i === currentTestimonial ? 32 : 10,
+                  height: 10,
+                  borderRadius: 999,
+                  background: i === currentTestimonial ? T.primary : T.border,
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease",
+                }}
+                aria-label={`Go to testimonial ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
       </section>
