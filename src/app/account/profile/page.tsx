@@ -56,45 +56,76 @@ export default function AccountPage() {
         description="Your personal information, home details, preferences, and security."
       />
 
-      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-surface shadow-[rgba(0,0,0,0.12)_0px_4px_16px_0px]">
-        <div className="p-6">
-          <div className="flex items-start gap-6">
-            <div className="flex-shrink-0">
-              <Image
-                src={accountProfile.picture}
-                alt={accountProfile.name}
-                width={96}
-                height={96}
-                className="rounded-full object-cover"
-              />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-4xl font-bold tracking-tight text-text-primary">{name}</h2>
-              <p className="mt-2 text-base text-text-secondary">{accountProfile.neighborhood}. Member since {accountProfile.memberSince.split("T")[0]}.</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="inline-flex min-h-9 items-center rounded-full bg-success/10 px-4 text-xs font-bold text-success">Verified account</span>
-              </div>
-            </div>
+      <section className="mb-8 rounded-2xl border border-border bg-surface p-8 shadow-[rgba(0,0,0,0.12)_0px_4px_16px_0px]">
+        <div className="flex items-start gap-6">
+          <div className="flex-shrink-0">
+            <Image
+              src={accountProfile.picture}
+              alt={accountProfile.name}
+              width={96}
+              height={96}
+              className="rounded-full object-cover ring-4 ring-primary/10"
+            />
           </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl bg-surface-muted p-4">
-              <p className="text-xs font-bold text-text-secondary">Email</p>
-              <p className="mt-2 text-sm font-bold text-text-primary">{accountProfile.email}</p>
-            </div>
-            <div className="rounded-2xl bg-surface-muted p-4">
-              <p className="text-xs font-bold text-text-secondary">Phone</p>
-              <p className="mt-2 text-sm font-bold text-text-primary">{accountProfile.phone}</p>
-            </div>
-            <div className="rounded-2xl bg-surface-muted p-4">
-              <p className="text-xs font-bold text-text-secondary">Location</p>
-              <p className="mt-2 text-sm font-bold text-text-primary">{accountProfile.neighborhood}</p>
+          <div className="flex-1">
+            <h2 className="text-4xl font-bold tracking-tight text-text-primary">{name}</h2>
+            <p className="mt-2 text-base text-text-secondary">{accountProfile.neighborhood} · Member since {accountProfile.memberSince.split("T")[0]}</p>
+            <div className="mt-4 flex gap-2">
+              <span className="inline-flex items-center rounded-full bg-success/10 px-4 py-2 text-xs font-bold text-success">
+                ✓ Verified account
+              </span>
             </div>
           </div>
         </div>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <aside className="order-first grid gap-6 lg:order-last lg:sticky lg:top-6 lg:self-start">
+          {nextBooking && (
+            <SummaryCard title="Next booking">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-bold text-text-secondary">Date</p>
+                  <p className="mt-1 text-sm font-bold text-text-primary">{nextBooking.date}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-text-secondary">Service</p>
+                  <p className="mt-1 text-sm font-bold text-text-primary">{nextBooking.service}</p>
+                </div>
+                <Link
+                  href={`/account/bookings/${nextBooking.id}`}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
+                >
+                  View booking
+                </Link>
+              </div>
+            </SummaryCard>
+          )}
+
+          <SummaryCard title="Account overview">
+            <dl className="space-y-4">
+              <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
+                <p className="text-xs font-bold text-text-secondary">Active plan</p>
+                <p className="mt-2 text-sm font-bold text-text-primary">{activePlan ? activePlan.cadence : "No active plan"}</p>
+              </div>
+              <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
+                <p className="text-xs font-bold text-text-secondary">Account standing</p>
+                <p className="mt-2 text-sm font-bold text-text-primary">Clear</p>
+              </div>
+            </dl>
+          </SummaryCard>
+
+          <div className="rounded-2xl bg-primary p-6 text-primary-foreground">
+            <div className="flex items-center gap-2 text-sm font-bold">
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Privacy
+            </div>
+            <p className="mt-2 text-sm leading-6 text-primary-foreground/80">
+              Your home address and access details are only shared with your assigned cleaner.
+            </p>
+          </div>
+        </aside>
+
         <div className="grid gap-6">
           <SummaryCard title="Contact information">
             <div className="space-y-4">
@@ -132,114 +163,100 @@ export default function AccountPage() {
           </SummaryCard>
 
           <SummaryCard title="Addresses">
-            <div className="space-y-3">
-              {addresses.map((address, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4">
-                  <div>
-                    <p className="font-bold text-text-primary">{address}</p>
-                    {idx === 0 && <p className="mt-1 text-xs font-bold text-success">Primary address</p>}
+            {addresses.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-text-secondary">No addresses yet. Add one to get started.</p>
+                <button
+                  onClick={() => setShowAddressModal(true)}
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
+                >
+                  <Plus className="size-4" />
+                  Add address
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {addresses.map((address, idx) => (
+                  <div key={idx} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-text-primary">{address}</p>
+                        {idx === 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Primary</span>}
+                      </div>
+                    </div>
+                    <SecondaryButton>Edit</SecondaryButton>
                   </div>
-                  <SecondaryButton>Edit</SecondaryButton>
-                </div>
-              ))}
-              <button
-                onClick={() => setShowAddressModal(true)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-muted border border-border px-5 text-sm font-bold text-text-primary transition hover:bg-background"
-              >
-                <Plus className="size-4" />
-                Add address
-              </button>
-            </div>
+                ))}
+                <button
+                  onClick={() => setShowAddressModal(true)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-muted border border-border px-5 text-sm font-bold text-text-primary transition hover:bg-background"
+                >
+                  <Plus className="size-4" />
+                  Add address
+                </button>
+              </div>
+            )}
           </SummaryCard>
 
           <SummaryCard title="Payment methods">
-            <div className="space-y-3">
-              {accountSettings.paymentMethods.map((method, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4">
-                  <div>
-                    <p className="font-bold text-text-primary">{method.label}</p>
-                    <p className="mt-1 text-sm text-text-secondary">{method.detail}</p>
+            {accountSettings.paymentMethods.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-text-secondary">No payment methods saved yet.</p>
+                <button
+                  onClick={() => setShowCardModal(true)}
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
+                >
+                  <Plus className="size-4" />
+                  Add card
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {accountSettings.paymentMethods.map((method, idx) => (
+                  <div key={idx} className={`flex items-start justify-between gap-4 rounded-2xl border p-4 ${
+                    defaultPaymentId === idx ? "border-primary bg-primary/5" : "border-border bg-surface-muted"
+                  }`}>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-text-primary">{method.label}</p>
+                        {defaultPaymentId === idx && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Default</span>}
+                      </div>
+                      <p className="mt-1 text-sm text-text-secondary">{method.detail}</p>
+                    </div>
+                    {defaultPaymentId !== idx && (
+                      <button
+                        onClick={() => setDefaultPaymentId(idx)}
+                        className="px-4 py-2 text-xs font-bold rounded-full border border-border bg-surface text-text-primary transition hover:bg-surface-muted"
+                      >
+                        Make default
+                      </button>
+                    )}
                   </div>
-                  <button
-                    onClick={() => setDefaultPaymentId(idx)}
-                    className={`px-4 py-2 text-xs font-bold rounded-full transition ${
-                      defaultPaymentId === idx
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-surface border border-border text-text-primary hover:bg-surface-muted"
-                    }`}
-                  >
-                    {defaultPaymentId === idx ? "Default" : "Make default"}
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => setShowCardModal(true)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-muted border border-border px-5 text-sm font-bold text-text-primary transition hover:bg-background"
-              >
-                <Plus className="size-4" />
-                Add card
-              </button>
-            </div>
+                ))}
+                <button
+                  onClick={() => setShowCardModal(true)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-muted border border-border px-5 text-sm font-bold text-text-primary transition hover:bg-background"
+                >
+                  <Plus className="size-4" />
+                  Add card
+                </button>
+              </div>
+            )}
           </SummaryCard>
 
-          <SummaryCard title="Close account">
-            <p className="text-sm text-text-secondary mb-4">
+          <div className="rounded-2xl border-2 border-error/40 bg-error/8 p-6">
+            <h3 className="font-bold text-error">Close account</h3>
+            <p className="mt-3 text-sm text-text-secondary">
               Your data will be retained for 90 days. You can sign back in anytime to reactivate.
             </p>
             <button
               onClick={() => setShowCloseModal(true)}
-              className="inline-flex min-h-11 items-center rounded-full border border-error/30 bg-error/5 px-5 text-sm font-bold text-error transition hover:bg-error/10"
+              className="mt-4 inline-flex min-h-11 items-center rounded-full border border-error/40 bg-error/10 px-5 text-sm font-bold text-error transition hover:bg-error/15"
             >
               Close account
             </button>
-          </SummaryCard>
-        </div>
-
-        <aside className="grid gap-6 lg:sticky lg:top-6 lg:self-start">
-          {nextBooking && (
-            <SummaryCard title="Next booking">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs font-bold text-text-secondary">Date</p>
-                  <p className="mt-1 text-sm font-bold text-text-primary">{nextBooking.date}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-text-secondary">Service</p>
-                  <p className="mt-1 text-sm font-bold text-text-primary">{nextBooking.service}</p>
-                </div>
-                <Link
-                  href={`/account/bookings/${nextBooking.id}`}
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
-                >
-                  View booking
-                </Link>
-              </div>
-            </SummaryCard>
-          )}
-
-          <SummaryCard title="Account overview">
-            <dl className="space-y-4">
-              <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
-                <p className="text-xs font-bold text-text-secondary">Active plan</p>
-                <p className="mt-2 text-sm font-bold text-text-primary">{activePlan ? activePlan.cadence : "No active plan"}</p>
-              </div>
-              <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
-                <p className="text-xs font-bold text-text-secondary">Account standing</p>
-                <p className="mt-2 text-sm font-bold text-text-primary">Clear</p>
-              </div>
-            </dl>
-          </SummaryCard>
-
-          <div className="rounded-2xl bg-primary p-6 text-primary-foreground shadow-[rgba(21,94,99,0.18)_0px_4px_16px_0px]">
-            <div className="flex items-center gap-2 text-sm font-bold">
-              <ShieldCheck className="size-4" aria-hidden="true" />
-              Privacy
-            </div>
-            <p className="mt-2 text-sm leading-6 text-primary-foreground/80">
-              Your home address and access details are only shared with your assigned cleaner.
-            </p>
           </div>
-        </aside>
+        </div>
       </div>
 
       {/* Add Address Modal */}
