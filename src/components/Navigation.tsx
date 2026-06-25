@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 const T = {
   primary: "#155E63",
@@ -26,97 +27,201 @@ const navLinks = [
 
 export default function Navigation() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav style={{
-      position: "sticky",
-      top: 0,
-      zIndex: 50,
-      background: "rgba(252,251,248,0.94)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
-      borderBottom: `1px solid ${T.border}`,
-    }}>
-      <div className="flex flex-wrap lg:flex-nowrap" style={{
-        maxWidth: 1280,
-        margin: "0 auto",
-        padding: "0 32px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        minHeight: 66,
+    <>
+      <nav style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: "rgba(252,251,248,0.94)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: `1px solid ${T.border}`,
       }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
-          <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: 999,
-            background: T.primary,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}>
-            <span style={{ color: T.onPrimary, fontSize: 13, fontWeight: 700 }}>M</span>
-          </div>
-          <span style={{ fontSize: 16, fontWeight: 600, color: T.ink, letterSpacing: "-0.02em" }}>
-            ApartmentMaid
-          </span>
-        </Link>
+        <div className="flex flex-wrap lg:flex-nowrap" style={{
+          maxWidth: 1280,
+          margin: "0 auto",
+          padding: "0 16px lg:px-8",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          minHeight: 66,
+        }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 999,
+              background: T.primary,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}>
+              <span style={{ color: T.onPrimary, fontSize: 13, fontWeight: 700 }}>M</span>
+            </div>
+            <span className="hidden sm:inline" style={{ fontSize: 16, fontWeight: 600, color: T.ink, letterSpacing: "-0.02em" }}>
+              ApartmentMaid
+            </span>
+          </Link>
 
-        <div className="order-last flex basis-full shrink-0 overflow-x-auto lg:order-none lg:basis-auto lg:flex-1 lg:shrink" style={{ alignItems: "center", gap: 2, justifyContent: "center", WebkitOverflowScrolling: "touch" }}>
+          <div className="hidden lg:flex order-last lg:order-none lg:flex-1 lg:shrink" style={{ alignItems: "center", gap: 2, justifyContent: "center" }}>
+            {navLinks.map(({ label, href }) => {
+              const isActive = pathname === href;
+              return (
+                <Link key={label} href={href} style={{
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: isActive ? "#fff" : T.body,
+                  textDecoration: "none",
+                  padding: "7px 14px",
+                  borderRadius: 999,
+                  background: isActive ? T.primary : "transparent",
+                }}>
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/login" className="hidden md:inline" style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: T.body,
+              textDecoration: "none",
+            }}>
+              Log in
+            </Link>
+            <Link href="/account/bookings" className="hidden md:inline" style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: T.body,
+              textDecoration: "none",
+            }}>
+              Account
+            </Link>
+            <a href="/booking" style={{
+              background: T.primary,
+              color: T.onPrimary,
+              fontSize: 14,
+              fontWeight: 600,
+              padding: "9px 20px",
+              borderRadius: 999,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}>
+              Book
+              <ArrowUpRight size={13} strokeWidth={2.5} className="hidden sm:inline" />
+            </a>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: T.ink,
+              }}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {mobileMenuOpen && (
+        <div style={{
+          position: "fixed",
+          top: 66,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 40,
+          background: "rgba(0, 0, 0, 0.5)",
+        }} onClick={() => setMobileMenuOpen(false)} />
+      )}
+
+      <div
+        style={{
+          position: "fixed",
+          top: 66,
+          left: 0,
+          right: 0,
+          zIndex: 45,
+          background: T.surface,
+          borderBottom: `1px solid ${T.border}`,
+          maxHeight: "calc(100vh - 66px)",
+          overflowY: "auto",
+          transform: mobileMenuOpen ? "translateY(0)" : "translateY(-100%)",
+          transition: "transform 0.3s ease-in-out",
+          WebkitOverflowScrolling: "touch",
+        }}
+        className="lg:hidden"
+      >
+        <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 8 }}>
           {navLinks.map(({ label, href }) => {
             const isActive = pathname === href;
             return (
-              <Link key={label} href={href} style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: isActive ? "#fff" : T.body,
-                textDecoration: "none",
-                padding: "7px 14px",
-                borderRadius: 999,
-                background: isActive ? T.primary : "transparent",
-              }}>
+              <Link
+                key={label}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontSize: 16,
+                  fontWeight: 500,
+                  color: isActive ? T.primary : T.ink,
+                  textDecoration: "none",
+                  padding: "12px 16px",
+                  borderRadius: 8,
+                  background: isActive ? `${T.primary}15` : "transparent",
+                }}
+              >
                 {label}
               </Link>
             );
           })}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link href="/login" className="hidden md:inline" style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: T.body,
-            textDecoration: "none",
-          }}>
+          <Link
+            href="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              fontSize: 16,
+              fontWeight: 500,
+              color: T.ink,
+              textDecoration: "none",
+              padding: "12px 16px",
+              borderRadius: 8,
+              marginTop: 8,
+            }}
+          >
             Log in
           </Link>
-          <Link href="/account/bookings" className="hidden md:inline" style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: T.body,
-            textDecoration: "none",
-          }}>
+          <Link
+            href="/account/bookings"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              fontSize: 16,
+              fontWeight: 500,
+              color: T.ink,
+              textDecoration: "none",
+              padding: "12px 16px",
+              borderRadius: 8,
+            }}
+          >
             Account
           </Link>
-          <a href="/booking" style={{
-            background: T.primary,
-            color: T.onPrimary,
-            fontSize: 14,
-            fontWeight: 600,
-            padding: "9px 20px",
-            borderRadius: 999,
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-          }}>
-            Check availability
-            <ArrowUpRight size={13} strokeWidth={2.5} />
-          </a>
         </div>
       </div>
-    </nav>
+    </>
   );
 }
