@@ -56,8 +56,8 @@ export default function AccountPage() {
         description="Your personal information, home details, preferences, and security."
       />
 
-      <section className="mb-8 overflow-hidden rounded-2xl border border-primary bg-primary p-8 text-primary-foreground shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px]">
-        <div className="flex items-start gap-6">
+      <section className="mb-8 overflow-hidden rounded-2xl border border-primary bg-primary p-6 sm:p-8 text-primary-foreground shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px]">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
           <div className="flex-shrink-0">
             <Image
               src={accountProfile.picture}
@@ -68,8 +68,8 @@ export default function AccountPage() {
             />
           </div>
           <div className="flex-1">
-            <h2 className="text-4xl font-bold tracking-tight text-primary-foreground">{name}</h2>
-            <p className="mt-2 text-base text-primary-foreground/80">{accountProfile.neighborhood} · Member since {accountProfile.memberSince.split("T")[0]}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-primary-foreground">{name}</h2>
+            <p className="mt-2 text-sm sm:text-base text-primary-foreground/80">{accountProfile.neighborhood} · Member since {accountProfile.memberSince.split("T")[0]}</p>
             <div className="mt-4 flex gap-2">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground px-4 py-2 text-xs font-bold text-primary shadow-lg">
                 <BadgeCheck className="size-4" />
@@ -262,8 +262,8 @@ export default function AccountPage() {
 
       {/* Add Address Modal */}
       {showAddressModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 pointer-events-auto">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px] pointer-events-auto">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h3 className="text-xl font-bold text-text-primary">Add new address</h3>
               <button
