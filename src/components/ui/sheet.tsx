@@ -94,7 +94,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="sheet-footer" className={cn("sticky bottom-0 -mx-5 -mb-[max(1.25rem,calc(1.25rem+env(safe-area-inset-bottom)))] mt-6 flex flex-col-reverse gap-3 bg-surface px-5 py-3 sm:flex-row sm:justify-end sm:-mb-5 sm:pb-5", className)} {...props} />;
+  return <div data-slot="sheet-footer" className={cn("sticky bottom-0 -mx-5 -mb-[max(1.25rem,calc(1.25rem+env(safe-area-inset-bottom)))] mt-6 flex flex-col-reverse gap-3 bg-surface px-5 py-3 sm:flex-row sm:justify-end sm:-mb-5 sm:pb-5 transition-all duration-300", className)} {...props} />;
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<typeof Dialog.Title>) {

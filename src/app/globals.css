@@ -183,4 +183,27 @@ body {
   [role="dialog"] {
     @apply z-50;
   }
+
+  /* Menu item animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .menu-item-enter {
+    animation: fadeInUp 0.4s ease-out forwards;
+  }
+
+  .menu-item-enter-0 { animation-delay: 0.05s; }
+  .menu-item-enter-1 { animation-delay: 0.1s; }
+  .menu-item-enter-2 { animation-delay: 0.15s; }
+  .menu-item-enter-3 { animation-delay: 0.2s; }
+  .menu-item-enter-4 { animation-delay: 0.25s; }
+  .menu-item-enter-5 { animation-delay: 0.3s; }
 }

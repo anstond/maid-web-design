@@ -79,7 +79,9 @@ export default function Navigation() {
                   padding: "7px 14px",
                   borderRadius: 999,
                   background: isActive ? T.primary : "transparent",
-                }}>
+                  transition: "all 300ms cubic-bezier(0.32, 0.72, 0, 1)",
+                  cursor: "pointer",
+                }} className="hover:bg-gray-100">
                   {label}
                 </Link>
               );
@@ -92,6 +94,7 @@ export default function Navigation() {
               fontWeight: 500,
               color: T.body,
               textDecoration: "none",
+              transition: "color 300ms cubic-bezier(0.32, 0.72, 0, 1)",
             }}>
               Log in
             </Link>
@@ -100,6 +103,7 @@ export default function Navigation() {
               fontWeight: 500,
               color: T.body,
               textDecoration: "none",
+              transition: "color 300ms cubic-bezier(0.32, 0.72, 0, 1)",
             }}>
               Account
             </Link>
@@ -114,6 +118,16 @@ export default function Navigation() {
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
+              transition: "all 300ms cubic-bezier(0.32, 0.72, 0, 1)",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = T.primaryH;
+              (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = T.primary;
+              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
             }}>
               Book
               <ArrowUpRight size={13} strokeWidth={2.5} className="hidden sm:inline" />
@@ -170,13 +184,14 @@ export default function Navigation() {
         className="lg:hidden"
       >
         <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: 8 }}>
-          {navLinks.map(({ label, href }) => {
+          {navLinks.map(({ label, href }, index) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={label}
                 href={href}
                 onClick={() => setMobileMenuOpen(false)}
+                className={`menu-item-enter menu-item-enter-${index}`}
                 style={{
                   fontSize: 16,
                   fontWeight: 500,
@@ -185,6 +200,8 @@ export default function Navigation() {
                   padding: "12px 16px",
                   borderRadius: 8,
                   background: isActive ? `${T.primary}15` : "transparent",
+                  transition: "all 300ms cubic-bezier(0.32, 0.72, 0, 1)",
+                  cursor: "pointer",
                 }}
               >
                 {label}
@@ -194,6 +211,7 @@ export default function Navigation() {
           <Link
             href="/login"
             onClick={() => setMobileMenuOpen(false)}
+            className={`menu-item-enter menu-item-enter-${navLinks.length}`}
             style={{
               fontSize: 16,
               fontWeight: 500,
@@ -202,6 +220,8 @@ export default function Navigation() {
               padding: "12px 16px",
               borderRadius: 8,
               marginTop: 8,
+              transition: "all 300ms cubic-bezier(0.32, 0.72, 0, 1)",
+              cursor: "pointer",
             }}
           >
             Log in
@@ -209,10 +229,13 @@ export default function Navigation() {
           <Link
             href="/account/bookings"
             onClick={() => setMobileMenuOpen(false)}
+            className={`menu-item-enter menu-item-enter-${navLinks.length + 1}`}
             style={{
               fontSize: 16,
               fontWeight: 500,
               color: T.ink,
+              transition: "all 300ms cubic-bezier(0.32, 0.72, 0, 1)",
+              cursor: "pointer",
               textDecoration: "none",
               padding: "12px 16px",
               borderRadius: 8,

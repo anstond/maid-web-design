@@ -44,10 +44,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
 
             {/* Desktop: Full button row */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-              <Link href="/" className="min-h-11 items-center rounded-full bg-surface-muted px-4 text-sm font-bold text-text-primary transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 inline-flex">
+              <Link href="/" className="min-h-11 items-center rounded-full bg-surface-muted px-4 text-sm font-bold text-text-primary transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft hover:scale-105 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 inline-flex active:scale-95">
                 Explore services
               </Link>
-              <Link href="/booking" className="min-h-11 items-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 inline-flex">
+              <Link href="/booking" className="min-h-11 items-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary-hover hover:scale-105 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 inline-flex active:scale-95">
                 Book cleaning
               </Link>
             </div>
@@ -55,7 +55,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
             {/* Mobile: Menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="sm:hidden min-h-11 inline-flex items-center justify-center rounded-full bg-surface-muted px-3 text-text-primary transition hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 flex-shrink-0"
+              className="sm:hidden min-h-11 inline-flex items-center justify-center rounded-full bg-surface-muted px-3 text-text-primary transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft hover:scale-105 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 flex-shrink-0 active:scale-95"
               aria-label="Toggle navigation"
             >
               {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -73,7 +73,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-bold transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30",
+                    "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 hover:scale-105",
                     active ? "bg-primary text-primary-foreground" : "bg-surface-muted text-text-primary hover:bg-accent-soft"
                   )}
                 >
@@ -103,7 +103,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
       >
         <div className="px-4 py-4 flex flex-col gap-3">
           {/* Account Navigation */}
-          {accountNavItems.map((item) => {
+          {accountNavItems.map((item, index) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
@@ -112,8 +112,8 @@ export function AccountShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition duration-300",
-                  active ? "bg-primary text-primary-foreground" : "bg-background text-text-primary"
+                  `menu-item-enter menu-item-enter-${index} flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105`,
+                  active ? "bg-primary text-primary-foreground" : "bg-background text-text-primary hover:bg-surface-muted"
                 )}
               >
                 <Icon className="size-5" aria-hidden="true" />
@@ -126,12 +126,12 @@ export function AccountShell({ children }: { children: ReactNode }) {
           <div className="h-px bg-border my-2" />
 
           {/* Back to Home */}
-          {marketingNavItems.map((item) => (
+          {marketingNavItems.map((item, index) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-text-primary bg-background hover:bg-surface-muted transition duration-300"
+              className={`menu-item-enter menu-item-enter-${accountNavItems.length + index} flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-text-primary bg-background hover:bg-surface-muted transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105`}
             >
               <ArrowLeft className="size-5" aria-hidden="true" />
               {item.label}
@@ -145,7 +145,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
           <Link
             href="/booking"
             onClick={() => setMobileMenuOpen(false)}
-            className="w-full text-center min-h-11 flex items-center justify-center rounded-2xl bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
+            className={`menu-item-enter menu-item-enter-${accountNavItems.length + marketingNavItems.length} w-full text-center min-h-11 flex items-center justify-center rounded-2xl bg-primary px-5 text-sm font-bold text-primary-foreground transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary-hover hover:scale-105 active:scale-95`}
           >
             Book cleaning
           </Link>
