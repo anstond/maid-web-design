@@ -43,6 +43,72 @@ export type SubscriptionRecord = {
   notes: string;
 };
 
+export type AccountProfile = {
+  name: string;
+  email: string;
+  phone: string;
+  neighborhood: string;
+  memberSince: string;
+  defaultAddress: string;
+  homeType: string;
+  bedrooms: number;
+  bathrooms: number;
+  pets: string;
+  suppliesPreference: string;
+  accessPreference: string;
+  parkingNotes: string;
+  cleanerPreference: string;
+  householdNotes: string;
+};
+
+export type AccountSettings = {
+  notifications: Array<{ label: string; description: string; enabled: boolean }>;
+  paymentMethods: Array<{ label: string; detail: string; default: boolean }>;
+  security: Array<{ label: string; value: string; state: "good" | "review" }>;
+  communication: Array<{ label: string; value: string }>;
+};
+
+export const accountProfile: AccountProfile = {
+  name: "Avery Morgan",
+  email: "avery.morgan@example.com",
+  phone: "(212) 555-0148",
+  neighborhood: "Chelsea, New York",
+  memberSince: "2026-02-18",
+  defaultAddress: "225 West 23rd Street, Apt 4B",
+  homeType: "2 bed, 2 bath apartment",
+  bedrooms: 2,
+  bathrooms: 2,
+  pets: "Cat at home",
+  suppliesPreference: "Bring professional supplies",
+  accessPreference: "Doorman or front desk",
+  parkingNotes: "Use the garage entrance on 8th Ave.",
+  cleanerPreference: "Prefer Maya R. or Daniel P. when available",
+  householdNotes: "Use unscented products in bedrooms. Skip the office unless it is listed in visit notes.",
+};
+
+export const accountSettings: AccountSettings = {
+  notifications: [
+    { label: "Arrival updates", description: "Cleaner assignment, en route, and arrival-window reminders.", enabled: true },
+    { label: "Schedule changes", description: "Reschedules, pauses, and recurring-plan changes.", enabled: true },
+    { label: "Receipts", description: "Payment authorizations, receipts, and refunds.", enabled: true },
+    { label: "Service tips", description: "Occasional prep reminders before deep or move cleanings.", enabled: false },
+  ],
+  paymentMethods: [
+    { label: "Visa ending in 4242", detail: "Default for home cleanings", default: true },
+    { label: "Amex ending in 3005", detail: "Used for small office plan", default: false },
+  ],
+  security: [
+    { label: "Password", value: "Updated 34 days ago", state: "good" },
+    { label: "Two-step verification", value: "Not enabled", state: "review" },
+    { label: "Active sessions", value: "2 signed-in devices", state: "good" },
+  ],
+  communication: [
+    { label: "Preferred channel", value: "SMS for arrival updates, email for receipts" },
+    { label: "Support language", value: "English" },
+    { label: "Quiet hours", value: "Do not text after 8:00 PM" },
+  ],
+};
+
 export const bookings: BookingRecord[] = [
   {
     id: "BK-1048",

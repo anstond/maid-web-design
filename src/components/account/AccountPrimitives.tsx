@@ -28,11 +28,78 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="mb-2 text-sm font-semibold text-primary">{eyebrow}</p>
-        <h1 className="text-3xl font-bold leading-tight tracking-normal text-text-primary md:text-4xl">{title}</h1>
+        <p className="mb-2 text-sm font-bold text-primary">{eyebrow}</p>
+        <h1 className="text-4xl font-bold leading-tight tracking-normal text-text-primary md:text-5xl">{title}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">{description}</p>
       </div>
       {action}
+    </div>
+  );
+}
+
+export function HeroPanel({
+  title,
+  description,
+  children,
+  action,
+}: {
+  title: string;
+  description: string;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <section className="mb-6 overflow-hidden rounded-2xl border border-border bg-primary text-primary-foreground shadow-[0_18px_58px_rgba(21,94,99,0.18)]">
+      <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div>
+          <h2 className="text-2xl font-bold tracking-normal md:text-3xl">{title}</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-primary-foreground/78">{description}</p>
+          {children ? <div className="mt-5">{children}</div> : null}
+        </div>
+        {action}
+      </div>
+    </section>
+  );
+}
+
+export function MetricGrid({ children }: { children: ReactNode }) {
+  return <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{children}</div>;
+}
+
+export function MetricCard({
+  label,
+  value,
+  helper,
+  icon,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  icon?: ReactNode;
+  tone?: "default" | "attention" | "strong";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border p-4 shadow-[0_10px_30px_rgba(21,94,99,0.07)]",
+        tone === "strong" && "border-primary bg-primary text-primary-foreground",
+        tone === "attention" && "border-error/25 bg-error/10 text-text-primary",
+        tone === "default" && "border-border bg-surface text-text-primary"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className={cn("text-xs font-bold", tone === "strong" ? "text-primary-foreground/70" : "text-text-secondary")}>{label}</p>
+          <p className="mt-2 text-2xl font-bold tracking-normal">{value}</p>
+        </div>
+        {icon ? (
+          <span className={cn("flex size-10 items-center justify-center rounded-full", tone === "strong" ? "bg-primary-foreground/15" : "bg-surface-muted text-primary")}>
+            {icon}
+          </span>
+        ) : null}
+      </div>
+      <p className={cn("mt-3 text-sm leading-5", tone === "strong" ? "text-primary-foreground/75" : "text-text-secondary")}>{helper}</p>
     </div>
   );
 }
@@ -51,6 +118,16 @@ export function SummaryCard({ title, children }: { title: string; children: Reac
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
       <h2 className="mb-4 text-lg font-bold text-text-primary">{title}</h2>
       {children}
+    </section>
+  );
+}
+
+export function CommandCard({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-5 shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
+      <h2 className="text-lg font-bold text-text-primary">{title}</h2>
+      {description ? <p className="mt-2 text-sm leading-6 text-text-secondary">{description}</p> : null}
+      <div className="mt-4 grid gap-3">{children}</div>
     </section>
   );
 }
