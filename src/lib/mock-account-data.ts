@@ -1,0 +1,194 @@
+export type BookingStatus = "scheduled" | "in_progress" | "completed" | "needs_attention" | "cancelled";
+export type SubscriptionStatus = "active" | "paused" | "ending";
+
+export type BookingRecord = {
+  id: string;
+  status: BookingStatus;
+  service: string;
+  frequency: string;
+  date: string;
+  arrivalWindow: string;
+  address: string;
+  home: string;
+  team: string;
+  cleaner: string;
+  total: number;
+  paymentStatus: string;
+  supplies: string;
+  access: string;
+  parking: string;
+  pets: string;
+  notes: string;
+  addons: Array<{ label: string; price: number }>;
+  timeline: Array<{ label: string; time: string; state: "done" | "current" | "upcoming" }>;
+};
+
+export type SubscriptionRecord = {
+  id: string;
+  status: SubscriptionStatus;
+  cadence: string;
+  service: string;
+  nextVisit: string;
+  arrivalWindow: string;
+  address: string;
+  home: string;
+  team: string;
+  cleanerPreference: string;
+  monthlyEstimate: number;
+  paymentMethod: string;
+  startedAt: string;
+  pausedUntil?: string;
+  scope: string[];
+  upcomingVisits: Array<{ id: string; date: string; arrivalWindow: string; status: string }>;
+  notes: string;
+};
+
+export const bookings: BookingRecord[] = [
+  {
+    id: "BK-1048",
+    status: "scheduled",
+    service: "Deep clean",
+    frequency: "One time",
+    date: "2026-07-02",
+    arrivalWindow: "10:00 AM - 12:00 PM",
+    address: "225 West 23rd Street, Apt 4B",
+    home: "2 bed, 2 bath apartment",
+    team: "4 hr x 2 cleaners",
+    cleaner: "Maya R. and team",
+    total: 487,
+    paymentStatus: "Authorized",
+    supplies: "Bring professional supplies",
+    access: "Doorman or front desk",
+    parking: "Use the garage entrance on 8th Ave.",
+    pets: "Cat at home",
+    notes: "Focus on kitchen grout, guest bath, and dust along window sills.",
+    addons: [
+      { label: "Inside fridge", price: 29 },
+      { label: "Interior windows", price: 45 },
+    ],
+    timeline: [
+      { label: "Booking created", time: "Jun 25, 9:18 AM", state: "done" },
+      { label: "Payment authorized", time: "Jun 25, 9:19 AM", state: "done" },
+      { label: "Cleaner assignment", time: "Jun 30, by 6:00 PM", state: "current" },
+      { label: "Cleaning visit", time: "Jul 2, 10:00 AM - 12:00 PM", state: "upcoming" },
+    ],
+  },
+  {
+    id: "BK-1036",
+    status: "completed",
+    service: "Standard clean",
+    frequency: "Every 2 weeks",
+    date: "2026-06-18",
+    arrivalWindow: "8:00 AM - 10:00 AM",
+    address: "88 Atlantic Avenue, Unit 12",
+    home: "1 bed, 1 bath apartment",
+    team: "3 hr x 1 cleaner",
+    cleaner: "Daniel P.",
+    total: 146,
+    paymentStatus: "Paid",
+    supplies: "Customer supplies",
+    access: "I will be home",
+    parking: "Street parking usually opens after 8:30 AM.",
+    pets: "No pets",
+    notes: "Skip the office. Use unscented products in bedroom.",
+    addons: [{ label: "Laundry fold", price: 32 }],
+    timeline: [
+      { label: "Booking created", time: "Jun 10, 5:42 PM", state: "done" },
+      { label: "Cleaner assigned", time: "Jun 16, 1:20 PM", state: "done" },
+      { label: "Visit completed", time: "Jun 18, 11:08 AM", state: "done" },
+      { label: "Receipt sent", time: "Jun 18, 11:10 AM", state: "done" },
+    ],
+  },
+  {
+    id: "BK-1029",
+    status: "needs_attention",
+    service: "Move clean",
+    frequency: "One time",
+    date: "2026-06-28",
+    arrivalWindow: "2:00 PM - 4:00 PM",
+    address: "19 Mercer Street, Floor 3",
+    home: "Empty 2 bed, 1 bath walk-up",
+    team: "5 hr x 3 cleaners",
+    cleaner: "Assignment pending",
+    total: 914,
+    paymentStatus: "Action needed",
+    supplies: "Bring professional supplies",
+    access: "Lockbox or smart lock",
+    parking: "Commercial loading zone in front of building.",
+    pets: "No pets",
+    notes: "Need lockbox code before assignment can be finalized.",
+    addons: [
+      { label: "Inside cabinets", price: 39 },
+      { label: "Inside oven", price: 34 },
+    ],
+    timeline: [
+      { label: "Booking created", time: "Jun 24, 2:15 PM", state: "done" },
+      { label: "Access details requested", time: "Jun 24, 2:18 PM", state: "current" },
+      { label: "Cleaner assignment", time: "After lockbox code", state: "upcoming" },
+      { label: "Cleaning visit", time: "Jun 28, 2:00 PM - 4:00 PM", state: "upcoming" },
+    ],
+  },
+];
+
+export const subscriptions: SubscriptionRecord[] = [
+  {
+    id: "SUB-221",
+    status: "active",
+    cadence: "Every 2 weeks",
+    service: "Standard clean",
+    nextVisit: "2026-07-08",
+    arrivalWindow: "8:00 AM - 10:00 AM",
+    address: "88 Atlantic Avenue, Unit 12",
+    home: "1 bed, 1 bath apartment",
+    team: "3 hr x 1 cleaner",
+    cleanerPreference: "Prefer Daniel P. when available",
+    monthlyEstimate: 292,
+    paymentMethod: "Visa ending in 4242",
+    startedAt: "2026-05-07",
+    scope: ["Kitchen and bathroom reset", "Floors and dusting", "Bedroom linens", "Laundry fold"],
+    upcomingVisits: [
+      { id: "BK-1051", date: "2026-07-08", arrivalWindow: "8:00 AM - 10:00 AM", status: "Scheduled" },
+      { id: "BK-1064", date: "2026-07-22", arrivalWindow: "8:00 AM - 10:00 AM", status: "Planned" },
+      { id: "BK-1076", date: "2026-08-05", arrivalWindow: "8:00 AM - 10:00 AM", status: "Planned" },
+    ],
+    notes: "Skip office. Use unscented products in bedroom.",
+  },
+  {
+    id: "SUB-184",
+    status: "paused",
+    cadence: "Weekly",
+    service: "Small office",
+    nextVisit: "2026-07-15",
+    arrivalWindow: "6:00 PM - 8:00 PM",
+    address: "41 East 11th Street, Suite 6A",
+    home: "Small office, 1 restroom",
+    team: "3 hr x 2 cleaners",
+    cleanerPreference: "Best available match",
+    monthlyEstimate: 1240,
+    paymentMethod: "Amex ending in 3005",
+    startedAt: "2026-02-12",
+    pausedUntil: "2026-07-10",
+    scope: ["Desks and conference room", "Kitchenette", "Restroom", "Trash and floors"],
+    upcomingVisits: [
+      { id: "BK-1080", date: "2026-07-15", arrivalWindow: "6:00 PM - 8:00 PM", status: "Resumes" },
+      { id: "BK-1091", date: "2026-07-22", arrivalWindow: "6:00 PM - 8:00 PM", status: "Planned" },
+    ],
+    notes: "Office is closed for renovation until July 10.",
+  },
+];
+
+export function getBooking(id: string) {
+  return bookings.find((booking) => booking.id === id);
+}
+
+export function getSubscription(id: string) {
+  return subscriptions.find((subscription) => subscription.id === id);
+}
+
+export function formatAccountDate(date: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(`${date}T12:00:00`));
+}

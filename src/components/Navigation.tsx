@@ -20,7 +20,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/services" },
   { label: "About Us", href: "#" },
-  { label: "Subscriptions", href: "#" },
+  { label: "Subscriptions", href: "/account/subscriptions" },
   { label: "Blog", href: "/blog" },
 ];
 
@@ -91,6 +91,14 @@ export default function Navigation() {
             textDecoration: "none",
           }}>
             Log in
+          </Link>
+          <Link href="/account/bookings" className="hidden md:inline" style={{
+            fontSize: 14,
+            fontWeight: 500,
+            color: T.body,
+            textDecoration: "none",
+          }}>
+            Account
           </Link>
           <a href="/booking" style={{
             background: T.primary,
