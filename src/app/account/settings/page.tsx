@@ -11,11 +11,11 @@ export default function SettingsPage() {
       <PageHeader
         eyebrow="Account"
         title="Settings"
-        description="Notifications, payment methods, security, and service preferences."
+        description="How we contact you, payment, and security."
       />
 
       <div className="grid gap-6">
-        <SummaryCard title="Notification preferences">
+        <SummaryCard title="How we contact you">
           <div className="space-y-4">
             {accountSettings.notifications.map((notification) => (
               <NotificationToggle key={notification.label} notification={notification} />
@@ -33,11 +33,11 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {method.default && <span className="inline-flex items-center rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">Default</span>}
-                  <SecondaryButton>Edit</SecondaryButton>
+                  <SecondaryButton>Change</SecondaryButton>
                 </div>
               </div>
             ))}
-            <SecondaryButton>Add payment method</SecondaryButton>
+            <SecondaryButton>Add a card</SecondaryButton>
           </div>
         </SummaryCard>
 
@@ -64,13 +64,13 @@ export default function SettingsPage() {
                     <p className="mt-1 text-sm text-text-secondary">{item.value}</p>
                   </div>
                 </div>
-                {item.label !== "Active sessions" && <SecondaryButton>Update</SecondaryButton>}
+                {item.label !== "Active sessions" && <SecondaryButton>Change</SecondaryButton>}
               </div>
             ))}
           </div>
         </SummaryCard>
 
-        <SummaryCard title="Service preferences">
+        <SummaryCard title="Cleaning preferences">
           <div className="space-y-4">
             {accountSettings.communication.map((pref) => (
               <div key={pref.label} className="border-b border-border py-4 last:border-b-0 last:py-0">
@@ -78,7 +78,7 @@ export default function SettingsPage() {
                 <p className="mt-2 text-sm text-text-primary">{pref.value}</p>
               </div>
             ))}
-            <SecondaryButton>Edit service preferences</SecondaryButton>
+            <SecondaryButton>Edit preferences</SecondaryButton>
           </div>
         </SummaryCard>
 
@@ -86,12 +86,12 @@ export default function SettingsPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 size-5 flex-shrink-0 text-error" aria-hidden="true" />
             <div className="flex-1">
-              <h3 className="font-bold text-text-primary">Deactivate account</h3>
+              <h3 className="font-bold text-text-primary">Close your account</h3>
               <p className="mt-2 text-sm leading-6 text-text-secondary">
-                Deactivating your account will cancel all active bookings and recurring plans. You can reactivate later with the same email.
+                This will pause all your bookings and plans. You can sign back in anytime with your email.
               </p>
               <button className="mt-4 inline-flex min-h-11 items-center rounded-full border border-error/50 bg-error/10 px-5 text-sm font-bold text-error transition hover:bg-error/20 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-error/30 active:translate-y-px">
-                Deactivate account
+                Close account
               </button>
             </div>
           </div>

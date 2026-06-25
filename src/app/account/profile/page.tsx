@@ -11,14 +11,14 @@ export default function ProfilePage() {
       <PageHeader
         eyebrow="Account"
         title="Profile"
-        description="Customer identity, default home details, cleaner preferences, and household notes used across bookings."
+        description="Your personal info, home details, and preferences."
         action={<SecondaryButton>Edit profile</SecondaryButton>}
       />
 
       <HeroPanel
         title={accountProfile.name}
-        description={`${accountProfile.neighborhood}. Member since ${formatAccountDate(accountProfile.memberSince)}. These defaults help cleaners arrive prepared without asking the same questions every visit.`}
-        action={<span className="inline-flex min-h-11 items-center rounded-full bg-primary-foreground px-5 text-sm font-bold text-primary">Verified customer</span>}
+        description={`${accountProfile.neighborhood}. A member since ${formatAccountDate(accountProfile.memberSince)}.`}
+        action={<span className="inline-flex min-h-11 items-center rounded-full bg-primary-foreground px-5 text-sm font-bold text-primary">Verified</span>}
       >
         <div className="grid gap-3 text-sm sm:grid-cols-3">
           <HeroFact icon={<Mail className="size-4" />} label="Email" value={accountProfile.email} />
@@ -36,50 +36,50 @@ export default function ProfilePage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="grid gap-6">
-          <SummaryCard title="Contact information">
+          <SummaryCard title="Contact info">
             <dl>
-              <DetailRow label="Full name" value={accountProfile.name} />
+              <DetailRow label="Name" value={accountProfile.name} />
               <DetailRow label="Email" value={accountProfile.email} />
               <DetailRow label="Phone" value={accountProfile.phone} />
               <DetailRow label="Neighborhood" value={accountProfile.neighborhood} />
             </dl>
           </SummaryCard>
 
-          <SummaryCard title="Default home">
+          <SummaryCard title="Your home">
             <dl>
               <DetailRow label="Address" value={accountProfile.defaultAddress} />
               <DetailRow label="Home type" value={accountProfile.homeType} />
               <DetailRow label="Pets" value={accountProfile.pets} />
-              <DetailRow label="Supplies" value={accountProfile.suppliesPreference} />
+              <DetailRow label="Supplies to use" value={accountProfile.suppliesPreference} />
             </dl>
           </SummaryCard>
 
-          <SummaryCard title="Cleaner instructions">
+          <SummaryCard title="How to reach your home">
             <div className="grid gap-4 md:grid-cols-2">
-              <PreferenceBlock icon={<KeyRound className="size-4" />} label="Access" value={accountProfile.accessPreference} />
-              <PreferenceBlock icon={<MapPin className="size-4" />} label="Parking" value={accountProfile.parkingNotes} />
+              <PreferenceBlock icon={<KeyRound className="size-4" />} label="Getting in" value={accountProfile.accessPreference} />
+              <PreferenceBlock icon={<MapPin className="size-4" />} label="Where to park" value={accountProfile.parkingNotes} />
               <PreferenceBlock icon={<UserRound className="size-4" />} label="Cleaner preference" value={accountProfile.cleanerPreference} />
-              <PreferenceBlock icon={<Sparkles className="size-4" />} label="Household notes" value={accountProfile.householdNotes} />
+              <PreferenceBlock icon={<Sparkles className="size-4" />} label="House notes" value={accountProfile.householdNotes} />
             </div>
           </SummaryCard>
         </div>
 
         <aside className="grid gap-6 lg:sticky lg:top-6 lg:self-start">
-          <SummaryCard title="Profile actions">
+          <SummaryCard title="Quick actions">
             <div className="grid gap-3">
-              <SecondaryButton>Update contact details</SecondaryButton>
-              <SecondaryButton>Edit default home</SecondaryButton>
-              <SecondaryButton>Change cleaner preferences</SecondaryButton>
+              <SecondaryButton>Edit contact info</SecondaryButton>
+              <SecondaryButton>Change home details</SecondaryButton>
+              <SecondaryButton>Update preferences</SecondaryButton>
             </div>
           </SummaryCard>
 
           <div className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-[0_18px_58px_rgba(21,94,99,0.18)]">
             <div className="flex items-center gap-2 text-sm font-bold">
               <ShieldCheck className="size-4" aria-hidden="true" />
-              Shared with cleaners
+              Privacy
             </div>
             <p className="mt-2 text-sm leading-6 text-primary-foreground/80">
-              Address, access, pets, supplies, and priority notes are visible only to the assigned cleaning team.
+              Your home address, access details, and special requests are only shared with your assigned cleaner.
             </p>
           </div>
         </aside>

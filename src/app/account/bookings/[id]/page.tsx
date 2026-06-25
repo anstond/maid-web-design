@@ -23,8 +23,8 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       </Link>
 
       <HeroPanel
-        title={`${booking.service} is ${booking.status.replaceAll("_", " ")}`}
-        description={`${formatAccountDate(booking.date)} between ${booking.arrivalWindow}. ${booking.cleaner} for ${booking.home}.`}
+        title={`${booking.service}`}
+        description={`${formatAccountDate(booking.date)}, ${booking.arrivalWindow} with ${booking.cleaner} for your ${booking.home}.`}
         action={<StatusPill status={booking.status} />}
       >
         <div className="grid gap-3 text-sm sm:grid-cols-3">
@@ -36,23 +36,42 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_370px]">
         <div className="grid gap-6">
-          <SummaryCard title="Operational timeline">
+          {booking.status === "completed" && (
+            <SummaryCard title="Completed">
+              <dl>
+                <DetailRow label="Started" value={booking.timeline.find((item) => item.label.toLowerCase().includes("arrived"))?.time || booking.timeline[0]?.time || "N/A"} />
+                <DetailRow label="Finished" value={booking.timeline.find((item) => item.label.toLowerCase().includes("complete"))?.time || booking.timeline[booking.timeline.length - 1]?.time || "N/A"} />
+                <DetailRow label="Cleaner" value={booking.cleaner} />
+              </dl>
+              {booking.notes && (
+                <div className="mt-5 rounded-2xl border border-border bg-surface-muted p-4">
+                  <p className="text-xs font-bold text-text-secondary">Notes from your cleaner</p>
+                  <p className="mt-2 text-sm leading-6 text-text-primary">{booking.notes}</p>
+                </div>
+              )}
+              <button className="mt-5 min-h-11 rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30">
+                Leave a review
+              </button>
+            </SummaryCard>
+          )}
+
+          <SummaryCard title="Timeline">
             <Timeline items={booking.timeline} />
           </SummaryCard>
 
-          <SummaryCard title="Appointment">
+          <SummaryCard title="Booking details">
             <dl>
               <DetailRow label="Date and time" value={`${formatAccountDate(booking.date)}, ${booking.arrivalWindow}`} />
               <DetailRow label="Address" value={booking.address} />
-              <DetailRow label="Home" value={booking.home} />
+              <DetailRow label="Home type" value={booking.home} />
               <DetailRow label="Cleaner" value={booking.cleaner} />
-              <DetailRow label="Frequency" value={booking.frequency} />
+              <DetailRow label="How often" value={booking.frequency} />
             </dl>
           </SummaryCard>
 
-          <SummaryCard title="Scope and add-ons">
+          <SummaryCard title="What's included">
             <div className="grid gap-3 sm:grid-cols-2">
-              <ScopeTile icon={<Sparkles className="size-4" />} label="Core service" value={booking.service} />
+              <ScopeTile icon={<Sparkles className="size-4" />} label="Service" value={booking.service} />
               <ScopeTile icon={<UsersRound className="size-4" />} label="Team" value={booking.team} />
               {booking.addons.map((addon) => (
                 <ScopeTile key={addon.label} icon={<ShieldCheck className="size-4" />} label={addon.label} value={`$${addon.price.toFixed(2)}`} />
@@ -60,18 +79,18 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
             </div>
           </SummaryCard>
 
-          <SummaryCard title="Arrival intelligence">
+          <SummaryCard title="Arrival details">
             <div className="grid gap-4 md:grid-cols-2">
-              <NoteBlock icon={<KeyRound className="size-4" />} label="Access" value={booking.access} />
+              <NoteBlock icon={<KeyRound className="size-4" />} label="How to access" value={booking.access} />
               <NoteBlock icon={<MapPin className="size-4" />} label="Parking" value={booking.parking} />
-              <NoteBlock icon={<ShieldCheck className="size-4" />} label="Pets" value={booking.pets} />
-              <NoteBlock icon={<Sparkles className="size-4" />} label="Priority notes" value={booking.notes} />
+              <NoteBlock icon={<ShieldCheck className="size-4" />} label="Pets at home" value={booking.pets} />
+              <NoteBlock icon={<Sparkles className="size-4" />} label="Special requests" value={booking.notes} />
             </div>
           </SummaryCard>
         </div>
 
         <aside className="grid gap-6 lg:sticky lg:top-6 lg:self-start">
-          <CommandCard title="Command panel" description="Manage timing, support, and payment artifacts for this appointment.">
+          <CommandCard title="Actions" description="Manage or get help with this cleaning.">
             <SecondaryButton>
               <CalendarDays className="mr-2 size-4" aria-hidden="true" />
               Reschedule
@@ -86,10 +105,10 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
             </SecondaryButton>
           </CommandCard>
 
-          <SummaryCard title="Payment summary">
+          <SummaryCard title="Payment">
             <dl>
               <DetailRow label="Status" value={booking.paymentStatus} />
-              <DetailRow label="Total" value={<Money value={booking.total} />} />
+              <DetailRow label="Amount" value={<Money value={booking.total} />} />
               <DetailRow label="Supplies" value={booking.supplies} />
             </dl>
           </SummaryCard>
