@@ -49,6 +49,7 @@ export type AccountProfile = {
   phone: string;
   neighborhood: string;
   memberSince: string;
+  picture: string;
   defaultAddress: string;
   homeType: string;
   bedrooms: number;
@@ -74,6 +75,7 @@ export const accountProfile: AccountProfile = {
   phone: "(212) 555-0148",
   neighborhood: "Chelsea, New York",
   memberSince: "2026-02-18",
+  picture: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop",
   defaultAddress: "225 West 23rd Street, Apt 4B",
   homeType: "2 bed, 2 bath apartment",
   bedrooms: 2,
