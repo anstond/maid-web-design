@@ -1,15 +1,35 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type ReactNode } from "react";
 import { CalendarDays, CheckCircle2, Clock3, CreditCard, History, PauseCircle, RefreshCw, Sparkles, UsersRound } from "lucide-react";
 import { ActionLink, Money, PageHeader } from "@/components/account/AccountPrimitives";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { bookings, formatAccountDate, subscriptions } from "@/lib/mock-account-data";
 
 export default function SubscriptionsPage() {
+  const router = useRouter();
+  const [openActionSheet, setOpenActionSheet] = useState<string | null>(null);
+  const [selectedAction, setSelectedAction] = useState<"change" | "skip" | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState(false);
+
   const activePlans = subscriptions.filter((subscription) => subscription.status === "active");
   const pausedPlans = subscriptions.filter((subscription) => subscription.status === "paused");
   const endingPlans = subscriptions.filter((subscription) => subscription.status === "ending");
   const nextPlan = activePlans[0] || subscriptions[0];
   const nextPlanPastCleanings = getPastCleaningsForPlan(nextPlan);
+
+  const handleActionConfirm = (action: "change" | "skip") => {
+    if (action === "change") {
+      // Navigate to reschedule page
+      router.push(`/account/subscriptions/${nextPlan.id}/reschedule`);
+    } else if (action === "skip") {
+      // In a real app, this would make an API call to skip the cleaning
+      console.log(`User confirmed skip for plan ${nextPlan.id}`);
+      // Show a success toast or navigate back
+    }
+  };
 
   return (
     <>
@@ -28,23 +48,19 @@ export default function SubscriptionsPage() {
             </div>
 
             <div className="mt-4 sm:mt-5 rounded-2xl bg-primary p-4 sm:p-6 text-primary-foreground">
-              <div className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs font-bold text-primary-foreground/72">{formatAccountDate(nextPlan.nextVisit).replace(/, \d{4}$/, "")}</p>
-                    <p className="mt-2 text-4xl sm:text-5xl font-bold leading-tight tracking-normal">{formatAccountDate(nextPlan.nextVisit).split(" ")[1].replace(",", "")}</p>
-                  </div>
-                  <p className="mt-3 sm:mt-0 text-xs sm:text-sm font-bold text-primary-foreground/80">{nextPlan.arrivalWindow}</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-bold text-primary-foreground/70">Next cleaning</p>
+                  <p className="mt-2 text-3xl sm:text-4xl font-bold leading-tight tracking-normal">{formatAccountDate(nextPlan.nextVisit)}</p>
+                  <p className="mt-3 text-xs sm:text-sm font-bold text-primary-foreground/80">{nextPlan.arrivalWindow}</p>
                 </div>
 
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-normal text-primary-foreground">{nextPlan.service}</h2>
-                    <p className="mt-2 text-xs sm:text-sm text-primary-foreground/80 leading-5">
-                      {formatTeam(nextPlan.team)} • {nextPlan.cleanerPreference}
-                    </p>
-                  </div>
-                  <div className="mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-primary-foreground/20 sm:border-t-0">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-normal text-primary-foreground">{nextPlan.service}</h2>
+                  <p className="mt-2 text-xs sm:text-sm text-primary-foreground/80 leading-5">
+                    {formatTeam(nextPlan.team)} • {nextPlan.cleanerPreference}
+                  </p>
+                  <div className="mt-3 pt-3 border-t border-primary-foreground/20">
                     <p className="text-xs font-bold text-primary-foreground/70">Monthly cost</p>
                     <p className="mt-1 text-2xl sm:text-3xl font-bold text-primary-foreground">${nextPlan.monthlyEstimate.toFixed(2)}</p>
                   </div>
@@ -64,9 +80,12 @@ export default function SubscriptionsPage() {
             </div>
 
             <div className="mt-5 sm:mt-6 flex flex-col gap-2">
-              <ActionPill href={`/account/subscriptions/${nextPlan.id}`} variant="primary">
+              <button
+                onClick={() => setOpenActionSheet(nextPlan.id)}
+                className="flex min-h-11 items-center justify-center rounded-full bg-primary px-4 sm:px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+              >
                 Change visit or skip
-              </ActionPill>
+              </button>
               {nextPlanPastCleanings[0] ? (
                 <ActionPill href={`/account/bookings/${nextPlanPastCleanings[0].id}`}>
                   View last cleaning
@@ -218,6 +237,28 @@ export default function SubscriptionsPage() {
           })}
         </div>
       </section>
+
+      <Sheet open={openActionSheet === nextPlan.id} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setOpenActionSheet(null);
+          setSelectedAction(null);
+          setConfirmingAction(false);
+        }
+      }}>
+        <SheetContent>
+          <ChangeVisitSheetContent
+            plan={nextPlan}
+            selectedAction={selectedAction}
+            onSelectAction={setSelectedAction}
+            onConfirm={(action) => {
+              handleActionConfirm(action);
+              setOpenActionSheet(null);
+              setSelectedAction(null);
+              setConfirmingAction(false);
+            }}
+          />
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
@@ -349,5 +390,94 @@ function getPastCleaningsForPlan(subscription: (typeof subscriptions)[number]) {
       (booking.status === "completed" || booking.status === "cancelled") &&
       booking.service === subscription.service &&
       booking.address === subscription.address
+  );
+}
+
+function ChangeVisitSheetContent({
+  plan,
+  selectedAction,
+  onSelectAction,
+  onConfirm,
+}: {
+  plan: (typeof subscriptions)[number];
+  selectedAction: "change" | "skip" | null;
+  onSelectAction: (action: "change" | "skip" | null) => void;
+  onConfirm: (action: "change" | "skip") => void;
+}) {
+  const actionDetails = {
+    change: {
+      title: "Change next cleaning date",
+      description: `Reschedule your ${plan.service.toLowerCase()} from ${formatAccountDate(plan.nextVisit)}`,
+      confirmText: "This doesn't cancel your plan—just moves this visit.",
+      buttonText: "Continue to reschedule",
+    },
+    skip: {
+      title: "Skip next cleaning",
+      description: `Skip the ${plan.service.toLowerCase()} on ${formatAccountDate(plan.nextVisit)}`,
+      confirmText: "Your plan stays active. Next visit will be " + formatAccountDate(plan.upcomingVisits[1]?.date || plan.nextVisit),
+      buttonText: "Yes, skip this cleaning",
+    },
+  };
+
+  const currentAction = selectedAction ? actionDetails[selectedAction] : null;
+
+  return (
+    <>
+      {!selectedAction ? (
+        // Main menu
+        <>
+          <SheetHeader>
+            <SheetTitle>What would you like to do?</SheetTitle>
+            <SheetDescription>{plan.service} on {formatAccountDate(plan.nextVisit)}</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-3">
+            <button
+              onClick={() => onSelectAction("change")}
+              className="w-full rounded-2xl border border-border bg-surface-muted p-4 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+            >
+              <p className="font-bold text-text-primary">Change the date</p>
+              <p className="mt-1 text-sm text-text-secondary">Move this cleaning to a different day</p>
+            </button>
+
+            <button
+              onClick={() => onSelectAction("skip")}
+              className="w-full rounded-2xl border border-border bg-surface-muted p-4 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+            >
+              <p className="font-bold text-text-primary">Skip this cleaning</p>
+              <p className="mt-1 text-sm text-text-secondary">Your plan stays active. Nothing changes.</p>
+            </button>
+          </div>
+        </>
+      ) : (
+        // Confirmation view
+        <>
+          <SheetHeader>
+            <SheetTitle>{currentAction?.title}</SheetTitle>
+            <SheetDescription>{currentAction?.description}</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 rounded-2xl bg-primary/10 p-4">
+            <p className="text-xs font-bold text-primary mb-2">HEADS UP</p>
+            <p className="text-sm text-text-secondary">{currentAction?.confirmText}</p>
+          </div>
+
+          <SheetFooter className="mt-6">
+            <button
+              onClick={() => onSelectAction(null)}
+              className="flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => onConfirm(selectedAction)}
+              className="flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+            >
+              {currentAction?.buttonText}
+            </button>
+          </SheetFooter>
+        </>
+      )}
+    </>
   );
 }

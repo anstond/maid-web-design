@@ -33,23 +33,19 @@ export default function BookingsPage() {
               </div>
 
               <div className="mt-4 sm:mt-5 rounded-2xl bg-primary p-4 sm:p-6 text-primary-foreground">
-                <div className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
-                  <div className="flex flex-col justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-primary-foreground/72">{formatAccountDate(nextVisit.date).replace(/, \d{4}$/, "")}</p>
-                      <p className="mt-2 text-4xl sm:text-5xl font-bold leading-tight tracking-normal">{formatAccountDate(nextVisit.date).split(" ")[1].replace(",", "")}</p>
-                    </div>
-                    <p className="mt-3 sm:mt-0 text-xs sm:text-sm font-bold text-primary-foreground/80">{nextVisit.arrivalWindow}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-bold text-primary-foreground/70">Next cleaning</p>
+                    <p className="mt-2 text-3xl sm:text-4xl font-bold leading-tight tracking-normal">{formatAccountDate(nextVisit.date)}</p>
+                    <p className="mt-3 text-xs sm:text-sm font-bold text-primary-foreground/80">{nextVisit.arrivalWindow}</p>
                   </div>
 
-                  <div className="flex flex-col justify-between">
-                    <div>
-                      <h2 className="text-2xl sm:text-3xl font-bold tracking-normal text-primary-foreground">{nextVisit.service}</h2>
-                      <p className="mt-2 text-xs sm:text-sm text-primary-foreground/80 leading-5">
-                        {nextVisit.cleaner} • {nextVisit.home}
-                      </p>
-                    </div>
-                    <div className="mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-primary-foreground/20 sm:border-t-0">
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-normal text-primary-foreground">{nextVisit.service}</h2>
+                    <p className="mt-2 text-xs sm:text-sm text-primary-foreground/80 leading-5">
+                      {nextVisit.cleaner} • {nextVisit.home}
+                    </p>
+                    <div className="mt-3 pt-3 border-t border-primary-foreground/20">
                       <StatusPill status={nextVisit.status} />
                     </div>
                   </div>
