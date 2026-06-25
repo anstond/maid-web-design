@@ -12,9 +12,9 @@ export default function SubscriptionsPage() {
   return (
     <>
       <PageHeader
-        title="Subscriptions"
-        description="Recurring cleaning without guesswork: next arrival, cadence, scope, and billing status stay visible."
-        action={<ActionLink href="/booking">Start recurring plan</ActionLink>}
+        title="Cleaning plans"
+        description="See your regular cleanings, what is included, what you pay each month, and when the next visit happens."
+        action={<ActionLink href="/booking">Start a cleaning plan</ActionLink>}
       />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -25,26 +25,26 @@ export default function SubscriptionsPage() {
                 <span className="rounded-full bg-primary-foreground px-3 py-1 text-xs font-bold capitalize text-primary">{nextPlan.status.replaceAll("_", " ")}</span>
                 <span className="rounded-full bg-primary-foreground/12 px-3 py-1 text-xs font-bold text-primary-foreground/80">{nextPlan.cadence}</span>
               </div>
-              <h2 className="mt-4 text-3xl font-bold tracking-normal md:text-4xl">{nextPlan.service} routine</h2>
+              <h2 className="mt-4 text-3xl font-bold tracking-normal md:text-4xl">{nextPlan.service} plan</h2>
               <p className="mt-3 max-w-[58ch] text-base leading-7 text-primary-foreground/78">
-                Next visit is {formatAccountDate(nextPlan.nextVisit)} from {nextPlan.arrivalWindow}. {nextPlan.cleanerPreference}.
+                Your next cleaning is {formatAccountDate(nextPlan.nextVisit)} from {nextPlan.arrivalWindow}. {nextPlan.cleanerPreference}.
               </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 <HeroFact icon={<CalendarDays className="size-4" />} label="Next visit" value={formatAccountDate(nextPlan.nextVisit)} />
-                <HeroFact icon={<UsersRound className="size-4" />} label="Team" value={nextPlan.team} />
-                <HeroFact icon={<CreditCard className="size-4" />} label="Monthly" value={`$${nextPlan.monthlyEstimate.toFixed(2)}`} />
+                <HeroFact icon={<UsersRound className="size-4" />} label="Cleaners" value={formatTeam(nextPlan.team)} />
+                <HeroFact icon={<CreditCard className="size-4" />} label="Monthly cost" value={`$${nextPlan.monthlyEstimate.toFixed(2)}`} />
               </div>
               <Link
                 href={`/account/subscriptions/${nextPlan.id}`}
                 className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary-foreground px-5 text-sm font-bold text-primary transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary-foreground/30 active:translate-y-px"
               >
-                Manage plan
+                View plan
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
             <div className="grid content-between gap-4 bg-primary-hover p-5 sm:p-6">
               <div>
-                <p className="text-sm font-bold text-primary-foreground/72">Routine scope</p>
+                <p className="text-sm font-bold text-primary-foreground/72">Included each visit</p>
                 <div className="mt-4 grid gap-2">
                   {nextPlan.scope.slice(0, 4).map((item) => (
                     <span key={item} className="rounded-xl bg-primary-foreground/10 px-3 py-2 text-sm font-bold text-primary-foreground/86">
@@ -63,20 +63,20 @@ export default function SubscriptionsPage() {
             <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
               <RefreshCw className="size-5" aria-hidden="true" />
             </div>
-            <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">Flexible</span>
+            <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success">Easy to change</span>
           </div>
-          <h2 className="mt-4 text-xl font-bold text-text-primary">Your routine</h2>
-          <p className="mt-2 text-sm leading-6 text-text-secondary">Pause, reschedule, or add a one-time visit without changing the main cadence.</p>
+          <h2 className="mt-4 text-xl font-bold text-text-primary">Plan options</h2>
+          <p className="mt-2 text-sm leading-6 text-text-secondary">You can skip, pause, or move a future cleaning without canceling your plan.</p>
           <div className="mt-4 grid gap-3 text-sm">
-            <RoutineLine label="Active" value={`${activePlans.length} plan${activePlans.length === 1 ? "" : "s"}`} />
-            <RoutineLine label="Paused" value={`${pausedPlans.length} plan${pausedPlans.length === 1 ? "" : "s"}`} />
-            <RoutineLine label="Change window" value="Any future visit" />
+            <RoutineLine label="Current plans" value={`${activePlans.length} active`} />
+            <RoutineLine label="Paused plans" value={`${pausedPlans.length} paused`} />
+            <RoutineLine label="Can change" value="Any future visit" />
           </div>
         </aside>
       </div>
 
       <div className="mt-6 grid gap-6">
-        <SummaryCard title="Recurring plans">
+        <SummaryCard title="Your cleaning plans">
           <div className="grid gap-3">
             {activePlans.map((subscription) => (
               <SubscriptionListCard key={subscription.id} subscription={subscription} />
@@ -89,9 +89,9 @@ export default function SubscriptionsPage() {
 
         <section className="grid gap-4 rounded-2xl bg-surface-muted p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
           <div>
-            <h2 className="text-xl font-bold text-text-primary">Add work without changing the routine</h2>
+            <h2 className="text-xl font-bold text-text-primary">Need an extra cleaning?</h2>
             <p className="mt-2 max-w-[62ch] text-sm leading-6 text-text-secondary">
-              Keep your recurring plan as-is and add a deep clean, move clean, or extra visit only when needed.
+              Keep your regular plan as-is and book a deep clean, move clean, or extra visit only when needed.
             </p>
           </div>
           <Link
@@ -117,7 +117,7 @@ function SubscriptionListCard({ subscription }: { subscription: (typeof subscrip
           <StatusPill status={subscription.status} />
           <span className="text-sm font-bold text-text-secondary">{subscription.cadence}</span>
         </div>
-        <h2 className="mt-3 text-xl font-bold text-text-primary">{subscription.service}</h2>
+        <h2 className="mt-3 text-xl font-bold text-text-primary">{subscription.service} plan</h2>
         <div className="mt-4 grid gap-3 text-sm text-text-secondary md:grid-cols-2">
           <span className="flex gap-2">
             <CalendarDays className="mt-0.5 size-4 text-primary" aria-hidden="true" />
@@ -125,7 +125,7 @@ function SubscriptionListCard({ subscription }: { subscription: (typeof subscrip
           </span>
           <span className="flex gap-2">
             <UsersRound className="mt-0.5 size-4 text-primary" aria-hidden="true" />
-            {subscription.team}
+            {formatTeam(subscription.team)}
           </span>
           <span className="flex gap-2">
             <ShieldCheck className="mt-0.5 size-4 text-primary" aria-hidden="true" />
@@ -146,11 +146,11 @@ function SubscriptionListCard({ subscription }: { subscription: (typeof subscrip
       </div>
 
       <div className="flex items-center justify-between gap-4 border-t border-border bg-surface p-4 lg:flex-col lg:items-end lg:justify-center lg:border-l lg:border-t-0">
-        <span className="text-sm font-semibold text-text-secondary">Estimate</span>
+        <span className="text-sm font-semibold text-text-secondary">Monthly cost</span>
         <span className="text-2xl font-bold text-primary">
           <Money value={subscription.monthlyEstimate} />
         </span>
-        <span className="text-sm font-bold text-primary opacity-100 transition lg:opacity-0 lg:group-hover:opacity-100">Manage</span>
+        <span className="text-sm font-bold text-primary opacity-100 transition lg:opacity-0 lg:group-hover:opacity-100">Open plan</span>
       </div>
     </Link>
   );
@@ -166,6 +166,15 @@ function HeroFact({ icon, label, value }: { icon: ReactNode; label: string; valu
       <p className="mt-2 text-sm font-bold leading-5 text-primary-foreground">{value}</p>
     </div>
   );
+}
+
+function formatTeam(team: string) {
+  const match = team.match(/^(.+?) x (\d+) (cleaners?)$/);
+
+  if (!match) return team;
+
+  const [, hours, cleanerCount, cleanerLabel] = match;
+  return `${cleanerCount} ${cleanerLabel} for ${hours}`;
 }
 
 function RoutineLine({ label, value }: { label: string; value: string }) {
