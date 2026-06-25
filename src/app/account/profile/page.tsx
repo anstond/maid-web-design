@@ -1,18 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShieldCheck, AlertCircle, Plus, X, BadgeCheck } from "lucide-react";
-import { DetailRow, PageHeader, SecondaryButton, SummaryCard } from "@/components/account/AccountPrimitives";
+import { ShieldCheck, Plus, BadgeCheck } from "lucide-react";
+import { PageHeader, SecondaryButton, SummaryCard } from "@/components/account/AccountPrimitives";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { accountProfile, accountSettings, bookings, subscriptions } from "@/lib/mock-account-data";
 
+type ProfileSheet = "address" | "card" | "phone" | "name" | "close" | null;
+
 export default function AccountPage() {
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [showCardModal, setShowCardModal] = useState(false);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [activeSheet, setActiveSheet] = useState<ProfileSheet>(null);
   const [addresses, setAddresses] = useState([accountProfile.defaultAddress]);
   const [defaultPaymentId, setDefaultPaymentId] = useState(0);
   const [newAddress, setNewAddress] = useState({ street: "", unit: "", postalCode: "", phone: "" });
@@ -20,32 +27,49 @@ export default function AccountPage() {
   const [editingPhone, setEditingPhone] = useState(accountProfile.phone);
   const [name, setName] = useState(accountProfile.name);
   const [editingName, setEditingName] = useState(accountProfile.name);
+  const [loadingAction, setLoadingAction] = useState<ProfileSheet>(null);
 
   const nextBooking = bookings.find((booking) => booking.status === "scheduled" || booking.status === "needs_attention");
   const activePlan = subscriptions.find((subscription) => subscription.status === "active");
 
-  const handleAddAddress = () => {
+  const handleAddAddress = async () => {
     const { street, unit, postalCode, phone } = newAddress;
     if (street.trim() && postalCode.trim() && phone.trim()) {
+      setLoadingAction("address");
+      await new Promise((resolve) => setTimeout(resolve, 800));
       const formattedAddress = `${street}${unit ? ` ${unit}` : ""}, ${postalCode}`;
       setAddresses([...addresses, formattedAddress]);
       setNewAddress({ street: "", unit: "", postalCode: "", phone: "" });
-      setShowAddressModal(false);
+      setLoadingAction(null);
+      setActiveSheet(null);
     }
   };
 
-  const handleUpdatePhone = () => {
+  const handleUpdatePhone = async () => {
     if (editingPhone.trim()) {
+      setLoadingAction("phone");
+      await new Promise((resolve) => setTimeout(resolve, 800));
       setPhone(editingPhone);
-      setShowPhoneModal(false);
+      setLoadingAction(null);
+      setActiveSheet(null);
     }
   };
 
-  const handleUpdateName = () => {
+  const handleUpdateName = async () => {
     if (editingName.trim()) {
+      setLoadingAction("name");
+      await new Promise((resolve) => setTimeout(resolve, 800));
       setName(editingName);
-      setShowNameModal(false);
+      setLoadingAction(null);
+      setActiveSheet(null);
     }
+  };
+
+  const handleSetDefaultPayment = async (idx: number) => {
+    setLoadingAction("card");
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setDefaultPaymentId(idx);
+    setLoadingAction(null);
   };
 
   return (
@@ -84,7 +108,7 @@ export default function AccountPage() {
         <aside className="order-first grid gap-6 lg:order-last lg:sticky lg:top-6 lg:self-start">
           {nextBooking && (
             <SummaryCard title="Next booking">
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 <div>
                   <p className="text-xs font-bold text-text-secondary">Date</p>
                   <p className="mt-1 text-sm font-bold text-text-primary">{nextBooking.date}</p>
@@ -104,7 +128,7 @@ export default function AccountPage() {
           )}
 
           <SummaryCard title="Account overview">
-            <dl className="space-y-4">
+            <dl className="flex flex-col gap-4">
               <div className="border-b border-border pb-4 last:border-b-0 last:pb-0">
                 <p className="text-xs font-bold text-text-secondary">Active plan</p>
                 <p className="mt-2 text-sm font-bold text-text-primary">{activePlan ? activePlan.cadence : "No active plan"}</p>
@@ -129,15 +153,15 @@ export default function AccountPage() {
 
         <div className="grid gap-6">
           <SummaryCard title="Contact information">
-            <div className="space-y-4">
+            <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between gap-4 pb-4 border-b border-border">
                 <div>
                   <p className="text-xs font-bold text-text-secondary">Full name</p>
                   <p className="mt-2 text-sm font-bold text-text-primary">{name}</p>
                 </div>
                 <button
-                  onClick={() => setShowNameModal(true)}
-                  className="px-4 py-2 text-xs font-bold rounded-full border border-border bg-surface text-text-primary transition hover:bg-surface-muted"
+                  onClick={() => setActiveSheet("name")}
+                  className="inline-flex min-h-11 items-center rounded-full border border-border bg-surface px-4 text-sm font-bold text-text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
                 >
                   Edit
                 </button>
@@ -154,8 +178,8 @@ export default function AccountPage() {
                   <p className="mt-2 text-sm font-bold text-text-primary">{phone}</p>
                 </div>
                 <button
-                  onClick={() => setShowPhoneModal(true)}
-                  className="px-4 py-2 text-xs font-bold rounded-full border border-border bg-surface text-text-primary transition hover:bg-surface-muted"
+                  onClick={() => setActiveSheet("phone")}
+                  className="inline-flex min-h-11 items-center rounded-full border border-border bg-surface px-4 text-sm font-bold text-text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
                 >
                   Edit
                 </button>
@@ -168,7 +192,7 @@ export default function AccountPage() {
               <div className="py-8 text-center">
                 <p className="text-sm text-text-secondary">No addresses yet. Add one to get started.</p>
                 <button
-                  onClick={() => setShowAddressModal(true)}
+                  onClick={() => setActiveSheet("address")}
                   className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
                 >
                   <Plus className="size-4" />
@@ -176,20 +200,20 @@ export default function AccountPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {addresses.map((address, idx) => (
-                  <div key={idx} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4">
+                  <div key={idx} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-muted p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <p className="font-bold text-text-primary">{address}</p>
                         {idx === 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Primary</span>}
                       </div>
                     </div>
-                    <SecondaryButton>Edit</SecondaryButton>
+                    <SecondaryButton className="w-full sm:w-auto" onClick={() => setActiveSheet("address")}>Edit</SecondaryButton>
                   </div>
                 ))}
                 <button
-                  onClick={() => setShowAddressModal(true)}
+                  onClick={() => setActiveSheet("address")}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-muted border border-border px-5 text-sm font-bold text-text-primary transition hover:bg-background"
                 >
                   <Plus className="size-4" />
@@ -204,7 +228,7 @@ export default function AccountPage() {
               <div className="py-8 text-center">
                 <p className="text-sm text-text-secondary">No payment methods saved yet.</p>
                 <button
-                  onClick={() => setShowCardModal(true)}
+                  onClick={() => setActiveSheet("card")}
                   className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover"
                 >
                   <Plus className="size-4" />
@@ -212,30 +236,33 @@ export default function AccountPage() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {accountSettings.paymentMethods.map((method, idx) => (
-                  <div key={idx} className={`flex items-start justify-between gap-4 rounded-2xl border p-4 ${
+                  <div key={idx} className={`flex flex-col gap-4 rounded-2xl border p-4 sm:flex-row sm:items-start sm:justify-between ${
                     defaultPaymentId === idx ? "border-primary bg-primary/5" : "border-border bg-surface-muted"
                   }`}>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <p className="font-bold text-text-primary">{method.label}</p>
                         {defaultPaymentId === idx && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">Default</span>}
                       </div>
                       <p className="mt-1 text-sm text-text-secondary">{method.detail}</p>
                     </div>
                     {defaultPaymentId !== idx && (
-                      <button
-                        onClick={() => setDefaultPaymentId(idx)}
-                        className="px-4 py-2 text-xs font-bold rounded-full border border-border bg-surface text-text-primary transition hover:bg-surface-muted"
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="h-11 rounded-full px-5 w-full sm:w-auto"
+                        onClick={() => handleSetDefaultPayment(idx)}
+                        loading={loadingAction === "card"}
                       >
                         Make default
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
                 <button
-                  onClick={() => setShowCardModal(true)}
+                  onClick={() => setActiveSheet("card")}
                   className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-muted border border-border px-5 text-sm font-bold text-text-primary transition hover:bg-background"
                 >
                   <Plus className="size-4" />
@@ -251,7 +278,7 @@ export default function AccountPage() {
               Your data will be retained for 90 days. You can sign back in anytime to reactivate.
             </p>
             <button
-              onClick={() => setShowCloseModal(true)}
+              onClick={() => setActiveSheet("close")}
               className="mt-4 inline-flex min-h-11 items-center rounded-full border border-error/40 bg-error/10 px-5 text-sm font-bold text-error transition hover:bg-error/15"
             >
               Close account
@@ -260,231 +287,163 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Add Address Modal */}
-      {showAddressModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 pointer-events-auto">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px] pointer-events-auto">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h3 className="text-xl font-bold text-text-primary">Add new address</h3>
-              <button
-                onClick={() => setShowAddressModal(false)}
-                className="p-1 hover:bg-surface-muted rounded-full"
-              >
-                <X className="size-5 text-text-secondary" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Street address"
-                value={newAddress.street}
-                onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                className="booking-input"
-              />
-              <input
-                type="text"
-                placeholder="Unit / Apartment (optional)"
-                value={newAddress.unit}
-                onChange={(e) => setNewAddress({ ...newAddress, unit: e.target.value })}
-                className="booking-input"
-              />
-              <input
-                type="text"
-                placeholder="Postal code"
-                value={newAddress.postalCode}
-                onChange={(e) => setNewAddress({ ...newAddress, postalCode: e.target.value })}
-                className="booking-input"
-              />
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={newAddress.phone}
-                onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                className="booking-input"
-              />
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setShowAddressModal(false)}
-                className="flex-1 px-4 py-2 rounded-full border border-border bg-surface text-text-primary font-bold transition hover:bg-surface-muted"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddAddress}
-                className="flex-1 px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold transition hover:bg-primary-hover"
-              >
-                Add
-              </button>
-            </div>
-          </div>
+      <AccountActionSheet
+        open={activeSheet === "address"}
+        onOpenChange={(open) => setActiveSheet(open ? "address" : null)}
+        title="Add new address"
+        description="Save the address and contact number cleaners should use for visits."
+      >
+        <div className="mt-5 flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="Street address"
+            value={newAddress.street}
+            onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
+            className="booking-input"
+          />
+          <input
+            type="text"
+            placeholder="Unit / Apartment (optional)"
+            value={newAddress.unit}
+            onChange={(e) => setNewAddress({ ...newAddress, unit: e.target.value })}
+            className="booking-input"
+          />
+          <input
+            type="text"
+            placeholder="Postal code"
+            value={newAddress.postalCode}
+            onChange={(e) => setNewAddress({ ...newAddress, postalCode: e.target.value })}
+            className="booking-input"
+          />
+          <input
+            type="tel"
+            placeholder="Phone number"
+            value={newAddress.phone}
+            onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+            className="booking-input"
+          />
         </div>
-      )}
+        <SheetFooter>
+          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5" onClick={() => setActiveSheet(null)} disabled={loadingAction === "address"}>
+            Cancel
+          </Button>
+          <Button type="button" size="lg" className="h-11 rounded-full px-5 font-bold" onClick={handleAddAddress} loading={loadingAction === "address"}>
+            Add
+          </Button>
+        </SheetFooter>
+      </AccountActionSheet>
 
-      {/* Add Card Modal */}
-      {showCardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h3 className="text-xl font-bold text-text-primary">Add new card</h3>
-              <button
-                onClick={() => setShowCardModal(false)}
-                className="p-1 hover:bg-surface-muted rounded-full"
-              >
-                <X className="size-5 text-text-secondary" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="text"
-                placeholder="Cardholder name"
-                className="booking-input"
-              />
-              <input
-                type="text"
-                placeholder="Card number"
-                className="booking-input"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="MM/YY"
-                  className="booking-input"
-                />
-                <input
-                  type="text"
-                  placeholder="CVC"
-                  className="booking-input"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setShowCardModal(false)}
-                className="flex-1 px-4 py-2 rounded-full border border-border bg-surface text-text-primary font-bold transition hover:bg-surface-muted"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowCardModal(false)}
-                className="flex-1 px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold transition hover:bg-primary-hover"
-              >
-                Add card
-              </button>
-            </div>
+      <AccountActionSheet
+        open={activeSheet === "card"}
+        onOpenChange={(open) => setActiveSheet(open ? "card" : null)}
+        title="Add new card"
+        description="Add a payment method for upcoming bookings and subscription renewals."
+      >
+        <div className="mt-5 flex flex-col gap-3">
+          <input type="text" placeholder="Cardholder name" className="booking-input" />
+          <input type="text" inputMode="numeric" placeholder="Card number" className="booking-input" />
+          <div className="grid grid-cols-2 gap-3">
+            <input type="text" inputMode="numeric" placeholder="MM/YY" className="booking-input" />
+            <input type="text" inputMode="numeric" placeholder="CVC" className="booking-input" />
           </div>
         </div>
-      )}
+        <SheetFooter>
+          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5" onClick={() => setActiveSheet(null)} disabled={loadingAction === "card"}>
+            Cancel
+          </Button>
+          <Button type="button" size="lg" className="h-11 rounded-full px-5 font-bold" onClick={() => setActiveSheet(null)} loading={loadingAction === "card"}>
+            Add card
+          </Button>
+        </SheetFooter>
+      </AccountActionSheet>
 
-      {/* Edit Phone Modal */}
-      {showPhoneModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h3 className="text-xl font-bold text-text-primary">Update phone number</h3>
-              <button
-                onClick={() => setShowPhoneModal(false)}
-                className="p-1 hover:bg-surface-muted rounded-full"
-              >
-                <X className="size-5 text-text-secondary" />
-              </button>
-            </div>
-            <input
-              type="tel"
-              placeholder="Phone number"
-              value={editingPhone}
-              onChange={(e) => setEditingPhone(e.target.value)}
-              className="booking-input mb-6"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowPhoneModal(false)}
-                className="flex-1 px-4 py-2 rounded-full border border-border bg-surface text-text-primary font-bold transition hover:bg-surface-muted"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdatePhone}
-                className="flex-1 px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold transition hover:bg-primary-hover"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AccountActionSheet
+        open={activeSheet === "phone"}
+        onOpenChange={(open) => setActiveSheet(open ? "phone" : null)}
+        title="Update phone number"
+        description="Use a number where your cleaner can reach you on service day."
+      >
+        <input
+          type="tel"
+          placeholder="Phone number"
+          value={editingPhone}
+          onChange={(e) => setEditingPhone(e.target.value)}
+          className="booking-input mt-5"
+        />
+        <SheetFooter>
+          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5" onClick={() => setActiveSheet(null)} disabled={loadingAction === "phone"}>
+            Cancel
+          </Button>
+          <Button type="button" size="lg" className="h-11 rounded-full px-5 font-bold" onClick={handleUpdatePhone} loading={loadingAction === "phone"}>
+            Save
+          </Button>
+        </SheetFooter>
+      </AccountActionSheet>
 
-      {/* Edit Name Modal */}
-      {showNameModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h3 className="text-xl font-bold text-text-primary">Update name</h3>
-              <button
-                onClick={() => setShowNameModal(false)}
-                className="p-1 hover:bg-surface-muted rounded-full"
-              >
-                <X className="size-5 text-text-secondary" />
-              </button>
-            </div>
-            <input
-              type="text"
-              placeholder="Full name"
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              className="booking-input mb-6"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowNameModal(false)}
-                className="flex-1 px-4 py-2 rounded-full border border-border bg-surface text-text-primary font-bold transition hover:bg-surface-muted"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUpdateName}
-                className="flex-1 px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold transition hover:bg-primary-hover"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AccountActionSheet
+        open={activeSheet === "name"}
+        onOpenChange={(open) => setActiveSheet(open ? "name" : null)}
+        title="Update name"
+        description="This is the name shown on your account and booking records."
+      >
+        <input
+          type="text"
+          placeholder="Full name"
+          value={editingName}
+          onChange={(e) => setEditingName(e.target.value)}
+          className="booking-input mt-5"
+        />
+        <SheetFooter>
+          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5" onClick={() => setActiveSheet(null)} disabled={loadingAction === "name"}>
+            Cancel
+          </Button>
+          <Button type="button" size="lg" className="h-11 rounded-full px-5 font-bold" onClick={handleUpdateName} loading={loadingAction === "name"}>
+            Save
+          </Button>
+        </SheetFooter>
+      </AccountActionSheet>
 
-      {/* Close Account Confirmation Modal */}
-      {showCloseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h3 className="text-xl font-bold text-text-primary">Close account?</h3>
-              <button
-                onClick={() => setShowCloseModal(false)}
-                className="p-1 hover:bg-surface-muted rounded-full"
-              >
-                <X className="size-5 text-text-secondary" />
-              </button>
-            </div>
-            <p className="text-sm text-text-secondary mb-6">
-              Bookings and plans will be paused. Your data will be retained for 90 days and you can reactivate anytime.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCloseModal(false)}
-                className="flex-1 px-4 py-2 rounded-full border border-border bg-surface text-text-primary font-bold transition hover:bg-surface-muted"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowCloseModal(false)}
-                className="flex-1 px-4 py-2 rounded-full border border-error/30 bg-error/5 text-error font-bold transition hover:bg-error/10"
-              >
-                Close account
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AccountActionSheet
+        open={activeSheet === "close"}
+        onOpenChange={(open) => setActiveSheet(open ? "close" : null)}
+        title="Close account?"
+        description="Bookings and plans will be paused. Your data will be retained for 90 days and you can reactivate anytime."
+      >
+        <SheetFooter>
+          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5" onClick={() => setActiveSheet(null)} disabled={loadingAction === "close"}>
+            Cancel
+          </Button>
+          <Button type="button" variant="destructive" size="lg" className="h-11 rounded-full px-5 font-bold" onClick={() => setActiveSheet(null)} loading={loadingAction === "close"}>
+            Close account
+          </Button>
+        </SheetFooter>
+      </AccountActionSheet>
     </>
+  );
+}
+
+function AccountActionSheet({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>{title}</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
+        </SheetHeader>
+        {children}
+      </SheetContent>
+    </Sheet>
   );
 }

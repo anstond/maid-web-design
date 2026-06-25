@@ -155,11 +155,19 @@ export function ActionLink({ href, children }: { href: string; children: ReactNo
   );
 }
 
-export function SecondaryButton({ children }: { children: ReactNode }) {
+export function SecondaryButton({
+  children,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
   return (
     <button
       type="button"
-      className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:border-primary/40 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+      className={cn(
+        "inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:border-primary/40 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px",
+        className
+      )}
+      {...props}
     >
       {children}
     </button>

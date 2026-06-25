@@ -178,4 +178,9 @@ body {
   .booking-input {
     @apply min-h-12 w-full rounded-xl border border-border bg-surface-muted px-4 py-3 text-base text-text-primary shadow-none transition placeholder:text-text-secondary/70 focus:border-primary focus:bg-surface focus:outline-none focus:ring-3 focus:ring-primary/20;
   }
+
+  /* Modal styling for mobile support */
+  [role="dialog"] {
+    @apply z-50;
+  }
 }
