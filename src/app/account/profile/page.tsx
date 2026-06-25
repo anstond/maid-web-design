@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShieldCheck, AlertCircle, Plus, X } from "lucide-react";
+import { ShieldCheck, AlertCircle, Plus, X, BadgeCheck } from "lucide-react";
 import { DetailRow, PageHeader, SecondaryButton, SummaryCard } from "@/components/account/AccountPrimitives";
 import { accountProfile, accountSettings, bookings, subscriptions } from "@/lib/mock-account-data";
 
@@ -56,7 +56,7 @@ export default function AccountPage() {
         description="Your personal information, home details, preferences, and security."
       />
 
-      <section className="mb-8 rounded-2xl border border-border bg-surface p-8 shadow-[rgba(0,0,0,0.12)_0px_4px_16px_0px]">
+      <section className="mb-8 overflow-hidden rounded-2xl border border-primary bg-primary p-8 text-primary-foreground shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px]">
         <div className="flex items-start gap-6">
           <div className="flex-shrink-0">
             <Image
@@ -64,15 +64,16 @@ export default function AccountPage() {
               alt={accountProfile.name}
               width={96}
               height={96}
-              className="rounded-full object-cover ring-4 ring-primary/10"
+              className="rounded-full object-cover ring-4 ring-primary-foreground/20 shadow-lg"
             />
           </div>
           <div className="flex-1">
-            <h2 className="text-4xl font-bold tracking-tight text-text-primary">{name}</h2>
-            <p className="mt-2 text-base text-text-secondary">{accountProfile.neighborhood} · Member since {accountProfile.memberSince.split("T")[0]}</p>
+            <h2 className="text-4xl font-bold tracking-tight text-primary-foreground">{name}</h2>
+            <p className="mt-2 text-base text-primary-foreground/80">{accountProfile.neighborhood} · Member since {accountProfile.memberSince.split("T")[0]}</p>
             <div className="mt-4 flex gap-2">
-              <span className="inline-flex items-center rounded-full bg-success/10 px-4 py-2 text-xs font-bold text-success">
-                ✓ Verified account
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary-foreground px-4 py-2 text-xs font-bold text-primary shadow-lg">
+                <BadgeCheck className="size-4" />
+                Verified account
               </span>
             </div>
           </div>
