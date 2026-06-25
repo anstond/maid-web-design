@@ -1,978 +1,334 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Lock, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import Link from "next/link";
+import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck } from "lucide-react";
 
-const T = {
-  primary: "#155E63",
-  primaryH: "#124A54",
-  accentW: "#D9C7A3",
-  accentS: "#EFE6D3",
-  ink: "#1F2937",
-  body: "#6B7280",
-  muted: "#B8C0C2",
-  canvas: "#FCFBF8",
-  surface: "#FFFFFF",
-  soft: "#F7F5F1",
-  border: "#E5DFD3",
-  onPrimary: "#FFFFFF",
-  success: "#16A34A",
-};
-
-const SERVICES: Record<string, string> = {
-  "regular-cleaning": "Regular Cleaning",
-  "deep-cleaning": "Deep Cleaning",
-  "kitchen-cleaning": "Kitchen Deep Clean",
-  "commercial-cleaning": "Commercial Cleaning",
-  "move-cleaning": "Move-In / Move-Out",
-  "post-construction": "Post-Construction Cleaning",
-};
-
-const ADDON_NAMES: Record<string, string> = {
-  deep_clean: "Deep cleaning upgrade",
-  fridge: "Inside fridge",
-  oven: "Inside oven",
-  cabinets: "Inside cabinets",
-  windows: "Windows (inside)",
-  pets: "Pet friendly care",
-};
-
-const ADDON_PRICES: Record<string, number> = {
-  deep_clean: 50,
-  fridge: 25,
-  oven: 25,
-  cabinets: 35,
-  windows: 40,
-  pets: 20,
-};
-
-const SUBSCRIPTION_NAMES: Record<string, string> = {
-  "one-time": "One-time booking",
-  monthly: "Monthly subscription",
-  biweekly: "Biweekly subscription",
-  weekly: "Weekly subscription",
-};
-
-interface BookingData {
-  serviceId: string;
-  hours: number;
-  maids: number;
-  addons: string[];
+type BookingData = {
   address: string;
   unit: string;
   city: string;
-  state: string;
   zip: string;
-  subscriptionPlan: string;
+  bedrooms: number;
+  bathrooms: number;
+  serviceName: string;
+  frequencyName: string;
+  arrivalWindowLabel: string;
   date: string;
-  timeSlot: string;
-  total: number;
+  access: string;
+  parking: string;
+  pets: string;
+  notes: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  estimate: {
+    estimatedHours: number;
+    visitHours: number;
+    laborHours: number;
+    cleanerCount: number;
+    labor: number;
+    addonTotal: number;
+    suppliesFee: number;
+    arrivalFee: number;
+    serviceFee: number;
+    total: number;
+  };
+};
+
+type PaymentState = {
+  cardName: string;
+  cardNumber: string;
+  expiry: string;
+  cvc: string;
+  billingZip: string;
+  saveCard: boolean;
+};
+
+const INITIAL_PAYMENT: PaymentState = {
+  cardName: "",
+  cardNumber: "",
+  expiry: "",
+  cvc: "",
+  billingZip: "",
+  saveCard: true,
+};
+
+function formatDate(date: string) {
+  if (!date) return "Date not selected";
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(`${date}T12:00:00`));
+}
+
+function cn(...classes: Array<string | false | undefined>) {
+  return classes.filter(Boolean).join(" ");
 }
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const [booking, setBooking] = useState<BookingData | null>(null);
+  const [payment, setPayment] = useState<PaymentState>(INITIAL_PAYMENT);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isConfirmed, setIsConfirmed] = useState(false);
-
-  const [formData, setFormData] = useState({
-    cardNumber: "",
-    expiry: "",
-    cvv: "",
-    name: "",
-    email: "",
-    phone: "",
-  });
+  const [confirmed, setConfirmed] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage) {
-      const bookingData = sessionStorage.getItem("apartmentmaid_booking");
-      if (bookingData) {
-        setBooking(JSON.parse(bookingData));
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+      const raw = sessionStorage.getItem("apartmentmaid_booking");
+      if (raw) {
+        setBooking(JSON.parse(raw));
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 16);
-    const formatted = value
-      .replace(/(\d{4})(?=\d)/g, "$1 ")
-      .slice(0, 19);
-    setFormData({ ...formData, cardNumber: formatted });
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "").slice(0, 4);
-    if (value.length >= 2) {
-      value = value.slice(0, 2) + "/" + value.slice(2);
-    }
-    setFormData({ ...formData, expiry: value });
-  };
-
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 3);
-    setFormData({ ...formData, cvv: value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setIsConfirmed(true);
-    setIsSubmitting(false);
-
-    // Redirect after 2 seconds
-    setTimeout(() => {
-      if (sessionStorage) {
-        sessionStorage.removeItem("apartmentmaid_booking");
-      }
-      router.push("/");
-    }, 2000);
-  };
-
-  if (isLoading || !booking) {
+  const formValid = useMemo(() => {
     return (
-      <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, minHeight: "100vh" }}>
-        <div
-          style={{
-            padding: "16px 32px",
-            background: T.surface,
-            borderBottom: `1px solid ${T.border}`,
-            position: "sticky",
-            top: 0,
-            zIndex: 20,
-          }}
-        >
-          <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-            <a
-              href="/"
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: T.primary,
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <ArrowLeft size={16} />
-              Back to home
-            </a>
-          </div>
+      payment.cardName.trim().length > 2 &&
+      payment.cardNumber.replace(/\D/g, "").length >= 15 &&
+      payment.expiry.length === 5 &&
+      payment.cvc.length >= 3 &&
+      payment.billingZip.length === 5
+    );
+  }, [payment]);
+
+  function update<K extends keyof PaymentState>(key: K, value: PaymentState[K]) {
+    setPayment((previous) => ({ ...previous, [key]: value }));
+  }
+
+  function handleCardNumber(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 16);
+    update("cardNumber", digits.replace(/(\d{4})(?=\d)/g, "$1 "));
+  }
+
+  function handleExpiry(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    update("expiry", digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    if (!formValid) {
+      setError("Check the payment fields before confirming.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    setConfirmed(true);
+    setIsSubmitting(false);
+    sessionStorage.removeItem("apartmentmaid_booking");
+  }
+
+  if (isLoading) {
+    return <div className="min-h-[100dvh] bg-background" />;
+  }
+
+  if (!booking) {
+    return (
+      <main className="min-h-[100dvh] bg-background px-4 py-12 text-text-primary">
+        <div className="mx-auto max-w-xl rounded-2xl border border-border bg-surface p-6 text-center">
+          <h1 className="text-2xl font-bold">No booking found</h1>
+          <p className="mt-3 text-sm leading-6 text-text-secondary">
+            Start the booking flow again so we can price the visit and collect arrival notes.
+          </p>
+          <Link href="/booking" className="mt-6 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground">
+            Start booking
+          </Link>
         </div>
-        <div
-          style={{
-            padding: "56px 32px",
-            textAlign: "center",
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <p style={{ color: T.body, fontSize: 16 }}>Loading checkout...</p>
-        </div>
-      </div>
+      </main>
     );
   }
 
-  const serviceLabel = SERVICES[booking.serviceId] || booking.serviceId;
-  const subscriptionLabel = SUBSCRIPTION_NAMES[booking.subscriptionPlan] || "One-time booking";
+  if (confirmed) {
+    return (
+      <main className="min-h-[100dvh] bg-background px-4 py-12 text-text-primary">
+        <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-6 text-center shadow-[0_12px_40px_rgba(21,94,99,0.08)] sm:p-8">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Check className="size-8" aria-hidden="true" />
+          </div>
+          <h1 className="mt-6 text-3xl font-bold">Your cleaning is booked.</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-text-secondary">
+            Confirmation was sent to {booking.email}. Your cleaner assignment and arrival instructions will arrive before the visit.
+          </p>
+
+          <div className="mt-8 grid gap-3 rounded-2xl bg-surface-muted p-4 text-left text-sm sm:grid-cols-2">
+            <SummaryLine label="Service" value={booking.serviceName} />
+            <SummaryLine label="When" value={`${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`} />
+            <SummaryLine label="Home" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}`} />
+            <SummaryLine label="Total paid" value={`$${booking.estimate.total.toFixed(2)}`} />
+          </div>
+
+          <Link href="/" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground">
+            Back to home
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, color: T.ink }}>
-      {/* Navigation */}
-      <div
-        style={{
-          padding: "16px 32px",
-          background: T.surface,
-          borderBottom: `1px solid ${T.border}`,
-          position: "sticky",
-          top: 0,
-          zIndex: 20,
-        }}
-      >
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <a
-            href="/booking"
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: T.primary,
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-            }}
-          >
-            <ArrowLeft size={16} />
-            Back to booking
-          </a>
+    <main className="min-h-[100dvh] bg-background text-text-primary">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/booking" className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-semibold text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30">
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Edit booking
+          </Link>
+          <div className="hidden items-center gap-2 text-sm font-medium text-text-secondary sm:flex">
+            <Lock className="size-4 text-primary" aria-hidden="true" />
+            Secure checkout
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div style={{ padding: "56px 32px", minHeight: "100vh" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          {isConfirmed ? (
-            // Confirmation State
-            <div
-              style={{
-                maxWidth: 600,
-                margin: "0 auto",
-                textAlign: "center",
-                padding: "56px 32px",
-              }}
-            >
-              <div
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: "50%",
-                  background: T.success,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto 32px",
-                  animation: "scaleIn 0.5s ease-out",
-                }}
-              >
-                <ShieldCheck size={40} color={T.onPrimary} strokeWidth={1.5} />
-              </div>
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8 lg:py-12">
+        <section className="rounded-2xl border border-border bg-surface p-5 shadow-[0_12px_40px_rgba(21,94,99,0.08)] sm:p-7" aria-labelledby="checkout-title">
+          <p className="mb-3 text-sm font-semibold text-primary">Payment</p>
+          <h1 id="checkout-title" className="text-3xl font-bold tracking-normal text-text-primary md:text-4xl">
+            Confirm your appointment.
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">
+            Your card is charged after confirmation. If the cleaner finds the job needs more time, we ask before changing the price.
+          </p>
 
-              <h1
-                style={{
-                  fontSize: 32,
-                  fontWeight: 700,
-                  color: T.ink,
-                  margin: "0 0 16px",
-                }}
-              >
-                Booking Confirmed! ✓
-              </h1>
+          <div className="mt-8 grid gap-4 rounded-2xl bg-surface-muted p-4 sm:grid-cols-2">
+            <SummaryLine label="Customer" value={`${booking.firstName} ${booking.lastName}`} />
+            <SummaryLine label="Contact" value={`${booking.email}, ${booking.phone}`} />
+            <SummaryLine label="Service" value={`${booking.serviceName}, ${booking.frequencyName}`} />
+            <SummaryLine label="Team" value={`${booking.estimate.visitHours} hr × ${booking.estimate.cleanerCount} ${booking.estimate.cleanerCount === 1 ? "cleaner" : "cleaners"}`} />
+            <SummaryLine label="Schedule" value={`${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`} />
+            <SummaryLine label="Address" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}, ${booking.city} ${booking.zip}`} />
+            <SummaryLine label="Access" value={booking.access} />
+            <SummaryLine label="Parking" value={booking.parking} />
+            <SummaryLine label="Pets" value={booking.pets} />
+          </div>
 
-              <p
-                style={{
-                  fontSize: 16,
-                  color: T.body,
-                  lineHeight: "26px",
-                  margin: "0 0 32px",
-                }}
-              >
-                Your cleaning is scheduled for{" "}
-                <strong>{new Date(booking.date).toLocaleDateString()}</strong>. You'll
-                receive a confirmation email shortly.
-              </p>
-
-              <div
-                style={{
-                  background: T.soft,
-                  border: `1px solid ${T.border}`,
-                  borderRadius: 16,
-                  padding: 24,
-                  marginBottom: 32,
-                  textAlign: "left",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 12,
-                    paddingBottom: 12,
-                    borderBottom: `1px solid ${T.border}`,
-                  }}
-                >
-                  <span style={{ fontWeight: 600, color: T.ink }}>
-                    {serviceLabel}
-                  </span>
-                  <span style={{ fontWeight: 600, color: T.ink }}>
-                    {booking.hours}h × {booking.maids} pro
-                  </span>
-                </div>
-
-                <div style={{ fontSize: 14, color: T.body, lineHeight: "20px" }}>
-                  <div>{booking.address}</div>
-                  {booking.unit && <div>{booking.unit}</div>}
-                  <div>
-                    {booking.city}, {booking.state} {booking.zip}
-                  </div>
-                </div>
-              </div>
-
-              <p style={{ fontSize: 14, color: T.body, margin: "0" }}>
-                Redirecting to home in a moment...
-              </p>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            <div className="flex items-center gap-2 text-base font-bold text-text-primary">
+              <CreditCard className="size-5 text-primary" aria-hidden="true" />
+              Card details
             </div>
-          ) : (
-            // Checkout Form
-            <div
-              className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10"
-              style={{ gridAutoFlow: "row" }}
-            >
-              {/* Left: Order Summary */}
-              <div>
-                <h1
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 700,
-                    color: T.ink,
-                    margin: "0 0 32px",
-                  }}
-                >
-                  Order Review
-                </h1>
 
-                <div
-                  style={{
-                    background: T.surface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 16,
-                    padding: 32,
-                    marginBottom: 24,
-                  }}
-                >
-                  <h2
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: T.ink,
-                      margin: "0 0 24px",
-                    }}
-                  >
-                    Booking Details
-                  </h2>
+            <Field label="Name on card" htmlFor="cardName">
+              <input id="cardName" value={payment.cardName} onChange={(event) => update("cardName", event.target.value)} autoComplete="cc-name" className="booking-input" />
+            </Field>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    {/* Service */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        paddingBottom: 16,
-                        borderBottom: `1px solid ${T.border}`,
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 4,
-                          }}
-                        >
-                          Service
-                        </div>
-                        <div style={{ fontSize: 13, color: T.body }}>
-                          {serviceLabel}
-                        </div>
-                      </div>
-                    </div>
+            <Field label="Card number" htmlFor="cardNumber">
+              <input id="cardNumber" value={payment.cardNumber} onChange={(event) => handleCardNumber(event.target.value)} autoComplete="cc-number" inputMode="numeric" className="booking-input font-mono tabular-nums" placeholder="4242 4242 4242 4242" />
+            </Field>
 
-                    {/* Schedule */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        paddingBottom: 16,
-                        borderBottom: `1px solid ${T.border}`,
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 4,
-                          }}
-                        >
-                          Date & Time
-                        </div>
-                        <div style={{ fontSize: 13, color: T.body }}>
-                          {new Date(booking.date).toLocaleDateString()},{" "}
-                          {booking.timeSlot}
-                        </div>
-                      </div>
-                    </div>
+            <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr]">
+              <Field label="Expiry" htmlFor="expiry">
+                <input id="expiry" value={payment.expiry} onChange={(event) => handleExpiry(event.target.value)} autoComplete="cc-exp" inputMode="numeric" className="booking-input font-mono tabular-nums" placeholder="MM/YY" />
+              </Field>
+              <Field label="CVC" htmlFor="cvc">
+                <input id="cvc" value={payment.cvc} onChange={(event) => update("cvc", event.target.value.replace(/\D/g, "").slice(0, 4))} autoComplete="cc-csc" inputMode="numeric" className="booking-input font-mono tabular-nums" />
+              </Field>
+              <Field label="Billing ZIP" htmlFor="billingZip">
+                <input id="billingZip" value={payment.billingZip} onChange={(event) => update("billingZip", event.target.value.replace(/\D/g, "").slice(0, 5))} autoComplete="postal-code" inputMode="numeric" className="booking-input font-mono tabular-nums" />
+              </Field>
+            </div>
 
-                    {/* Duration */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        paddingBottom: 16,
-                        borderBottom: `1px solid ${T.border}`,
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 4,
-                          }}
-                        >
-                          Team Size
-                        </div>
-                        <div style={{ fontSize: 13, color: T.body }}>
-                          {booking.hours} hours × {booking.maids}{" "}
-                          {booking.maids === 1 ? "professional" : "professionals"}
-                        </div>
-                      </div>
-                    </div>
+            <label className="flex items-start gap-3 rounded-2xl border border-border bg-surface-muted p-4 text-sm leading-6 text-text-secondary">
+              <input
+                type="checkbox"
+                checked={payment.saveCard}
+                onChange={(event) => update("saveCard", event.target.checked)}
+                className="mt-1 size-4 accent-primary"
+              />
+              Keep this payment method on file for future appointments.
+            </label>
 
-                    {/* Address */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        paddingBottom: 16,
-                        borderBottom: `1px solid ${T.border}`,
-                      }}
-                    >
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 4,
-                          }}
-                        >
-                          Location
-                        </div>
-                        <div style={{ fontSize: 13, color: T.body }}>
-                          <div>{booking.address}</div>
-                          {booking.unit && <div>{booking.unit}</div>}
-                          <div>
-                            {booking.city}, {booking.state} {booking.zip}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Add-ons */}
-                    {booking.addons.length > 0 && (
-                      <div
-                        style={{
-                          paddingBottom: 16,
-                          borderBottom: `1px solid ${T.border}`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 8,
-                          }}
-                        >
-                          Add-on Services
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          {booking.addons.map((id) => (
-                            <div
-                              key={id}
-                              style={{
-                                fontSize: 13,
-                                color: T.body,
-                                display: "flex",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <span>{ADDON_NAMES[id]}</span>
-                              <span>+${ADDON_PRICES[id]}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Subscription Plan */}
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 600,
-                          color: T.ink,
-                          marginBottom: 4,
-                        }}
-                      >
-                        Plan
-                      </div>
-                      <div style={{ fontSize: 13, color: T.body }}>
-                        {subscriptionLabel}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Form */}
-                <div
-                  style={{
-                    background: T.surface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 16,
-                    padding: 32,
-                  }}
-                >
-                  <h2
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      color: T.ink,
-                      margin: "0 0 24px",
-                    }}
-                  >
-                    Payment Details
-                  </h2>
-
-                  <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: 20 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: T.ink,
-                          marginBottom: 8,
-                        }}
-                      >
-                        Cardholder Name
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                        placeholder="John Doe"
-                        required
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 14,
-                          border: `1px solid ${T.border}`,
-                          borderRadius: 8,
-                          background: T.soft,
-                          fontFamily: "var(--font-sans)",
-                          boxSizing: "border-box",
-                        }}
-                        onFocus={(e) => {
-                          (e.target as HTMLInputElement).style.outline = "none";
-                          (e.target as HTMLInputElement).style.borderColor = T.primary;
-                          (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px ${T.primary}20`;
-                        }}
-                        onBlur={(e) => {
-                          (e.target as HTMLInputElement).style.borderColor = T.border;
-                          (e.target as HTMLInputElement).style.boxShadow = "none";
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ marginBottom: 20 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: T.ink,
-                          marginBottom: 8,
-                        }}
-                      >
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        required
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 14,
-                          border: `1px solid ${T.border}`,
-                          borderRadius: 8,
-                          background: T.soft,
-                          fontFamily: "monospace",
-                          boxSizing: "border-box",
-                        }}
-                        onFocus={(e) => {
-                          (e.target as HTMLInputElement).style.outline = "none";
-                          (e.target as HTMLInputElement).style.borderColor = T.primary;
-                          (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px ${T.primary}20`;
-                        }}
-                        onBlur={(e) => {
-                          (e.target as HTMLInputElement).style.borderColor = T.border;
-                          (e.target as HTMLInputElement).style.boxShadow = "none";
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12, marginBottom: 20 }}>
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 8,
-                          }}
-                        >
-                          Expiry
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.expiry}
-                          onChange={handleExpiryChange}
-                          placeholder="MM/YY"
-                          maxLength={5}
-                          required
-                          style={{
-                            width: "100%",
-                            padding: "12px 16px",
-                            fontSize: 14,
-                            border: `1px solid ${T.border}`,
-                            borderRadius: 8,
-                            background: T.soft,
-                            fontFamily: "monospace",
-                            boxSizing: "border-box",
-                          }}
-                          onFocus={(e) => {
-                            (e.target as HTMLInputElement).style.outline = "none";
-                            (e.target as HTMLInputElement).style.borderColor = T.primary;
-                            (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px ${T.primary}20`;
-                          }}
-                          onBlur={(e) => {
-                            (e.target as HTMLInputElement).style.borderColor = T.border;
-                            (e.target as HTMLInputElement).style.boxShadow = "none";
-                          }}
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          style={{
-                            display: "block",
-                            fontSize: 13,
-                            fontWeight: 600,
-                            color: T.ink,
-                            marginBottom: 8,
-                          }}
-                        >
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.cvv}
-                          onChange={handleCvvChange}
-                          placeholder="123"
-                          maxLength={3}
-                          required
-                          style={{
-                            width: "100%",
-                            padding: "12px 16px",
-                            fontSize: 14,
-                            border: `1px solid ${T.border}`,
-                            borderRadius: 8,
-                            background: T.soft,
-                            fontFamily: "monospace",
-                            boxSizing: "border-box",
-                          }}
-                          onFocus={(e) => {
-                            (e.target as HTMLInputElement).style.outline = "none";
-                            (e.target as HTMLInputElement).style.borderColor = T.primary;
-                            (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px ${T.primary}20`;
-                          }}
-                          onBlur={(e) => {
-                            (e.target as HTMLInputElement).style.borderColor = T.border;
-                            (e.target as HTMLInputElement).style.boxShadow = "none";
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ marginBottom: 28 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: T.ink,
-                          marginBottom: 8,
-                        }}
-                      >
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                        placeholder="your@email.com"
-                        required
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: 14,
-                          border: `1px solid ${T.border}`,
-                          borderRadius: 8,
-                          background: T.soft,
-                          fontFamily: "var(--font-sans)",
-                          boxSizing: "border-box",
-                        }}
-                        onFocus={(e) => {
-                          (e.target as HTMLInputElement).style.outline = "none";
-                          (e.target as HTMLInputElement).style.borderColor = T.primary;
-                          (e.target as HTMLInputElement).style.boxShadow = `0 0 0 3px ${T.primary}20`;
-                        }}
-                        onBlur={(e) => {
-                          (e.target as HTMLInputElement).style.borderColor = T.border;
-                          (e.target as HTMLInputElement).style.boxShadow = "none";
-                        }}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      style={{
-                        width: "100%",
-                        background: isSubmitting ? T.muted : T.primary,
-                        color: T.onPrimary,
-                        border: "none",
-                        borderRadius: 999,
-                        padding: "16px 24px",
-                        fontSize: 15,
-                        fontWeight: 700,
-                        cursor: isSubmitting ? "not-allowed" : "pointer",
-                        transition: "all 0.15s ease",
-                        opacity: isSubmitting ? 0.7 : 1,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSubmitting) {
-                          (e.currentTarget as HTMLElement).style.background = T.primaryH;
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSubmitting) {
-                          (e.currentTarget as HTMLElement).style.background = T.primary;
-                        }
-                      }}
-                    >
-                      {isSubmitting
-                        ? "Processing..."
-                        : `Confirm & Pay $${booking.total.toFixed(2)}`}
-                    </button>
-                  </form>
-
-                  {/* Trust Badges */}
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 16,
-                      marginTop: 24,
-                      paddingTop: 24,
-                      borderTop: `1px solid ${T.border}`,
-                      fontSize: 12,
-                      color: T.body,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <Lock size={16} color={T.primary} />
-                      Secured by SSL
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <ShieldCheck size={16} color={T.primary} />
-                      100% Guaranteed
-                    </div>
-                  </div>
-                </div>
+            {error ? (
+              <div className="rounded-2xl border border-error/30 bg-error/10 p-4 text-sm font-medium text-error" role="alert">
+                {error}
               </div>
+            ) : null}
 
-              {/* Right: Order Summary Sidebar */}
-              <div style={{ position: "sticky", top: 88, zIndex: 10 }}>
-                <div
-                  style={{
-                    background: T.surface,
-                    border: `1px solid ${T.border}`,
-                    borderRadius: 16,
-                    padding: 24,
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: T.ink,
-                      margin: "0 0 20px",
-                    }}
-                  >
-                    Order Summary
-                  </h3>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(
+                "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px",
+                isSubmitting ? "cursor-not-allowed bg-primary/60" : "bg-primary hover:bg-primary-hover"
+              )}
+            >
+              {isSubmitting ? "Confirming booking..." : `Pay $${booking.estimate.total.toFixed(2)}`}
+            </button>
+          </form>
+        </section>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: 13,
-                        color: T.body,
-                      }}
-                    >
-                      <span>Service</span>
-                      <span>{serviceLabel}</span>
-                    </div>
+        <aside className="lg:sticky lg:top-24 lg:self-start" aria-label="Payment summary">
+          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
+            <div className="bg-primary p-5 text-primary-foreground">
+              <p className="text-sm font-semibold text-primary-foreground/80">Due today</p>
+              <p className="mt-2 text-4xl font-bold tracking-normal">${booking.estimate.total.toFixed(2)}</p>
+              <p className="mt-1 text-sm text-primary-foreground/80">{booking.estimate.visitHours} visit hr × {booking.estimate.cleanerCount} {booking.estimate.cleanerCount === 1 ? "cleaner" : "cleaners"}</p>
+            </div>
+            <div className="space-y-4 p-5">
+              <EstimateRow label="Labor" value={`$${booking.estimate.labor.toFixed(0)}`} />
+              <EstimateRow label="Labor hours" value={`${booking.estimate.laborHours.toFixed(1).replace(".0", "")} hr`} />
+              {booking.estimate.addonTotal > 0 ? <EstimateRow label="Extra tasks" value={`$${booking.estimate.addonTotal.toFixed(0)}`} /> : null}
+              {booking.estimate.arrivalFee > 0 ? <EstimateRow label="Arrival window" value={`$${booking.estimate.arrivalFee.toFixed(0)}`} /> : null}
+              <EstimateRow label="Supplies" value={booking.estimate.suppliesFee > 0 ? `$${booking.estimate.suppliesFee}` : "Provided"} />
+              <EstimateRow label="Service fee" value={`$${booking.estimate.serviceFee}`} />
 
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: 13,
-                        color: T.body,
-                      }}
-                    >
-                      <span>Duration</span>
-                      <span>{booking.hours}h × {booking.maids}</span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: 13,
-                        color: T.body,
-                      }}
-                    >
-                      <span>Date</span>
-                      <span>
-                        {new Date(booking.date).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    {booking.addons.length > 0 && (
-                      <div
-                        style={{
-                          fontSize: 13,
-                          color: T.body,
-                          paddingTop: 12,
-                          borderTop: `1px solid ${T.border}`,
-                        }}
-                      >
-                        <div style={{ marginBottom: 8 }}>
-                          <strong>Add-ons:</strong>
-                        </div>
-                        {booking.addons.map((id) => (
-                          <div
-                            key={id}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              marginBottom: 4,
-                            }}
-                          >
-                            <span>{ADDON_NAMES[id]}</span>
-                            <span>${ADDON_PRICES[id]}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div
-                    style={{
-                      height: 1,
-                      background: T.border,
-                      margin: "20px 0",
-                    }}
-                  />
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "baseline",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 700,
-                        color: T.ink,
-                      }}
-                    >
-                      Total
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 28,
-                        fontWeight: 700,
-                        color: T.primary,
-                        letterSpacing: "-0.03em",
-                      }}
-                    >
-                      ${booking.total.toFixed(2)}
-                    </span>
-                  </div>
-
-                  <a
-                    href="/booking"
-                    style={{
-                      display: "block",
-                      marginTop: 20,
-                      fontSize: 13,
-                      color: T.primary,
-                      textDecoration: "underline",
-                      textAlign: "center",
-                    }}
-                  >
-                    Edit booking
-                  </a>
+              <div className="rounded-2xl bg-surface-muted p-4 text-sm leading-6 text-text-secondary">
+                <div className="mb-2 flex items-center gap-2 font-bold text-text-primary">
+                  <ShieldCheck className="size-4 text-primary" aria-hidden="true" />
+                  Quality guarantee
                 </div>
+                Report a missed area within 24 hours and we schedule a re-clean for that area.
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        </aside>
       </div>
+    </main>
+  );
+}
 
-      <style>{`
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
+function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: ReactNode }) {
+  return (
+    <div>
+      <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-text-primary">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function SummaryLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-bold text-text-secondary">{label}</p>
+      <p className="mt-1 text-sm font-semibold leading-6 text-text-primary">{value}</p>
+    </div>
+  );
+}
+
+function EstimateRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className={cn("flex items-center justify-between gap-4 text-sm", strong ? "font-bold text-text-primary" : "text-text-secondary")}>
+      <span>{label}</span>
+      <span className="text-right tabular-nums">{value}</span>
     </div>
   );
 }
