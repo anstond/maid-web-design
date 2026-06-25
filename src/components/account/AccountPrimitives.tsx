@@ -20,17 +20,17 @@ export function PageHeader({
   description,
   action,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description: string;
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="mb-2 text-sm font-bold text-primary">{eyebrow}</p>
-        <h1 className="text-4xl font-bold leading-tight tracking-normal text-text-primary md:text-5xl">{title}</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">{description}</p>
+        {eyebrow ? <p className="mb-2 text-sm font-bold text-primary">{eyebrow}</p> : null}
+        <h1 className="text-3xl font-bold leading-tight tracking-normal text-text-primary md:text-5xl">{title}</h1>
+        <p className="mt-3 max-w-[62ch] text-base leading-7 text-text-secondary">{description}</p>
       </div>
       {action}
     </div>
@@ -145,10 +145,12 @@ export function ActionLink({ href, children }: { href: string; children: ReactNo
   return (
     <Link
       href={href}
-      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+      className="group inline-flex min-h-11 items-center justify-center gap-3 rounded-full bg-primary py-1.5 pl-5 pr-1.5 text-sm font-bold text-primary-foreground transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
     >
       {children}
-      <ArrowRight className="size-4" aria-hidden="true" />
+      <span className="flex size-8 items-center justify-center rounded-full bg-primary-foreground/14 transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5">
+        <ArrowRight className="size-4" aria-hidden="true" />
+      </span>
     </Link>
   );
 }
