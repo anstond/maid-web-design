@@ -56,8 +56,8 @@ export default function AccountPage() {
         description="Your personal information, home details, preferences, and security."
       />
 
-      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
-        <div className="p-5 sm:p-6">
+      <section className="mb-8 overflow-hidden rounded-2xl border border-border bg-surface shadow-[rgba(0,0,0,0.12)_0px_4px_16px_0px]">
+        <div className="p-6">
           <div className="flex items-start gap-6">
             <div className="flex-shrink-0">
               <Image
@@ -78,15 +78,15 @@ export default function AccountPage() {
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-surface-muted p-4">
+            <div className="rounded-2xl bg-surface-muted p-4">
               <p className="text-xs font-bold text-text-secondary">Email</p>
               <p className="mt-2 text-sm font-bold text-text-primary">{accountProfile.email}</p>
             </div>
-            <div className="rounded-xl bg-surface-muted p-4">
+            <div className="rounded-2xl bg-surface-muted p-4">
               <p className="text-xs font-bold text-text-secondary">Phone</p>
               <p className="mt-2 text-sm font-bold text-text-primary">{accountProfile.phone}</p>
             </div>
-            <div className="rounded-xl bg-surface-muted p-4">
+            <div className="rounded-2xl bg-surface-muted p-4">
               <p className="text-xs font-bold text-text-secondary">Location</p>
               <p className="mt-2 text-sm font-bold text-text-primary">{accountProfile.neighborhood}</p>
             </div>
@@ -134,7 +134,7 @@ export default function AccountPage() {
           <SummaryCard title="Addresses">
             <div className="space-y-3">
               {addresses.map((address, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-4 rounded-lg border border-border bg-surface-muted p-4">
+                <div key={idx} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4">
                   <div>
                     <p className="font-bold text-text-primary">{address}</p>
                     {idx === 0 && <p className="mt-1 text-xs font-bold text-success">Primary address</p>}
@@ -155,7 +155,7 @@ export default function AccountPage() {
           <SummaryCard title="Payment methods">
             <div className="space-y-3">
               {accountSettings.paymentMethods.map((method, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-4 rounded-lg border border-border bg-surface-muted p-4">
+                <div key={idx} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-surface-muted p-4">
                   <div>
                     <p className="font-bold text-text-primary">{method.label}</p>
                     <p className="mt-1 text-sm text-text-secondary">{method.detail}</p>
@@ -230,7 +230,7 @@ export default function AccountPage() {
             </dl>
           </SummaryCard>
 
-          <div className="rounded-2xl bg-primary p-5 text-primary-foreground shadow-[0_18px_58px_rgba(21,94,99,0.18)]">
+          <div className="rounded-2xl bg-primary p-6 text-primary-foreground shadow-[rgba(21,94,99,0.18)_0px_4px_16px_0px]">
             <div className="flex items-center gap-2 text-sm font-bold">
               <ShieldCheck className="size-4" aria-hidden="true" />
               Privacy
@@ -245,7 +245,7 @@ export default function AccountPage() {
       {/* Add Address Modal */}
       {showAddressModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-6 border border-border shadow-[rgba(0,0,0,0.16)_0px_4px_16px_0px]">
             <div className="flex items-center justify-between gap-4 mb-4">
               <h3 className="text-xl font-bold text-text-primary">Add new address</h3>
               <button
@@ -261,28 +261,28 @@ export default function AccountPage() {
                 placeholder="Street address"
                 value={newAddress.street}
                 onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })}
-                className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="booking-input"
               />
               <input
                 type="text"
                 placeholder="Unit / Apartment (optional)"
                 value={newAddress.unit}
                 onChange={(e) => setNewAddress({ ...newAddress, unit: e.target.value })}
-                className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="booking-input"
               />
               <input
                 type="text"
                 placeholder="Postal code"
                 value={newAddress.postalCode}
                 onChange={(e) => setNewAddress({ ...newAddress, postalCode: e.target.value })}
-                className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="booking-input"
               />
               <input
                 type="tel"
                 placeholder="Phone number"
                 value={newAddress.phone}
                 onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="booking-input"
               />
             </div>
             <div className="mt-6 flex gap-3">
@@ -320,23 +320,23 @@ export default function AccountPage() {
               <input
                 type="text"
                 placeholder="Cardholder name"
-                className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="booking-input"
               />
               <input
                 type="text"
                 placeholder="Card number"
-                className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                className="booking-input"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="text"
                   placeholder="MM/YY"
-                  className="rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="booking-input"
                 />
                 <input
                   type="text"
                   placeholder="CVC"
-                  className="rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="booking-input"
                 />
               </div>
             </div>
@@ -376,7 +376,7 @@ export default function AccountPage() {
               placeholder="Phone number"
               value={editingPhone}
               onChange={(e) => setEditingPhone(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary mb-6"
+              className="booking-input mb-6"
             />
             <div className="flex gap-3">
               <button
@@ -414,7 +414,7 @@ export default function AccountPage() {
               placeholder="Full name"
               value={editingName}
               onChange={(e) => setEditingName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-muted p-3 text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary mb-6"
+              className="booking-input mb-6"
             />
             <div className="flex gap-3">
               <button
