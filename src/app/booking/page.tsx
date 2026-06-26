@@ -848,14 +848,14 @@ function BookingPageContent() {
                       if (index <= step) setStep(index);
                     }}
                     className={cn(
-                      "flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl px-1.5 text-xs font-semibold transition sm:gap-2 sm:px-2 sm:text-sm",
+                      "flex min-h-11 w-full items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition sm:gap-2 sm:px-2 sm:text-sm",
                       index === step && "bg-primary text-primary-foreground",
                       index < step && "bg-surface-muted text-primary",
                       index > step && "text-text-secondary"
                     )}
                     aria-current={index === step ? "step" : undefined}
                   >
-                    {index < step ? <Check className="size-4" aria-hidden="true" /> : null}
+                    {index < step ? <Check className="size-3.5 shrink-0" aria-hidden="true" /> : null}
                     <span className="truncate">{label}</span>
                   </button>
                 </li>
@@ -1176,7 +1176,7 @@ function BookingPageContent() {
                       View all extras
                     </button>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="-mx-4 flex flex-row flex-nowrap gap-2 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-none sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
                     {popularAddons.map((addon) => {
                       const selected = state.addons.includes(addon.id);
                       return (
@@ -1185,7 +1185,7 @@ function BookingPageContent() {
                           type="button"
                           onClick={() => toggleAddon(addon.id)}
                           className={cn(
-                            "flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 text-left text-sm font-bold transition active:translate-y-px",
+                            "flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 text-left text-sm font-bold transition active:translate-y-px w-[260px] shrink-0 snap-start sm:w-auto",
                             selected
                               ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(21,94,99,0.14)]"
                               : "border-primary/20 bg-surface text-text-primary hover:border-primary/45"
@@ -1238,7 +1238,7 @@ function BookingPageContent() {
                 <div className="grid gap-3 rounded-[1.5rem] border border-border/80 bg-surface-muted/60 p-2 shadow-[0_8px_30px_rgba(21,94,99,0.03)] md:grid-cols-[1.2fr_0.8fr] md:rounded-[2rem] md:p-2.5">
                   <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
                     <div>
-                      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-bold tracking-tight text-text-primary">Visit hours</h3>
@@ -1256,14 +1256,14 @@ function BookingPageContent() {
                           <button
                             type="button"
                             onClick={() => update("hours", recommendedHours)}
-                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/25 bg-surface px-4 py-1 text-xs font-bold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/25 bg-surface px-4 py-1 text-xs font-bold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 self-start sm:self-auto"
                           >
                             <Sparkles className="size-3" />
                             Use recommended
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
                         {hourOptions.map((hours) => {
                           const isSelected = state.hours === hours;
                           const isRec = hours === recommendedHours;
