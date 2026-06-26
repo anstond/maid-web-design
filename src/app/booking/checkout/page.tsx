@@ -37,6 +37,7 @@ type BookingData = {
     total: number;
   };
   frequencyId?: string;
+  startDate?: string;
   customSchedules?: Array<{ dayOfWeek: number; time: string; product: string }>;
 };
 
@@ -171,7 +172,14 @@ export default function CheckoutPage() {
 
           <div className="mt-8 grid gap-3 rounded-2xl bg-surface-muted p-4 text-left text-sm sm:grid-cols-2">
             <SummaryLine label="Service" value={booking.serviceName} />
-            <SummaryLine label="When" value={`${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`} />
+            <SummaryLine
+              label={booking.frequencyId === "custom" ? "Starts on" : "When"}
+              value={
+                booking.frequencyId === "custom"
+                  ? formatDate(booking.startDate ?? booking.date)
+                  : `${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`
+              }
+            />
             <SummaryLine label="Home" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}`} />
             <SummaryLine label="Total paid" value={`$${booking.estimate.total.toFixed(2)}`} />
           </div>
@@ -214,7 +222,14 @@ export default function CheckoutPage() {
             <SummaryLine label="Contact" value={`${booking.email}, ${booking.phone}`} />
             <SummaryLine label="Service" value={`${booking.serviceName}, ${booking.frequencyName}`} />
             <SummaryLine label="Team" value={`${booking.estimate.visitHours} hr × ${booking.estimate.cleanerCount} ${booking.estimate.cleanerCount === 1 ? "cleaner" : "cleaners"}`} />
-            <SummaryLine label="Schedule" value={`${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`} />
+            <SummaryLine
+              label={booking.frequencyId === "custom" ? "Starts on" : "Schedule"}
+              value={
+                booking.frequencyId === "custom"
+                  ? formatDate(booking.startDate ?? booking.date)
+                  : `${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`
+              }
+            />
             <SummaryLine label="Address" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}, ${booking.city} ${booking.zip}`} />
             <SummaryLine label="Access" value={booking.access} />
             <SummaryLine label="Parking" value={booking.parking} />

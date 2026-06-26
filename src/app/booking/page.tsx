@@ -251,7 +251,12 @@ function BookingPageContent() {
       if (!cleanerOptions.includes(state.cleaners)) result.push(`Choose an available cleaner count for ${currentService.name}.`);
     }
     if (step === 2) {
-      if (!state.date) result.push("Choose a date.");
+      if (state.frequencyId === "custom") {
+        if (!state.startDate) result.push("Choose a subscription start date.");
+        if (state.customSchedules.length === 0) result.push("Pick at least one day for your custom schedule.");
+      } else {
+        if (!state.date) result.push("Choose a date.");
+      }
       if (!state.parking.trim()) result.push("Add parking or transit notes.");
     }
     if (step === 3) {
@@ -555,61 +560,10 @@ function BookingPageContent() {
             {step === 2 ? (
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-2xl font-bold text-text-primary">Select date and time.</h2>
+                  <h2 className="text-2xl font-bold text-text-primary">Choose frequency and schedule.</h2>
                   <p className="mt-2 text-sm leading-6 text-text-secondary">
-                    Choose when the cleaner should arrive. Access and parking details come next on the same screen.
+                    Select how often you would like us to clean and set your arrival dates. Access and parking details come next on the same screen.
                   </p>
-                </div>
-
-                <div className="space-y-5">
-                  <div>
-                    <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-                      <div>
-                        <h3 className="text-base font-bold text-text-primary">Date</h3>
-                        <p className="mt-1 text-sm leading-5 text-text-secondary">Pick one of the next available dates or use the calendar.</p>
-                      </div>
-                      <div className="w-full sm:w-48">
-                        <label htmlFor="date" className="sr-only">Choose a custom date</label>
-                        <input id="date" type="date" min={tomorrowISO()} value={state.date} onChange={(event) => update("date", event.target.value)} className="booking-input" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                      {dateOptions.map((option) => (
-                        <button
-                          key={option.iso}
-                          type="button"
-                          onClick={() => update("date", option.iso)}
-                          className={cn(
-                            "min-h-20 rounded-2xl border p-3 text-left transition active:translate-y-px",
-                            state.date === option.iso ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
-                          )}
-                        >
-                          <span className={cn("block text-xs font-bold", state.date === option.iso ? "text-primary-foreground/75" : "text-text-secondary")}>{option.weekday}</span>
-                          <span className="mt-1 block text-base font-bold">{option.monthDay}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="mb-3 text-base font-bold text-text-primary">Time</h3>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {ARRIVAL_WINDOWS.map((slot) => (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          onClick={() => update("arrivalWindow", slot.id)}
-                          className={cn(
-                            "flex min-h-14 items-center justify-between rounded-xl border px-4 text-left text-sm font-semibold transition active:translate-y-px",
-                            state.arrivalWindow === slot.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted hover:border-primary/40"
-                          )}
-                        >
-                          {slot.label}
-                          {slot.price ? <span>+${slot.price}</span> : <span>Included</span>}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
 
                 <div>
@@ -633,9 +587,63 @@ function BookingPageContent() {
                     ))}
                   </div>
 
+                  {/* Standard date and time selection — hidden for custom plans */}
+                  {state.frequencyId !== "custom" && (
+                    <div className="mt-8 space-y-5 border-t border-border/55 pt-6">
+                      <div>
+                        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                          <div>
+                            <h3 className="text-base font-bold text-text-primary">Date</h3>
+                            <p className="mt-1 text-sm leading-5 text-text-secondary">Pick one of the next available dates or use the calendar.</p>
+                          </div>
+                          <div className="w-full sm:w-48">
+                            <label htmlFor="date" className="sr-only">Choose a custom date</label>
+                            <input id="date" type="date" min={tomorrowISO()} value={state.date} onChange={(event) => update("date", event.target.value)} className="booking-input" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                          {dateOptions.map((option) => (
+                            <button
+                              key={option.iso}
+                              type="button"
+                              onClick={() => update("date", option.iso)}
+                              className={cn(
+                                "min-h-20 rounded-2xl border p-3 text-left transition active:translate-y-px",
+                                state.date === option.iso ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
+                              )}
+                            >
+                              <span className={cn("block text-xs font-bold", state.date === option.iso ? "text-primary-foreground/75" : "text-text-secondary")}>{option.weekday}</span>
+                              <span className="mt-1 block text-base font-bold">{option.monthDay}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="mb-3 text-base font-bold text-text-primary">Time</h3>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {ARRIVAL_WINDOWS.map((slot) => (
+                            <button
+                              key={slot.id}
+                              type="button"
+                              onClick={() => update("arrivalWindow", slot.id)}
+                              className={cn(
+                                "flex min-h-14 items-center justify-between rounded-xl border px-4 text-left text-sm font-semibold transition active:translate-y-px",
+                                state.arrivalWindow === slot.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted hover:border-primary/40"
+                              )}
+                            >
+                              {slot.label}
+                              {slot.price ? <span>+${slot.price}</span> : <span>Included</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Custom schedule builder — shown when custom frequency is selected */}
                   {state.frequencyId === "custom" && (
-                    <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                    <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5">
                       <div className="mb-4 flex items-center gap-2">
                         <Sparkles className="size-4 text-primary" aria-hidden="true" />
                         <p className="text-sm font-bold text-text-primary">Build your custom schedule</p>
@@ -774,7 +782,15 @@ function BookingPageContent() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <SummaryTile icon={<MapPin className="size-5" />} title="Home" body={`${state.address}${state.unit ? `, ${state.unit}` : ""}, ${state.city} ${state.zip}`} />
-                  <SummaryTile icon={<CalendarDays className="size-5" />} title="Schedule" body={`${state.date || "Date not set"} between ${currentArrival.label}`} />
+                  <SummaryTile
+                    icon={<CalendarDays className="size-5" />}
+                    title="Schedule"
+                    body={
+                      state.frequencyId === "custom"
+                        ? `Starts ${state.startDate || "Date not set"} (Custom weekly schedule)`
+                        : `${state.date || "Date not set"} between ${currentArrival.label}`
+                    }
+                  />
                   <SummaryTile icon={<Sparkles className="size-5" />} title="Service" body={`${currentService.name}, ${state.hours} hr, ${state.cleaners} ${state.cleaners === 1 ? "cleaner" : "cleaners"}`} />
                   <SummaryTile icon={<KeyRound className="size-5" />} title="Arrival notes" body={`${state.access}. ${state.parking || "Parking notes missing"}`} />
                 </div>
