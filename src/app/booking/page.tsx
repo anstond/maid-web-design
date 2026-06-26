@@ -122,6 +122,8 @@ const ADDONS = [
   { id: "walls", label: "Wall spot clean", helper: "Marks within reach", price: 28, minutes: 25 },
 ];
 
+const POPULAR_ADDON_IDS = ["fridge", "oven", "laundry"];
+
 const ARRIVAL_WINDOWS = [
   { id: "9:00 AM", label: "9:00 AM", price: 0 },
   { id: "10:00 AM", label: "10:00 AM", price: 0 },
@@ -370,6 +372,10 @@ function BookingPageContent() {
   const [mapPreQuery, setMapPreQuery] = useState("");
   const [isEditingCustomAddress, setIsEditingCustomAddress] = useState(false);
   const addressScrollRef = useRef<HTMLDivElement>(null);
+  const addonsRef = useRef<HTMLFieldSetElement>(null);
+  const [showAddressScrollHint, setShowAddressScrollHint] = useState(true);
+  const [showAddonNudge, setShowAddonNudge] = useState(false);
+  const [addonNudgeDismissed, setAddonNudgeDismissed] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState<typeof SUGGESTED_PLACES>([]);
 
@@ -398,6 +404,7 @@ function BookingPageContent() {
   };
 
   const scrollAddresses = (direction: "left" | "right") => {
+    setShowAddressScrollHint(false);
     if (addressScrollRef.current) {
       const scrollAmount = 340; // width + gap
       addressScrollRef.current.scrollBy({
@@ -638,6 +645,7 @@ function BookingPageContent() {
   const currentServiceMaxHours = currentService.maxHours;
   const hourOptions = getHourOptions(currentService.minimumHours, currentService.maxHours);
   const cleanerOptions = currentService.cleanerOptions;
+  const popularAddons = ADDONS.filter((addon) => POPULAR_ADDON_IDS.includes(addon.id));
   const dateOptions = useMemo(() => getDateOptions(), []);
   const recommendedHours = (() => {
     const homeHours = 1.6 + state.bedrooms * 0.55 + state.bathrooms * 0.65;
@@ -722,6 +730,7 @@ function BookingPageContent() {
         ? previous.addons.filter((addon) => addon !== id)
         : [...previous.addons, id],
     }));
+    setShowAddonNudge(false);
   }
 
   function selectService(serviceId: ServiceId) {
@@ -735,9 +744,26 @@ function BookingPageContent() {
     }));
   }
 
+  function goToExtras() {
+    setShowAddonNudge(false);
+    addonsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function advanceStep() {
+    setTouched(false);
+    setStep(step + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function continueFlow() {
     setTouched(true);
     if (errors.length > 0) return;
+
+    if (step === 1 && state.addons.length === 0 && !addonNudgeDismissed) {
+      setShowAddonNudge(true);
+      setTouched(false);
+      return;
+    }
 
     if (step === 0 && !state.addressVerified) {
       setMapPreQuery(state.address);
@@ -760,9 +786,7 @@ function BookingPageContent() {
       return;
     }
 
-    setTouched(false);
-    setStep(step + 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    advanceStep();
   }
 
   function goBack() {
@@ -881,12 +905,10 @@ function BookingPageContent() {
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                       <p className="text-sm font-bold text-text-primary">Your Saved Addresses</p>
-                      <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-text-secondary">
-                        Swipe to see more
-                      </span>
                       <button
                         type="button"
                         onClick={() => {
+                          setShowAddressScrollHint(false);
                           update("address", "");
                           update("unit", "");
                           update("zip", "");
@@ -926,8 +948,15 @@ function BookingPageContent() {
 
                   <div className="relative">
                     <div className="pointer-events-none absolute bottom-4 right-0 top-0 z-10 w-12 bg-gradient-to-l from-surface to-transparent sm:hidden" aria-hidden="true" />
+                    {showAddressScrollHint && !isEditingCustomAddress ? (
+                      <div className="pointer-events-none absolute bottom-6 right-3 z-20 inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-surface px-3 text-xs font-bold text-primary shadow-[0_10px_24px_rgba(31,41,55,0.14)] sm:hidden">
+                        Swipe for more
+                        <ChevronRight className="size-4" aria-hidden="true" />
+                      </div>
+                    ) : null}
                     <div
                       ref={addressScrollRef}
+                      onScroll={() => setShowAddressScrollHint(false)}
                       className="-mx-4 flex flex-row flex-nowrap gap-3 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] sm:mx-0 sm:gap-4 sm:px-0 [&::-webkit-scrollbar]:hidden"
                     >
                       {SAVED_ADDRESSES.map((addr) => {
@@ -937,6 +966,7 @@ function BookingPageContent() {
                             key={addr.label}
                             type="button"
                             onClick={() => {
+                              setShowAddressScrollHint(false);
                               update("address", addr.address);
                               update("unit", addr.unit);
                               update("zip", addr.zip);
@@ -1132,30 +1162,68 @@ function BookingPageContent() {
                   </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4" aria-labelledby="popular-addons-title">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 id="popular-addons-title" className="text-base font-bold text-text-primary">Popular add-ons</h3>
+                      <p className="mt-1 text-sm text-text-secondary">Most customers add one small task while we are already there.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={goToExtras}
+                      className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/25 bg-surface px-4 text-sm font-bold text-primary transition hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                    >
+                      View all extras
+                    </button>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {popularAddons.map((addon) => {
+                      const selected = state.addons.includes(addon.id);
+                      return (
+                        <button
+                          key={addon.id}
+                          type="button"
+                          onClick={() => toggleAddon(addon.id)}
+                          className={cn(
+                            "flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 text-left text-sm font-bold transition active:translate-y-px",
+                            selected
+                              ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(21,94,99,0.14)]"
+                              : "border-primary/20 bg-surface text-text-primary hover:border-primary/45"
+                          )}
+                          aria-pressed={selected}
+                        >
+                          <span>{addon.label}</span>
+                          <span className={cn("shrink-0", selected ? "text-primary-foreground/80" : "text-primary")}>+${addon.price}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
                   {SERVICES.map((service) => (
                     <button
                       key={service.id}
                       type="button"
                       onClick={() => selectService(service.id)}
                       className={cn(
-                        "min-h-44 rounded-2xl border p-5 text-left transition active:translate-y-px",
+                        "rounded-2xl border p-4 text-left transition active:translate-y-px sm:min-h-44 sm:p-5",
                         state.serviceId === service.id
                           ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
                           : "border-border bg-surface-muted hover:border-primary/40"
                       )}
                     >
-                      <span className="flex items-start justify-between gap-4">
-                        <span>
-                          <span className="block text-lg font-bold text-text-primary">{service.name}</span>
-                          <span className="mt-1 block text-sm leading-6 text-text-secondary">{service.description}</span>
+                      <span className="flex items-start justify-between gap-3 sm:gap-4">
+                        <span className="min-w-0">
+                          <span className="block text-base font-bold text-text-primary sm:text-lg">{service.name}</span>
+                          <span className="mt-1 block text-sm leading-5 text-text-secondary sm:leading-6">{service.description}</span>
                         </span>
-                        <span className="rounded-full bg-surface px-3 py-1 text-sm font-bold text-primary">${service.rate}/labor hr</span>
+                        <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-primary sm:px-3 sm:text-sm">${service.rate}/hr</span>
                       </span>
-                      <span className="mt-3 block text-sm font-semibold text-primary">
+                      <span className="mt-2 block text-xs font-semibold text-primary sm:mt-3 sm:text-sm">
                         {Math.ceil(service.minimumHours)}-{service.maxHours} visit hours
                       </span>
-                      <span className="mt-4 grid gap-2 text-sm text-text-secondary">
+                      <span className="mt-4 hidden gap-2 text-sm text-text-secondary sm:grid">
                         {service.included.map((item) => (
                           <span key={item} className="flex gap-2">
                             <Check className="mt-0.5 size-4 text-primary" aria-hidden="true" />
@@ -1223,39 +1291,34 @@ function BookingPageContent() {
                   </div>
 
                   <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
-                    <div>
-                      <h3 className="mb-1 text-lg font-bold tracking-tight text-text-primary">Cleaner count</h3>
-                      <p className="mb-4 text-sm leading-relaxed text-text-secondary">
-                        Labor hours are visit hours multiplied by cleaner count.
-                      </p>
-                      <div className="grid gap-2">
-                        {cleanerOptions.map((cleaners) => {
-                          const isSelected = state.cleaners === cleaners;
-                          return (
-                            <button
-                              key={cleaners}
-                              type="button"
-                              onClick={() => update("cleaners", cleaners)}
-                              className={cn(
-                                "flex min-h-12 items-center justify-between rounded-xl border px-4 text-sm font-bold transition-all duration-300 active:scale-[0.98] cursor-pointer",
-                                isSelected
-                                  ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/10"
-                                  : "border-border bg-surface text-text-primary hover:border-primary/45 hover:bg-surface-muted/30"
-                              )}
-                            >
-                              <span>{cleaners} {cleaners === 1 ? "cleaner" : "cleaners"}</span>
-                              <span className={isSelected ? "text-primary-foreground/80" : "text-text-secondary"}>
-                                {(state.hours * cleaners).toFixed(1).replace(".0", "")} labor hr
-                              </span>
-                            </button>
-                          );
-                        })}
+                    <div className="flex h-full flex-col justify-between gap-5">
+                      <div>
+                        <h3 className="mb-1 text-lg font-bold tracking-tight text-text-primary">Cleaner count</h3>
+                        <p className="text-sm leading-relaxed text-text-secondary">
+                          Adjust the team size for this visit.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-3">
+                        <Counter
+                          label="Cleaners"
+                          value={state.cleaners}
+                          min={cleanerOptions[0]}
+                          max={cleanerOptions[cleanerOptions.length - 1]}
+                          onChange={(cleaners) => update("cleaners", cleaners)}
+                        />
+                        <div className="rounded-xl bg-surface-muted px-4 py-3 text-sm text-text-secondary">
+                          <span className="font-semibold text-text-primary">
+                            {state.cleaners} {state.cleaners === 1 ? "cleaner" : "cleaners"}
+                          </span>{" "}
+                          gives {(state.hours * state.cleaners).toFixed(1).replace(".0", "")} labor hr for this visit.
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <fieldset>
+                <fieldset ref={addonsRef} className="scroll-mt-28">
                   <legend className="mb-3 text-base font-bold text-text-primary">Extra tasks</legend>
                   <div className="grid gap-3 md:grid-cols-2">
                     {ADDONS.map((addon) => {
@@ -1849,6 +1912,39 @@ function BookingPageContent() {
               </div>
             ) : null}
 
+            {showAddonNudge ? (
+              <div className="mt-6 rounded-2xl border border-primary/25 bg-primary/5 p-4" role="status">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-base font-bold text-text-primary">Want to add common extras?</p>
+                    <p className="mt-1 text-sm leading-5 text-text-secondary">
+                      Fridge, oven, and laundry can be added before you pick the schedule.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={goToExtras}
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                    >
+                      Add extras
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddonNudgeDismissed(true);
+                        setShowAddonNudge(false);
+                        advanceStep();
+                      }}
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:border-primary/45 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                    >
+                      Skip extras
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={goBack} className="min-h-12 rounded-full px-5 text-sm font-bold text-text-secondary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30">
                 {step === 0 ? "Cancel" : "Back"}
@@ -1902,19 +1998,46 @@ function BookingPageContent() {
         </aside>
       </div>
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 p-3 shadow-[0_-12px_30px_rgba(31,41,55,0.10)] backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-text-secondary">Due today</p>
-            <p className="text-xl font-bold tabular-nums text-text-primary">${estimate.total.toFixed(2)}</p>
+        <div className="mx-auto grid max-w-7xl gap-3">
+          {showAddonNudge ? (
+            <div className="rounded-2xl border border-primary/25 bg-surface p-3 shadow-[0_10px_24px_rgba(31,41,55,0.12)]" role="status">
+              <p className="text-sm font-bold text-text-primary">Want to add common extras?</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={goToExtras}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground"
+                >
+                  Add extras
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddonNudgeDismissed(true);
+                    setShowAddonNudge(false);
+                    advanceStep();
+                  }}
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface-muted px-4 text-sm font-bold text-text-primary"
+                >
+                  Skip extras
+                </button>
+              </div>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-text-secondary">Due today</p>
+              <p className="text-xl font-bold tabular-nums text-text-primary">${estimate.total.toFixed(2)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={continueFlow}
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+            >
+              {step === 0 ? homeContinueLabel : step === 3 ? "Payment" : "Continue"}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={continueFlow}
-            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
-          >
-            {step === 0 ? homeContinueLabel : step === 3 ? "Payment" : "Continue"}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </button>
         </div>
       </div>
       <MapPicker
@@ -1974,15 +2097,18 @@ function Counter({
   max: number;
   onChange: (value: number) => void;
 }) {
+  const canDecrease = value > min;
+  const canIncrease = value < max;
+
   return (
     <div className="flex min-h-20 items-center justify-between rounded-2xl border border-border bg-surface-muted p-4">
       <span className="font-bold text-text-primary">{label}</span>
       <div className="flex items-center gap-3">
-        <button type="button" onClick={() => onChange(Math.max(min, value - 1))} className="size-11 rounded-full border border-border bg-surface text-xl font-bold text-text-primary transition hover:border-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30" aria-label={`Decrease ${label}`}>
+        <button type="button" onClick={() => onChange(Math.max(min, value - 1))} disabled={!canDecrease} className="size-11 rounded-full border border-border bg-surface text-xl font-bold text-text-primary transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30" aria-label={`Decrease ${label}`}>
           -
         </button>
         <span className="w-8 text-center text-lg font-bold tabular-nums">{value}</span>
-        <button type="button" onClick={() => onChange(Math.min(max, value + 1))} className="size-11 rounded-full border border-border bg-surface text-xl font-bold text-text-primary transition hover:border-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30" aria-label={`Increase ${label}`}>
+        <button type="button" onClick={() => onChange(Math.min(max, value + 1))} disabled={!canIncrease} className="size-11 rounded-full border border-border bg-surface text-xl font-bold text-text-primary transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30" aria-label={`Increase ${label}`}>
           +
         </button>
       </div>
