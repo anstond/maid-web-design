@@ -7,6 +7,7 @@ import { useState } from "react";
 
 const T = {
   primary: "#155E63",
+  primaryH: "#0f4d51",
   accentW: "#D9C7A3",
   ink: "#1F2937",
   body: "#6B7280",

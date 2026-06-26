@@ -14,6 +14,7 @@ function useKeyboardHeight() {
 
     const updateKeyboardHeight = () => {
       const viewport = window.visualViewport;
+      if (!viewport) return;
       const height = window.innerHeight - viewport.height;
       setKeyboardHeight(Math.max(0, height));
     };

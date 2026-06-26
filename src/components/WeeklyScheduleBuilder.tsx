@@ -19,10 +19,24 @@ const TIME_SLOTS = [
   "3:00 PM", "4:00 PM", "5:00 PM",
 ];
 
-const PRODUCTS = ["Standard clean", "Deep clean", "Premium clean"];
+const SERVICES = ["Standard clean", "Deep clean", "Move clean", "Small office"];
+const HOURS = ["1 hr", "2 hr", "3 hr", "4 hr", "5 hr", "6 hr", "7 hr", "8 hr"];
 
 const DEFAULT_TIME = "10:00 AM";
-const DEFAULT_PRODUCT = "Standard clean";
+const DEFAULT_SERVICE = "Standard clean";
+const DEFAULT_HOURS = "3 hr";
+const DEFAULT_PRODUCT = `${DEFAULT_SERVICE} (${DEFAULT_HOURS})`;
+
+function parseProduct(productStr: string) {
+  if (!productStr) {
+    return { service: DEFAULT_SERVICE, hours: DEFAULT_HOURS };
+  }
+  const match = productStr.match(/^(.*?)\s*\((\d+(?:\.\d+)?\s*hrs?)\)$/) || productStr.match(/^(.*?)\s*-\s*(\d+(?:\.\d+)?\s*hrs?)$/);
+  if (match) {
+    return { service: match[1].trim(), hours: match[2].trim() };
+  }
+  return { service: productStr, hours: DEFAULT_HOURS };
+}
 
 type SlotConfig = { dayOfWeek: number; time: string; product: string };
 
@@ -60,8 +74,21 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
     }
   }
 
-  function updateSlot(dayOfWeek: number, field: "time" | "product", val: string) {
-    updateSlots(slots.map((s) => (s.dayOfWeek === dayOfWeek ? { ...s, [field]: val } : s)));
+  function updateSlot(dayOfWeek: number, field: "time" | "service" | "hours", val: string) {
+    updateSlots(
+      slots.map((s) => {
+        if (s.dayOfWeek === dayOfWeek) {
+          if (field === "time") {
+            return { ...s, time: val };
+          }
+          const { service, hours } = parseProduct(s.product);
+          const nextService = field === "service" ? val : service;
+          const nextHours = field === "hours" ? val : hours;
+          return { ...s, product: `${nextService} (${nextHours})` };
+        }
+        return s;
+      })
+    );
   }
 
   const selectedDays = new Set(slots.map((s) => s.dayOfWeek));
@@ -123,15 +150,32 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                     {TIME_SLOTS.map((t) => (<option key={t} value={t}>{t}</option>))}
                   </select>
 
-                  <label className="sr-only" htmlFor={`product-${slot.dayOfWeek}`}>Cleaning type for {dayLabel}</label>
-                  <select
-                    id={`product-${slot.dayOfWeek}`}
-                    value={slot.product}
-                    onChange={(e) => updateSlot(slot.dayOfWeek, "product", e.target.value)}
-                    className="min-h-10 flex-1 rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
-                  >
-                    {PRODUCTS.map((p) => (<option key={p} value={p}>{p}</option>))}
-                  </select>
+                  {(() => {
+                    const { service, hours } = parseProduct(slot.product);
+                    return (
+                      <>
+                        <label className="sr-only" htmlFor={`service-${slot.dayOfWeek}`}>Cleaning type for {dayLabel}</label>
+                        <select
+                          id={`service-${slot.dayOfWeek}`}
+                          value={service}
+                          onChange={(e) => updateSlot(slot.dayOfWeek, "service", e.target.value)}
+                          className="min-h-10 flex-[2_2_0%] rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                        >
+                          {SERVICES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                        </select>
+
+                        <label className="sr-only" htmlFor={`hours-${slot.dayOfWeek}`}>Duration for {dayLabel}</label>
+                        <select
+                          id={`hours-${slot.dayOfWeek}`}
+                          value={hours}
+                          onChange={(e) => updateSlot(slot.dayOfWeek, "hours", e.target.value)}
+                          className="min-h-10 flex-1 rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                        >
+                          {HOURS.map((h) => (<option key={h} value={h}>{h}</option>))}
+                        </select>
+                      </>
+                    );
+                  })()}
 
                   <button
                     type="button"

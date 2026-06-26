@@ -36,6 +36,8 @@ type BookingData = {
     serviceFee: number;
     total: number;
   };
+  frequencyId?: string;
+  customSchedules?: Array<{ dayOfWeek: number; time: string; product: string }>;
 };
 
 type PaymentState = {
@@ -217,6 +219,21 @@ export default function CheckoutPage() {
             <SummaryLine label="Access" value={booking.access} />
             <SummaryLine label="Parking" value={booking.parking} />
             <SummaryLine label="Pets" value={booking.pets} />
+            {booking.frequencyId === "custom" && booking.customSchedules && booking.customSchedules.length > 0 && (
+              <div className="col-span-full border-t border-border/50 pt-3 mt-1">
+                <p className="text-xs font-bold text-primary mb-2">Weekly custom schedule</p>
+                <div className="flex flex-wrap gap-2">
+                  {booking.customSchedules.map((slot) => {
+                    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                    return (
+                      <span key={slot.dayOfWeek} className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-text-secondary border border-border">
+                        {days[slot.dayOfWeek]} {slot.time} — {slot.product}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
