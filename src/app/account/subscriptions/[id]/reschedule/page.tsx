@@ -1,154 +1,265 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import { PageHeader } from "@/components/account/AccountPrimitives";
 import { getSubscription, formatAccountDate } from "@/lib/mock-account-data";
+
+const PAYMENT_LEAD_DAYS = 3; // Payment collects 3 days before a visit
 
 export default function ReschedulePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   const subscription = getSubscription(id);
+
+  const [rescheduleType, setRescheduleType] = useState<"subscription" | "booking" | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  const timeSlots = [
-    "8:00 AM",
-    "10:00 AM",
-    "12:00 PM",
-    "2:00 PM",
-    "4:00 PM",
-  ];
+  const timeSlots = ["8:00 AM", "10:00 AM", "12:00 PM", "2:00 PM", "4:00 PM"];
 
   if (!subscription) {
     return (
       <div className="text-center py-12">
-        <p className="text-[#6B7280]">Plan not found</p>
+        <p className="text-text-secondary">Plan not found</p>
       </div>
     );
   }
 
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
+  // ── Eligibility: check if the next visit is within the payment window ────────
+  const nextVisitDate = new Date(subscription.nextVisit + "T12:00:00");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const daysUntilNextVisit = Math.ceil((nextVisitDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  const paymentAlreadyStarted = daysUntilNextVisit <= PAYMENT_LEAD_DAYS;
+  const nextVisitPaymentStatus = subscription.upcomingVisits[0]?.paymentStatus;
+  const isIneligibleForSubscriptionReschedule =
+    paymentAlreadyStarted ||
+    nextVisitPaymentStatus === "retrying" ||
+    nextVisitPaymentStatus === "confirmed";
 
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
+  // ── Calendar helpers ─────────────────────────────────────────────────────────
+  const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
-  const getAvailableDates = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const availableDates = useMemo(() => {
     const dates = new Set<string>();
-
-    // Get next 60 days
-    for (let i = 1; i <= 60; i++) {
+    // Subscription reschedule: must be at least 7 days from now and not within 3 days of next visit payment
+    const minDays = rescheduleType === "subscription" ? Math.max(7, daysUntilNextVisit + 1) : 1;
+    for (let i = minDays; i <= 90; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
       dates.add(date.toISOString().split("T")[0]);
     }
-
     return dates;
-  };
+  }, [rescheduleType, daysUntilNextVisit]);
 
-  const availableDates = getAvailableDates();
-
-  const generateCalendarDays = () => {
+  const calendarDays = useMemo(() => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth);
-    const days = [];
-
-    // Empty cells for days before month starts
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null);
-    }
-
-    // Days of the month
+    const days: (string | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i);
-      const dateStr = date.toISOString().split("T")[0];
-      days.push(dateStr);
+      days.push(date.toISOString().split("T")[0]);
     }
-
     return days;
-  };
+  }, [currentMonth]);
 
-  const handlePrevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  };
+  // ── Skipped occurrences preview (for subscription reschedule) ────────────────
+  const skippedOccurrences = useMemo(() => {
+    if (rescheduleType !== "subscription" || !selectedDate) return [];
+    // For non-custom: generate recurrence between now and the new date
+    // Simplified: flag nextVisit as skipped if it falls before the new date
+    const newDate = new Date(selectedDate + "T12:00:00");
+    const skipped: string[] = [];
+    subscription.upcomingVisits.forEach((visit) => {
+      const visitDate = new Date(visit.date + "T12:00:00");
+      if (visitDate < newDate && visitDate > today) {
+        skipped.push(visit.date);
+      }
+    });
+    return skipped;
+  }, [rescheduleType, selectedDate, subscription.upcomingVisits]);
 
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
-  };
+  // ── New recurrence preview (after selected date) ─────────────────────────────
+  const recurrencePreview = useMemo(() => {
+    if (rescheduleType !== "subscription" || !selectedDate || subscription.type === "custom") return [];
+    const cadenceWeeks = subscription.type === "biweekly" ? 2 : subscription.type === "weekly" ? 1 : 4;
+    const dates: string[] = [];
+    const base = new Date(selectedDate + "T12:00:00");
+    for (let i = 1; i <= 3; i++) {
+      const d = new Date(base);
+      d.setDate(d.getDate() + cadenceWeeks * 7 * i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return dates;
+  }, [rescheduleType, selectedDate, subscription.type]);
 
-  const formatFullDate = (dateStr: string) => {
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    }).format(new Date(dateStr + "T12:00:00"));
-  };
+  const formatFullDate = (dateStr: string) =>
+    new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(
+      new Date(dateStr + "T12:00:00")
+    );
 
-  const calendarDays = generateCalendarDays();
   const monthYear = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(currentMonth);
 
   const handleConfirm = () => {
-    if (selectedDate && selectedTime) {
-      console.log(`Rescheduling ${subscription.service} to ${selectedDate} at ${selectedTime}`);
-      router.push(`/account/subscriptions/${subscription.id}?rescheduled=true`);
-    }
+    if (!selectedDate) return;
+    console.log(`${rescheduleType} reschedule to ${selectedDate}${selectedTime ? " at " + selectedTime : ""}`);
+    router.push(`/account/subscriptions/${subscription.id}?rescheduled=true`);
   };
 
+  // ── Step 1: Pick reschedule type ─────────────────────────────────────────────
+  if (!rescheduleType) {
+    return (
+      <>
+        <Link
+          href={`/account/subscriptions/${subscription.id}`}
+          className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-full px-1 text-sm font-bold text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to plan
+        </Link>
+
+        <PageHeader
+          title="Reschedule cleaning"
+          description="Choose what you would like to reschedule — just one visit, or your whole subscription schedule."
+        />
+
+        <div className="mt-2 grid gap-4 sm:grid-cols-2 max-w-2xl">
+          {/* Subscription-level reschedule */}
+          <button
+            onClick={() => !isIneligibleForSubscriptionReschedule && setRescheduleType("subscription")}
+            disabled={isIneligibleForSubscriptionReschedule}
+            className={[
+              "relative rounded-2xl border p-5 text-left transition-all duration-200",
+              "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30",
+              isIneligibleForSubscriptionReschedule
+                ? "border-border bg-surface-muted opacity-60 cursor-not-allowed"
+                : "border-border bg-surface hover:border-primary/40 hover:bg-surface-muted active:translate-y-px cursor-pointer",
+            ].join(" ")}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <CalendarDays className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="font-bold text-text-primary">Move the whole schedule</p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
+                  Shift your subscription to a new start date. All future visits move forward.
+                </p>
+              </div>
+            </div>
+            {isIneligibleForSubscriptionReschedule && (
+              <div className="mt-4 flex items-start gap-2 rounded-xl border border-warning/25 bg-warning/10 px-3 py-2 text-xs">
+                <AlertCircle className="size-3.5 shrink-0 text-warning mt-0.5" />
+                <span className="text-text-secondary">
+                  {paymentAlreadyStarted
+                    ? `Payment for the next visit is within ${PAYMENT_LEAD_DAYS} days. Reschedule the individual booking instead.`
+                    : "Payment has already started for the next visit."}
+                </span>
+              </div>
+            )}
+          </button>
+
+          {/* Booking-level reschedule */}
+          <button
+            onClick={() => setRescheduleType("booking")}
+            className="rounded-2xl border border-border bg-surface p-5 text-left transition-all duration-200 hover:border-primary/40 hover:bg-surface-muted active:translate-y-px cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text-secondary">
+                <CalendarDays className="size-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="font-bold text-text-primary">Move just one visit</p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
+                  Pick a new date for your next cleaning only. Your subscription schedule stays the same.
+                </p>
+              </div>
+            </div>
+            {isIneligibleForSubscriptionReschedule && (
+              <div className="mt-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs">
+                <Info className="size-3.5 shrink-0 text-primary mt-0.5" />
+                <span className="text-text-secondary font-bold text-primary">Recommended for your next visit.</span>
+              </div>
+            )}
+          </button>
+        </div>
+
+        {/* Explanation of the difference */}
+        <div className="mt-6 max-w-2xl rounded-2xl border border-border bg-surface-muted p-5">
+          <p className="text-xs font-bold text-text-secondary mb-3">HOW RESCHEDULING WORKS</p>
+          <div className="space-y-3 text-sm text-text-secondary leading-6">
+            <p>
+              <span className="font-bold text-text-primary">Moving the schedule</span> changes the subscription anchor date.
+              Any visits between now and the new date are skipped — no bookings, no charges for those occurrences.
+            </p>
+            <p>
+              <span className="font-bold text-text-primary">Moving one visit</span> only affects your next booking.
+              Your subscription keeps its original rhythm — the visit after will follow the normal schedule.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── Step 2: Calendar ─────────────────────────────────────────────────────────
   return (
     <>
-      <Link
-        href="/account/subscriptions"
-        className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-bold text-[#155E63] hover:bg-[#F7F5F1] transition-colors focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#155E63]/30"
+      <button
+        onClick={() => { setRescheduleType(null); setSelectedDate(null); setSelectedTime(null); }}
+        className="mb-4 inline-flex min-h-11 items-center gap-2 rounded-full px-1 text-sm font-bold text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
-        Back to subscriptions
-      </Link>
+        Back
+      </button>
 
       <PageHeader
-        title="Reschedule cleaning"
-        description="Choose a new date for your cleaning. Your plan and team assignment stay the same."
+        title={rescheduleType === "subscription" ? "Move your schedule" : "Change this visit"}
+        description={
+          rescheduleType === "subscription"
+            ? "Pick a new anchor date for your subscription. Visits between now and this date will be skipped."
+            : "Choose a new date for your next cleaning. Your subscription schedule stays the same."
+        }
       />
 
-      {/* Mobile: Show selected date and time above calendar */}
+      {/* Mobile: selected date preview */}
       {selectedDate && selectedTime && (
-        <div className="lg:hidden rounded-[16px] bg-white p-4 border border-[#D9C7A3]/30 mb-4">
+        <div className="lg:hidden rounded-xl bg-surface border border-border p-4 mb-4">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="size-5 text-[#155E63] mt-0.5 flex-shrink-0" aria-hidden="true" />
-            <div className="flex-1">
-              <p className="text-[12px] font-bold text-[#155E63] uppercase tracking-wide">New date & time selected</p>
-              <p className="mt-2 text-[16px] font-bold text-[#1F2937]">{formatFullDate(selectedDate)}</p>
-              <p className="mt-1 text-[14px] font-bold text-[#6B7280]">{selectedTime}</p>
+            <CheckCircle2 className="size-5 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-xs font-bold text-primary uppercase tracking-wide">New date selected</p>
+              <p className="mt-1.5 text-base font-bold text-text-primary">{formatFullDate(selectedDate)}</p>
+              <p className="text-sm text-text-secondary">{selectedTime}</p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[400px_340px]">
-        {/* Calendar Section */}
-        <section className="rounded-[16px] bg-white p-6 sm:p-8 shadow-[0_4px_16px_rgba(21,94,99,0.08)]">
-          {/* Header with month/year and navigation */}
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-[24px] font-bold text-[#1F2937]">{monthYear}</h2>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        {/* Calendar section */}
+        <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
+          {/* Month navigation */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-text-primary">{monthYear}</h2>
             <div className="flex gap-2">
               <button
-                onClick={handlePrevMonth}
-                className="flex size-10 items-center justify-center rounded-full bg-[#F7F5F1] text-[#1F2937] hover:bg-[#EFE6D3] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155E63] focus-visible:ring-offset-2"
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                className="flex size-10 items-center justify-center rounded-full bg-surface-muted text-text-primary hover:bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 aria-label="Previous month"
               >
                 <ChevronLeft className="size-5" aria-hidden="true" />
               </button>
               <button
-                onClick={handleNextMonth}
-                className="flex size-10 items-center justify-center rounded-full bg-[#F7F5F1] text-[#1F2937] hover:bg-[#EFE6D3] transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155E63] focus-visible:ring-offset-2"
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                className="flex size-10 items-center justify-center rounded-full bg-surface-muted text-text-primary hover:bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                 aria-label="Next month"
               >
                 <ChevronRight className="size-5" aria-hidden="true" />
@@ -156,44 +267,36 @@ export default function ReschedulePage() {
             </div>
           </div>
 
-          {/* Day names header */}
-          <div className="grid grid-cols-7 gap-2 mb-4">
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-1 mb-3">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div
-                key={day}
-                className="text-center text-[12px] font-bold text-[#6B7280] py-1"
-              >
-                {day}
-              </div>
+              <div key={day} className="text-center text-xs font-bold text-text-secondary py-1">{day}</div>
             ))}
           </div>
 
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-2 mb-8">
+          <div className="grid grid-cols-7 gap-1 mb-6">
             {calendarDays.map((date, index) => {
-              if (!date) {
-                return <div key={`empty-${index}`} className="h-10 w-full" />;
-              }
-
+              if (!date) return <div key={`empty-${index}`} className="h-10 w-full" />;
               const isAvailable = availableDates.has(date);
               const isSelected = selectedDate === date;
               const dayNum = new Date(date + "T12:00:00").getDate();
-
               return (
                 <button
                   key={date}
-                  onClick={() => {
-                    isAvailable && setSelectedDate(date);
-                    setSelectedTime(null);
-                  }}
+                  onClick={() => { isAvailable && setSelectedDate(date); setSelectedTime(null); }}
                   disabled={!isAvailable}
-                  className={`h-10 w-full rounded-lg flex items-center justify-center text-[13px] font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155E63] ${
+                  aria-label={`${formatFullDate(date)}${isAvailable ? "" : ", unavailable"}`}
+                  aria-pressed={isSelected}
+                  className={[
+                    "h-10 w-full rounded-xl flex items-center justify-center text-sm font-bold transition-all duration-200",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                     isSelected
-                      ? "bg-[#155E63] text-white shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
+                      ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
                       : isAvailable
-                        ? "bg-[#F7F5F1] text-[#1F2937] hover:bg-[#EFE6D3] hover:shadow-[0_2px_8px_rgba(21,94,99,0.12)] cursor-pointer"
-                        : "bg-[#FCFBF8] text-[#B8C0C2] cursor-not-allowed"
-                  }`}
+                        ? "bg-surface-muted text-text-primary hover:bg-background hover:shadow-[0_2px_8px_rgba(21,94,99,0.12)] cursor-pointer"
+                        : "text-text-secondary/40 cursor-not-allowed",
+                  ].join(" ")}
                 >
                   {dayNum}
                 </button>
@@ -203,18 +306,21 @@ export default function ReschedulePage() {
 
           {/* Time slot selection */}
           {selectedDate && (
-            <div className="mb-8">
-              <p className="text-[14px] font-bold text-[#1F2937] mb-4">Select time</p>
-              <div className="grid grid-cols-2 gap-3">
+            <div className="mb-6">
+              <p className="text-sm font-bold text-text-primary mb-3">Select arrival window</p>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {timeSlots.map((slot) => (
                   <button
                     key={slot}
                     onClick={() => setSelectedTime(slot)}
-                    className={`px-4 py-3 rounded-lg text-[13px] font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155E63] ${
+                    aria-pressed={selectedTime === slot}
+                    className={[
+                      "px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
                       selectedTime === slot
-                        ? "bg-[#155E63] text-white shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
-                        : "bg-[#F7F5F1] text-[#1F2937] hover:bg-[#EFE6D3] hover:shadow-[0_2px_8px_rgba(21,94,99,0.12)] cursor-pointer"
-                    }`}
+                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
+                        : "bg-surface-muted text-text-primary hover:bg-background cursor-pointer",
+                    ].join(" ")}
                   >
                     {slot}
                   </button>
@@ -223,56 +329,92 @@ export default function ReschedulePage() {
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* Subscription reschedule: skipped visits preview */}
+          {rescheduleType === "subscription" && selectedDate && skippedOccurrences.length > 0 && (
+            <div className="mb-6 rounded-xl border border-warning/25 bg-warning/10 p-4">
+              <p className="text-xs font-bold text-warning mb-2">
+                {skippedOccurrences.length} VISIT{skippedOccurrences.length > 1 ? "S" : ""} WILL BE SKIPPED
+              </p>
+              <div className="space-y-1">
+                {skippedOccurrences.map((date) => (
+                  <p key={date} className="text-sm text-text-secondary">
+                    ✕ {formatAccountDate(date)} — no booking, no charge
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Subscription reschedule: new recurrence preview */}
+          {rescheduleType === "subscription" && selectedDate && recurrencePreview.length > 0 && (
+            <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+              <p className="text-xs font-bold text-primary mb-2">UPCOMING AFTER NEW DATE</p>
+              <div className="space-y-1">
+                {recurrencePreview.map((date) => (
+                  <p key={date} className="text-sm text-text-secondary">
+                    → {formatAccountDate(date)}
+                  </p>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-text-secondary">Payment for each visit collects 3 days before.</p>
+            </div>
+          )}
+
+          {/* Actions */}
           <div className="flex flex-col gap-3">
             <button
               onClick={handleConfirm}
-              disabled={!selectedDate}
-              className="w-full flex min-h-11 items-center justify-center rounded-full bg-[#155E63] px-5 text-[16px] font-bold text-white transition-all duration-200 hover:bg-[#124A54] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155E63] focus-visible:ring-offset-2 active:scale-95"
+              disabled={!selectedDate || !selectedTime}
+              className="w-full flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
             >
-              Confirm new date
+              {rescheduleType === "subscription" ? "Confirm new schedule date" : "Confirm new visit date"}
             </button>
             <Link
-              href="/account/subscriptions"
-              className="w-full flex min-h-11 items-center justify-center rounded-full bg-[#FCFBF8] border border-[#E5DFD3] px-5 text-[16px] font-bold text-[#1F2937] transition-colors duration-200 hover:bg-[#F7F5F1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#155E63] focus-visible:ring-offset-2"
+              href={`/account/subscriptions/${subscription.id}`}
+              className="w-full flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
             >
               Cancel
             </Link>
           </div>
         </section>
 
-        {/* Sidebar */}
-        <aside className="rounded-[16px] bg-[#F7F5F1] p-6">
-          <h3 className="text-[16px] font-bold text-[#1F2937]">Current cleaning</h3>
-          <div className="mt-6 space-y-5">
-            {/* Service */}
+        {/* Sidebar: current visit details */}
+        <aside className="rounded-2xl border border-border bg-surface-muted p-5">
+          <h3 className="text-base font-bold text-text-primary">
+            {rescheduleType === "subscription" ? "Current schedule" : "Current visit"}
+          </h3>
+          <div className="mt-5 space-y-4">
             <div>
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wide">Service</p>
-              <p className="mt-2 text-[16px] font-bold text-[#1F2937]">{subscription.service}</p>
+              <p className="text-xs font-bold text-text-secondary uppercase tracking-wide">Service</p>
+              <p className="mt-1.5 text-base font-bold text-text-primary">{subscription.service}</p>
             </div>
-
-            {/* Current date */}
             <div>
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wide">Current date</p>
-              <p className="mt-2 text-[16px] font-bold text-[#1F2937]">{formatAccountDate(subscription.nextVisit)}</p>
+              <p className="text-xs font-bold text-text-secondary uppercase tracking-wide">
+                {rescheduleType === "subscription" ? "Next scheduled visit" : "Current date"}
+              </p>
+              <p className="mt-1.5 text-base font-bold text-text-primary">{formatAccountDate(subscription.nextVisit)}</p>
             </div>
-
-            {/* Time window */}
             <div>
-              <p className="text-[12px] font-bold text-[#6B7280] uppercase tracking-wide">Time window</p>
-              <p className="mt-2 text-[16px] font-bold text-[#1F2937]">{subscription.arrivalWindow}</p>
+              <p className="text-xs font-bold text-text-secondary uppercase tracking-wide">Time window</p>
+              <p className="mt-1.5 text-base font-bold text-text-primary">{subscription.arrivalWindow}</p>
             </div>
+            {rescheduleType === "subscription" && (
+              <div>
+                <p className="text-xs font-bold text-text-secondary uppercase tracking-wide">How often</p>
+                <p className="mt-1.5 text-base font-bold text-text-primary">{subscription.cadence}</p>
+              </div>
+            )}
 
-            {/* Desktop: New date and time selection indicator */}
+            {/* Desktop: selected date preview */}
             {selectedDate && selectedTime && (
-              <div className="hidden lg:block mt-6 pt-5 border-t border-[#E5DFD3]">
-                <div className="rounded-[12px] bg-white p-4 border border-[#D9C7A3]/30">
+              <div className="hidden lg:block pt-4 border-t border-border">
+                <div className="rounded-xl bg-surface border border-border p-4">
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="size-5 text-[#155E63] mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <CheckCircle2 className="size-5 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
                     <div>
-                      <p className="text-[12px] font-bold text-[#155E63] uppercase tracking-wide">New date & time selected</p>
-                      <p className="mt-2 text-[16px] font-bold text-[#1F2937]">{formatFullDate(selectedDate)}</p>
-                      <p className="mt-1 text-[14px] font-bold text-[#6B7280]">{selectedTime}</p>
+                      <p className="text-xs font-bold text-primary uppercase tracking-wide">New date selected</p>
+                      <p className="mt-1.5 text-base font-bold text-text-primary">{formatFullDate(selectedDate)}</p>
+                      <p className="text-sm text-text-secondary">{selectedTime}</p>
                     </div>
                   </div>
                 </div>

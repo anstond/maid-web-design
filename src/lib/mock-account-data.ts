@@ -1,5 +1,15 @@
 export type BookingStatus = "scheduled" | "in_progress" | "completed" | "needs_attention" | "cancelled";
 export type SubscriptionStatus = "active" | "paused" | "ending";
+export type SubscriptionType = "weekly" | "biweekly" | "monthly" | "custom";
+export type VisitPaymentStatus = "confirmed" | "pending" | "retrying" | "failed" | "cancelled";
+
+/** A single recurring slot within a custom subscription schedule */
+export type SubscriptionScheduleSlot = {
+  /** 0 = Sunday, 1 = Monday, …, 6 = Saturday */
+  dayOfWeek: number;
+  time: string;
+  product: string;
+};
 
 export type BookingRecord = {
   id: string;
@@ -25,9 +35,13 @@ export type BookingRecord = {
 
 export type SubscriptionRecord = {
   id: string;
+  /** Subscription type discriminator */
+  type: SubscriptionType;
   status: SubscriptionStatus;
   cadence: string;
   service: string;
+  /** ISO date — subscription becomes active only on or after this date */
+  startDate: string;
   nextVisit: string;
   arrivalWindow: string;
   address: string;
@@ -39,8 +53,31 @@ export type SubscriptionRecord = {
   startedAt: string;
   pausedUntil?: string;
   scope: string[];
-  upcomingVisits: Array<{ id: string; date: string; arrivalWindow: string; status: string }>;
+  /**
+   * For custom subscriptions: each recurring slot within a week.
+   * For weekly/biweekly/monthly: a single-element array for consistency.
+   */
+  schedules: SubscriptionScheduleSlot[];
+  upcomingVisits: Array<{
+    id: string;
+    date: string;
+    arrivalWindow: string;
+    status: string;
+    /** Payment lifecycle state for this specific occurrence */
+    paymentStatus: VisitPaymentStatus;
+    /** For retrying state: which attempt number (1–3) */
+    paymentRetryAttempt?: number;
+    /** The product for this visit (may differ per slot in custom subscriptions) */
+    product?: string;
+  }>;
   notes: string;
+  /** Audit trail of subscription-level reschedules */
+  rescheduleHistory?: Array<{
+    originalDate: string;
+    newDate: string;
+    rescheduledAt: string;
+    skippedDates: string[];
+  }>;
 };
 
 export type AccountProfile = {
@@ -319,9 +356,11 @@ export const bookings: BookingRecord[] = [
 export const subscriptions: SubscriptionRecord[] = [
   {
     id: "SUB-221",
+    type: "biweekly",
     status: "active",
     cadence: "Every 2 weeks",
     service: "Standard clean",
+    startDate: "2026-05-07",
     nextVisit: "2026-07-08",
     arrivalWindow: "8:00 AM - 10:00 AM",
     address: "88 Atlantic Avenue, Unit 12",
@@ -332,18 +371,21 @@ export const subscriptions: SubscriptionRecord[] = [
     paymentMethod: "Visa ending in 4242",
     startedAt: "2026-05-07",
     scope: ["Kitchen and bathroom reset", "Floors and dusting", "Bedroom linens", "Laundry fold"],
+    schedules: [{ dayOfWeek: 2, time: "8:00 AM", product: "Standard clean" }],
     upcomingVisits: [
-      { id: "BK-1051", date: "2026-07-08", arrivalWindow: "8:00 AM - 10:00 AM", status: "Scheduled" },
-      { id: "BK-1064", date: "2026-07-22", arrivalWindow: "8:00 AM - 10:00 AM", status: "Planned" },
-      { id: "BK-1076", date: "2026-08-05", arrivalWindow: "8:00 AM - 10:00 AM", status: "Planned" },
+      { id: "BK-1051", date: "2026-07-08", arrivalWindow: "8:00 AM - 10:00 AM", status: "Scheduled", paymentStatus: "confirmed" },
+      { id: "BK-1064", date: "2026-07-22", arrivalWindow: "8:00 AM - 10:00 AM", status: "Planned", paymentStatus: "pending" },
+      { id: "BK-1076", date: "2026-08-05", arrivalWindow: "8:00 AM - 10:00 AM", status: "Planned", paymentStatus: "pending" },
     ],
     notes: "Skip office. Use unscented products in bedroom.",
   },
   {
     id: "SUB-245",
+    type: "weekly",
     status: "active",
     cadence: "Weekly",
     service: "Deep clean",
+    startDate: "2026-04-15",
     nextVisit: "2026-07-04",
     arrivalWindow: "10:00 AM - 1:00 PM",
     address: "225 West 23rd Street, Apt 4B",
@@ -354,18 +396,21 @@ export const subscriptions: SubscriptionRecord[] = [
     paymentMethod: "Visa ending in 4242",
     startedAt: "2026-04-15",
     scope: ["Deep kitchen clean", "Bathroom grout and tile", "Interior windows", "Baseboards and trim"],
+    schedules: [{ dayOfWeek: 5, time: "10:00 AM", product: "Deep clean" }],
     upcomingVisits: [
-      { id: "BK-1092", date: "2026-07-04", arrivalWindow: "10:00 AM - 1:00 PM", status: "Scheduled" },
-      { id: "BK-1101", date: "2026-07-11", arrivalWindow: "10:00 AM - 1:00 PM", status: "Planned" },
-      { id: "BK-1110", date: "2026-07-18", arrivalWindow: "10:00 AM - 1:00 PM", status: "Planned" },
+      { id: "BK-1092", date: "2026-07-04", arrivalWindow: "10:00 AM - 1:00 PM", status: "Scheduled", paymentStatus: "confirmed" },
+      { id: "BK-1101", date: "2026-07-11", arrivalWindow: "10:00 AM - 1:00 PM", status: "Planned", paymentStatus: "pending" },
+      { id: "BK-1110", date: "2026-07-18", arrivalWindow: "10:00 AM - 1:00 PM", status: "Planned", paymentStatus: "pending" },
     ],
     notes: "Cat at home. Use unscented products only.",
   },
   {
     id: "SUB-267",
+    type: "monthly",
     status: "active",
     cadence: "Every 4 weeks",
     service: "Standard office clean",
+    startDate: "2026-03-01",
     nextVisit: "2026-07-20",
     arrivalWindow: "5:00 PM - 7:00 PM",
     address: "500 Fifth Avenue, Suite 2800",
@@ -376,18 +421,21 @@ export const subscriptions: SubscriptionRecord[] = [
     paymentMethod: "Visa ending in 4242",
     startedAt: "2026-03-01",
     scope: ["Conference rooms", "All restrooms", "Kitchen area", "Common spaces and desks"],
+    schedules: [{ dayOfWeek: 0, time: "5:00 PM", product: "Standard office clean" }],
     upcomingVisits: [
-      { id: "BK-1120", date: "2026-07-20", arrivalWindow: "5:00 PM - 7:00 PM", status: "Scheduled" },
-      { id: "BK-1135", date: "2026-08-17", arrivalWindow: "5:00 PM - 7:00 PM", status: "Planned" },
-      { id: "BK-1148", date: "2026-09-14", arrivalWindow: "5:00 PM - 7:00 PM", status: "Planned" },
+      { id: "BK-1120", date: "2026-07-20", arrivalWindow: "5:00 PM - 7:00 PM", status: "Scheduled", paymentStatus: "retrying", paymentRetryAttempt: 2 },
+      { id: "BK-1135", date: "2026-08-17", arrivalWindow: "5:00 PM - 7:00 PM", status: "Planned", paymentStatus: "pending" },
+      { id: "BK-1148", date: "2026-09-14", arrivalWindow: "5:00 PM - 7:00 PM", status: "Planned", paymentStatus: "pending" },
     ],
     notes: "After-hours cleaning. Building access via 5th Ave entrance.",
   },
   {
     id: "SUB-184",
+    type: "weekly",
     status: "paused",
     cadence: "Weekly",
     service: "Small office",
+    startDate: "2026-02-12",
     nextVisit: "2026-07-15",
     arrivalWindow: "6:00 PM - 8:00 PM",
     address: "41 East 11th Street, Suite 6A",
@@ -399,17 +447,20 @@ export const subscriptions: SubscriptionRecord[] = [
     startedAt: "2026-02-12",
     pausedUntil: "2026-07-10",
     scope: ["Desks and conference room", "Kitchenette", "Restroom", "Trash and floors"],
+    schedules: [{ dayOfWeek: 2, time: "6:00 PM", product: "Small office clean" }],
     upcomingVisits: [
-      { id: "BK-1080", date: "2026-07-15", arrivalWindow: "6:00 PM - 8:00 PM", status: "Resumes" },
-      { id: "BK-1091", date: "2026-07-22", arrivalWindow: "6:00 PM - 8:00 PM", status: "Planned" },
+      { id: "BK-1080", date: "2026-07-15", arrivalWindow: "6:00 PM - 8:00 PM", status: "Resumes", paymentStatus: "pending" },
+      { id: "BK-1091", date: "2026-07-22", arrivalWindow: "6:00 PM - 8:00 PM", status: "Planned", paymentStatus: "pending" },
     ],
     notes: "Office is closed for renovation until July 10.",
   },
   {
     id: "SUB-189",
+    type: "biweekly",
     status: "paused",
     cadence: "Every 2 weeks",
     service: "Move-out clean",
+    startDate: "2026-06-01",
     nextVisit: "2026-08-15",
     arrivalWindow: "9:00 AM - 12:00 PM",
     address: "77 Park Avenue, Apt 15C",
@@ -421,16 +472,19 @@ export const subscriptions: SubscriptionRecord[] = [
     startedAt: "2026-06-01",
     pausedUntil: "2026-08-15",
     scope: ["All surfaces deep clean", "Appliance interiors", "Closets and storage", "Move-out standards"],
+    schedules: [{ dayOfWeek: 6, time: "9:00 AM", product: "Move-out clean" }],
     upcomingVisits: [
-      { id: "BK-1160", date: "2026-08-15", arrivalWindow: "9:00 AM - 12:00 PM", status: "Resumes" },
+      { id: "BK-1160", date: "2026-08-15", arrivalWindow: "9:00 AM - 12:00 PM", status: "Resumes", paymentStatus: "pending" },
     ],
     notes: "Tenant is moving out mid-August. Plan resumes after move.",
   },
   {
     id: "SUB-156",
+    type: "biweekly",
     status: "ending",
     cadence: "Every 2 weeks",
     service: "Seasonal deep clean",
+    startDate: "2026-05-15",
     nextVisit: "2026-07-31",
     arrivalWindow: "10:00 AM - 2:00 PM",
     address: "200 Central Park South, Penthouse",
@@ -442,10 +496,85 @@ export const subscriptions: SubscriptionRecord[] = [
     startedAt: "2026-05-15",
     pausedUntil: "2026-09-01",
     scope: ["Full deep clean", "Chandelier cleaning", "Marble polishing", "All windows inside and out"],
+    schedules: [{ dayOfWeek: 4, time: "10:00 AM", product: "Seasonal deep clean" }],
     upcomingVisits: [
-      { id: "BK-1175", date: "2026-07-31", arrivalWindow: "10:00 AM - 2:00 PM", status: "Final" },
+      { id: "BK-1175", date: "2026-07-31", arrivalWindow: "10:00 AM - 2:00 PM", status: "Final", paymentStatus: "confirmed" },
     ],
     notes: "Seasonal service ending Sept 1. Penthouse is closed during summer.",
+  },
+  // ─── Custom subscription ────────────────────────────────────────────────────
+  // Demonstrates: multi-day custom schedule, future start date, product-per-slot,
+  // payment retrying state (for reschedule ineligibility testing), and a reschedule history.
+  {
+    id: "SUB-custom-001",
+    type: "custom",
+    status: "active",
+    cadence: "Custom",
+    service: "Custom cleaning plan",
+    startDate: "2026-07-07",
+    nextVisit: "2026-07-07",
+    arrivalWindow: "10:00 AM - 12:00 PM",
+    address: "225 West 23rd Street, Apt 4B",
+    home: "2 bed, 2 bath apartment",
+    team: "3 hr x 1 cleaner",
+    cleanerPreference: "Prefer Maya R. when available",
+    monthlyEstimate: 624,
+    paymentMethod: "Visa ending in 4242",
+    startedAt: "2026-06-25",
+    scope: ["Kitchen and bathroom reset", "Floors and dusting", "Bedroom linens"],
+    schedules: [
+      { dayOfWeek: 1, time: "10:00 AM", product: "Standard clean" },   // Monday
+      { dayOfWeek: 3, time: "2:00 PM",  product: "Deep clean" },        // Wednesday
+      { dayOfWeek: 5, time: "9:00 AM",  product: "Standard clean" },    // Friday
+    ],
+    upcomingVisits: [
+      // First visit is within 3 days of creation — immediately entered payment processing
+      {
+        id: "BK-custom-001",
+        date: "2026-07-07",
+        arrivalWindow: "10:00 AM - 12:00 PM",
+        status: "Payment processing",
+        paymentStatus: "retrying",
+        paymentRetryAttempt: 1,
+        product: "Standard clean",
+      },
+      // Second slot same week (Wednesday) — confirmed
+      {
+        id: "BK-custom-002",
+        date: "2026-07-09",
+        arrivalWindow: "2:00 PM - 4:00 PM",
+        status: "Scheduled",
+        paymentStatus: "confirmed",
+        product: "Deep clean",
+      },
+      // Third slot same week (Friday) — pending (payment starts 3 days before)
+      {
+        id: "BK-custom-003",
+        date: "2026-07-11",
+        arrivalWindow: "9:00 AM - 11:00 AM",
+        status: "Planned",
+        paymentStatus: "pending",
+        product: "Standard clean",
+      },
+      // Week 2 — Monday
+      {
+        id: "BK-custom-004",
+        date: "2026-07-14",
+        arrivalWindow: "10:00 AM - 12:00 PM",
+        status: "Planned",
+        paymentStatus: "pending",
+        product: "Standard clean",
+      },
+    ],
+    notes: "Mon/Wed/Fri schedule. Cat at home. Use unscented products.",
+    rescheduleHistory: [
+      {
+        originalDate: "2026-06-30",
+        newDate: "2026-07-07",
+        rescheduledAt: "2026-06-25T09:30:00Z",
+        skippedDates: ["2026-06-30"],
+      },
+    ],
   },
 ];
 

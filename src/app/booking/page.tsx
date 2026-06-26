@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
+import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -20,7 +21,7 @@ import {
 } from "lucide-react";
 
 type ServiceId = "standard" | "deep" | "move" | "office";
-type FrequencyId = "once" | "weekly" | "biweekly" | "monthly";
+type FrequencyId = "once" | "weekly" | "biweekly" | "monthly" | "custom";
 
 type BookingState = {
   zip: string;
@@ -34,6 +35,10 @@ type BookingState = {
   hours: number;
   cleaners: number;
   frequencyId: FrequencyId;
+  /** Custom subscription: per-day schedule slots */
+  customSchedules: Array<{ dayOfWeek: number; time: string; product: string }>;
+  /** Subscription start date (ISO), applies to all recurring frequencies */
+  startDate: string;
   addons: string[];
   date: string;
   arrivalWindow: string;
@@ -97,6 +102,7 @@ const FREQUENCIES = [
   { id: "weekly" as const, label: "Weekly", helper: "Repeat every week" },
   { id: "biweekly" as const, label: "Every 2 weeks", helper: "Repeat every other week" },
   { id: "monthly" as const, label: "Monthly", helper: "Repeat once a month" },
+  { id: "custom" as const, label: "Custom schedule", helper: "Choose specific days and products" },
 ];
 
 const ADDONS = [
@@ -127,6 +133,8 @@ const INITIAL_STATE: BookingState = {
   hours: 3,
   cleaners: 1,
   frequencyId: "once",
+  customSchedules: [],
+  startDate: "",
   addons: [],
   date: "",
   arrivalWindow: "10-12",
@@ -605,8 +613,8 @@ function BookingPageContent() {
                 </div>
 
                 <div>
-                  <h3 className="mb-3 text-base font-bold text-text-primary">Cleaning cadence</h3>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <h3 className="mb-3 text-base font-bold text-text-primary">How often should we clean?</h3>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {FREQUENCIES.map((frequency) => (
                       <button
                         key={frequency.id}
@@ -618,11 +626,79 @@ function BookingPageContent() {
                         )}
                       >
                         <span className="block font-bold">{frequency.label}</span>
-                        <span className={cn("mt-1 block text-sm", state.frequencyId === frequency.id ? "text-primary-foreground/85" : "text-text-secondary")}>{frequency.helper}</span>
+                        <span className={cn("mt-1 block text-sm", state.frequencyId === frequency.id ? "text-primary-foreground/85" : "text-text-secondary")}>
+                          {frequency.helper}
+                        </span>
                       </button>
                     ))}
                   </div>
+
+                  {/* Custom schedule builder — shown when custom frequency is selected */}
+                  {state.frequencyId === "custom" && (
+                    <div className="mt-5 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                      <div className="mb-4 flex items-center gap-2">
+                        <Sparkles className="size-4 text-primary" aria-hidden="true" />
+                        <p className="text-sm font-bold text-text-primary">Build your custom schedule</p>
+                      </div>
+                      <WeeklyScheduleBuilder
+                        value={state.customSchedules}
+                        onChange={(schedules) => update("customSchedules", schedules)}
+                      />
+                    </div>
+                  )}
+
+                  {/* Start date picker — shown for all recurring plans */}
+                  {state.frequencyId !== "once" && (
+                    <div className="mt-5 rounded-2xl border border-border bg-surface-muted p-4">
+                      <Field
+                        label="Subscription start date"
+                        htmlFor="startDate"
+                        helper={
+                          state.frequencyId === "custom"
+                            ? "We will generate your first week of bookings from this date."
+                            : `Your first ${state.frequencyId === "weekly" ? "weekly" : state.frequencyId === "biweekly" ? "biweekly" : "monthly"} cleaning will be on or after this date.`
+                        }
+                      >
+                        <input
+                          id="startDate"
+                          type="date"
+                          min={tomorrowISO()}
+                          value={state.startDate}
+                          onChange={(event) => update("startDate", event.target.value)}
+                          className="booking-input"
+                        />
+                      </Field>
+                      {state.frequencyId === "custom" && state.customSchedules.length > 0 && (
+                        (() => {
+                          const productGroups = state.customSchedules.reduce<Record<string, number>>((acc, s) => {
+                            acc[s.product] = (acc[s.product] ?? 0) + 1;
+                            return acc;
+                          }, {});
+                          const productCount = Object.keys(productGroups).length;
+                          if (productCount <= 1) return null;
+                          return (
+                            <div className="mt-3 rounded-xl border border-info/20 bg-info/5 px-4 py-3">
+                              <p className="text-xs font-bold text-info">MULTIPLE SERVICES SELECTED</p>
+                              <p className="mt-1 text-sm text-text-secondary">
+                                You have chosen {productCount} different cleaning types. We will create{" "}
+                                <span className="font-bold text-text-primary">{productCount} separate plans</span> — one per
+                                service type — so billing and scheduling stay clear.
+                              </p>
+                              <div className="mt-2 space-y-0.5">
+                                {Object.entries(productGroups).map(([product, count]) => (
+                                  <p key={product} className="text-xs text-text-secondary">
+                                    → <span className="font-bold">{product}</span> ({count}× per week)
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()
+                      )}
+                    </div>
+                  )}
                 </div>
+
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <Field label="Cleaner preference" htmlFor="cleanerPreference">

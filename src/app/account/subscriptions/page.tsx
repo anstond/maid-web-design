@@ -3,31 +3,46 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { CalendarDays, CheckCircle2, Clock3, CreditCard, History, PauseCircle, RefreshCw, Sparkles, UsersRound } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  History,
+  PauseCircle,
+  RefreshCw,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
 import { ActionLink, Money, PageHeader } from "@/components/account/AccountPrimitives";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { bookings, formatAccountDate, subscriptions } from "@/lib/mock-account-data";
+import { bookings, formatAccountDate, subscriptions, type SubscriptionRecord, type VisitPaymentStatus } from "@/lib/mock-account-data";
+
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function SubscriptionsPage() {
   const router = useRouter();
   const [openActionSheet, setOpenActionSheet] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<"change" | "skip" | null>(null);
-  const [confirmingAction, setConfirmingAction] = useState(false);
 
-  const activePlans = subscriptions.filter((subscription) => subscription.status === "active");
-  const pausedPlans = subscriptions.filter((subscription) => subscription.status === "paused");
-  const endingPlans = subscriptions.filter((subscription) => subscription.status === "ending");
+  const activePlans = subscriptions.filter((s) => s.status === "active");
+  const pausedPlans = subscriptions.filter((s) => s.status === "paused");
+  const endingPlans = subscriptions.filter((s) => s.status === "ending");
   const nextPlan = activePlans[0] || subscriptions[0];
   const nextPlanPastCleanings = getPastCleaningsForPlan(nextPlan);
+  const nextVisitPayment = nextPlan?.upcomingVisits[0];
+  const hasPaymentIssue =
+    nextVisitPayment?.paymentStatus === "retrying" ||
+    nextVisitPayment?.paymentStatus === "failed";
+
+  const isSubscriptionStarted = (sub: SubscriptionRecord) =>
+    new Date(sub.startDate) <= new Date();
 
   const handleActionConfirm = (action: "change" | "skip") => {
     if (action === "change") {
-      // Navigate to reschedule page
       router.push(`/account/subscriptions/${nextPlan.id}/reschedule`);
-    } else if (action === "skip") {
-      // In a real app, this would make an API call to skip the cleaning
+    } else {
       console.log(`User confirmed skip for plan ${nextPlan.id}`);
-      // Show a success toast or navigate back
     }
   };
 
@@ -39,40 +54,98 @@ export default function SubscriptionsPage() {
         action={<ActionLink href="/booking">Start a cleaning plan</ActionLink>}
       />
 
+      {/* ── Hero card: next cleaning ── */}
       <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="px-4 py-5 sm:p-6">
+            {/* Payment issue banner */}
+            {hasPaymentIssue && (
+              <div className="mb-4 flex items-start gap-3 rounded-xl border border-error/25 bg-error/5 px-4 py-3">
+                <AlertCircle className="size-5 shrink-0 text-error mt-0.5" aria-hidden="true" />
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-error">Payment issue — action needed</p>
+                  <p className="mt-1 text-xs text-text-secondary leading-5">
+                    {nextVisitPayment?.paymentRetryAttempt
+                      ? `Attempt ${nextVisitPayment.paymentRetryAttempt} of 3 failed.`
+                      : "Payment could not be collected."}{" "}
+                    Your booking is on hold until payment clears.
+                  </p>
+                  <Link
+                    href="/account/settings"
+                    className="mt-2 inline-flex items-center text-xs font-bold text-error underline-offset-2 hover:underline"
+                  >
+                    Update payment method →
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">✓ Your next cleaning</span>
-              <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold text-text-secondary">{nextPlan.cadence}</span>
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
+                ✓ Your next cleaning
+              </span>
+              <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-bold text-text-secondary">
+                {nextPlan.cadence}
+              </span>
+              {!isSubscriptionStarted(nextPlan) && (
+                <span className="rounded-full bg-info/10 px-3 py-1 text-xs font-bold text-info">
+                  Starting {formatAccountDate(nextPlan.startDate)}
+                </span>
+              )}
             </div>
 
             <div className="mt-4 sm:mt-5 rounded-2xl bg-primary p-4 sm:p-6 text-primary-foreground">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <p className="text-xs font-bold text-primary-foreground/70">Next cleaning</p>
-                  <p className="mt-2 text-3xl sm:text-4xl font-bold leading-tight tracking-normal">{formatAccountDate(nextPlan.nextVisit)}</p>
-                  <p className="mt-3 text-xs sm:text-sm font-bold text-primary-foreground/80">{nextPlan.arrivalWindow}</p>
+                  <p className="mt-2 text-3xl sm:text-4xl font-bold leading-tight tracking-normal">
+                    {formatAccountDate(nextPlan.nextVisit)}
+                  </p>
+                  <p className="mt-3 text-xs sm:text-sm font-bold text-primary-foreground/80">
+                    {nextPlan.arrivalWindow}
+                  </p>
                 </div>
-
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-normal text-primary-foreground">{nextPlan.service}</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-normal text-primary-foreground">
+                    {nextPlan.service}
+                  </h2>
                   <p className="mt-2 text-xs sm:text-sm text-primary-foreground/80 leading-5">
                     {formatTeam(nextPlan.team)} • {nextPlan.cleanerPreference}
                   </p>
                   <div className="mt-3 pt-3 border-t border-primary-foreground/20">
                     <p className="text-xs font-bold text-primary-foreground/70">Monthly cost</p>
-                    <p className="mt-1 text-2xl sm:text-3xl font-bold text-primary-foreground">${nextPlan.monthlyEstimate.toFixed(2)}</p>
+                    <p className="mt-1 text-2xl sm:text-3xl font-bold text-primary-foreground">
+                      ${nextPlan.monthlyEstimate.toFixed(2)}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {nextPlan.scope.length > 0 && (
+              {/* Custom schedule preview */}
+              {nextPlan.type === "custom" && nextPlan.schedules.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-primary-foreground/20">
+                  <p className="text-xs font-bold text-primary-foreground/70 mb-2">Weekly schedule</p>
+                  <div className="flex flex-wrap gap-2">
+                    {nextPlan.schedules.map((slot) => (
+                      <span
+                        key={slot.dayOfWeek}
+                        className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-bold text-primary-foreground"
+                      >
+                        {DAY_NAMES[slot.dayOfWeek]} {slot.time}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {nextPlan.type !== "custom" && nextPlan.scope.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-primary-foreground/20">
                   <p className="text-xs font-bold text-primary-foreground/70">What's included</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {nextPlan.scope.slice(0, 3).map((item) => (
-                      <span key={item} className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-bold text-primary-foreground">{item}</span>
+                      <span key={item} className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-bold text-primary-foreground">
+                        {item}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -97,19 +170,29 @@ export default function SubscriptionsPage() {
           <aside className="border-t border-border bg-surface-muted px-4 py-5 sm:p-6 lg:border-l lg:border-t-0">
             <h2 className="text-lg sm:text-xl font-bold text-text-primary">Your upcoming schedule</h2>
             <div className="mt-4 grid gap-2 sm:gap-3">
-              {nextPlan.upcomingVisits.slice(0, 3).length > 0 ? (
-                nextPlan.upcomingVisits.slice(0, 3).map((visit) => (
+              {nextPlan.upcomingVisits.slice(0, 4).length > 0 ? (
+                nextPlan.upcomingVisits.slice(0, 4).map((visit) => (
                   <div key={visit.id} className="rounded-2xl bg-surface p-3 sm:p-4">
-                    <div className="flex items-center justify-between gap-2 sm:gap-3">
-                      <p className="text-sm sm:text-base font-bold text-text-primary">{formatAccountDate(visit.date)}</p>
-                      <span className="rounded-full bg-primary/10 px-2 sm:px-3 py-1 text-xs font-bold text-primary whitespace-nowrap">{visit.status}</span>
+                    <div className="flex items-start justify-between gap-2 sm:gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm sm:text-base font-bold text-text-primary">
+                          {formatAccountDate(visit.date)}
+                        </p>
+                        {visit.product && (
+                          <p className="text-xs text-text-secondary mt-0.5">{visit.product}</p>
+                        )}
+                        <p className="mt-1 text-xs sm:text-sm text-text-secondary">{visit.arrivalWindow}</p>
+                      </div>
+                      <VisitPaymentBadge paymentStatus={visit.paymentStatus} attempt={visit.paymentRetryAttempt} />
                     </div>
-                    <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-text-secondary">{visit.arrivalWindow}</p>
                   </div>
                 ))
               ) : (
                 <div className="rounded-2xl bg-surface p-4 text-center">
-                  <p className="text-sm text-text-secondary">No upcoming visits scheduled yet. <span className="font-bold">Start your plan to see your schedule.</span></p>
+                  <p className="text-sm text-text-secondary">
+                    No upcoming visits yet.{" "}
+                    <span className="font-bold">Start your plan to see your schedule.</span>
+                  </p>
                 </div>
               )}
             </div>
@@ -118,6 +201,7 @@ export default function SubscriptionsPage() {
       </section>
 
       <div className="mt-6 grid gap-5 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Plan list */}
         <section className="rounded-2xl border border-border bg-surface px-4 py-5 sm:p-6 shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
             <h2 className="text-lg sm:text-xl font-bold text-text-primary">
@@ -146,9 +230,7 @@ export default function SubscriptionsPage() {
                 <div className="mt-2">
                   <p className="mb-3 text-xs font-bold text-warning">PAUSED ({pausedPlans.length})</p>
                   <div className="grid gap-3">
-                    {pausedPlans.map((subscription) => (
-                      <PlanCard key={subscription.id} subscription={subscription} />
-                    ))}
+                    {pausedPlans.map((subscription) => (<PlanCard key={subscription.id} subscription={subscription} />))}
                   </div>
                 </div>
               )}
@@ -156,9 +238,7 @@ export default function SubscriptionsPage() {
                 <div className="mt-2">
                   <p className="mb-3 text-xs font-bold text-text-secondary">ENDING SOON ({endingPlans.length})</p>
                   <div className="grid gap-3">
-                    {endingPlans.map((subscription) => (
-                      <PlanCard key={subscription.id} subscription={subscription} />
-                    ))}
+                    {endingPlans.map((subscription) => (<PlanCard key={subscription.id} subscription={subscription} />))}
                   </div>
                 </div>
               )}
@@ -174,61 +254,64 @@ export default function SubscriptionsPage() {
           )}
         </section>
 
+        {/* Quick actions sidebar */}
         <aside className="grid gap-4 lg:self-start">
           <section className="rounded-2xl border border-border bg-surface px-4 py-5 sm:p-6 shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
             <div className="flex size-10 sm:size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
               <RefreshCw className="size-4 sm:size-5" aria-hidden="true" />
             </div>
             <h2 className="mt-3 sm:mt-4 text-lg sm:text-xl font-bold text-text-primary">Quick changes</h2>
-            <p className="mt-2 text-xs sm:text-sm leading-6 text-text-secondary">Reschedule, skip, or pause your next cleaning. Your plan stays active.</p>
+            <p className="mt-2 text-xs sm:text-sm leading-6 text-text-secondary">
+              Reschedule, skip, or pause your next cleaning. Your plan stays active.
+            </p>
             <div className="mt-4 grid gap-2 sm:gap-3">
-              <ActionPill href={`/account/subscriptions/${nextPlan.id}`}>Reschedule or skip</ActionPill>
+              <ActionPill href={`/account/subscriptions/${nextPlan.id}/reschedule`}>Reschedule next visit</ActionPill>
               <ActionPill href={`/account/subscriptions/${nextPlan.id}`}>Pause plan</ActionPill>
             </div>
           </section>
-
           <section className="rounded-2xl border border-border bg-surface-muted px-4 py-5 sm:p-6">
             <h2 className="text-lg sm:text-xl font-bold text-text-primary">Need more frequent cleaning?</h2>
-            <p className="mt-2 text-xs sm:text-sm leading-6 text-text-secondary">Book an extra cleaning, deep clean, or move-in cleaning anytime without changing your plan frequency.</p>
-            <Link
-              href="/booking"
-              className="mt-4 inline-flex w-full sm:w-auto min-h-11 items-center justify-center rounded-full bg-surface px-5 text-sm font-bold text-primary transition duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
-            >
+            <p className="mt-2 text-xs sm:text-sm leading-6 text-text-secondary">
+              Book an extra cleaning, deep clean, or move-in cleaning anytime without changing your plan.
+            </p>
+            <Link href="/booking" className="mt-4 inline-flex w-full sm:w-auto min-h-11 items-center justify-center rounded-full bg-surface px-5 text-sm font-bold text-primary transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px">
               Book now
             </Link>
           </section>
         </aside>
       </div>
 
+      {/* Cleaning history */}
       <section className="mt-6 rounded-2xl border border-border bg-surface px-4 py-5 sm:p-6 shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
         <div className="flex items-start justify-between gap-3 sm:gap-4">
           <div className="flex-1">
             <h2 className="text-lg sm:text-xl font-bold text-text-primary">Your cleaning history</h2>
-            <p className="mt-2 text-xs sm:text-sm leading-6 text-text-secondary">Review receipts, see who cleaned, and check what was completed.</p>
+            <p className="mt-2 text-xs sm:text-sm leading-6 text-text-secondary">
+              Review receipts, see who cleaned, and check what was completed.
+            </p>
           </div>
           <Link href="/account/bookings" className="hidden sm:inline-flex min-h-11 items-center rounded-full bg-surface-muted px-4 text-sm font-bold text-primary hover:bg-accent-soft focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 flex-shrink-0">
             All cleanings
           </Link>
         </div>
-
         <div className="mt-5 grid gap-4 sm:gap-5 grid-cols-1 md:grid-cols-2">
           {subscriptions.map((subscription) => {
             const pastCleanings = getPastCleaningsForPlan(subscription);
-
             return (
               <div key={subscription.id} className="rounded-2xl bg-surface-muted p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-2 sm:gap-3">
                   <h3 className="text-sm sm:text-base font-bold text-text-primary">{subscription.service}</h3>
-                  <span className="text-xs sm:text-sm font-bold text-text-secondary whitespace-nowrap">{pastCleanings.length} {pastCleanings.length === 1 ? "cleaning" : "cleanings"}</span>
+                  <span className="text-xs sm:text-sm font-bold text-text-secondary whitespace-nowrap">
+                    {pastCleanings.length} {pastCleanings.length === 1 ? "cleaning" : "cleanings"}
+                  </span>
                 </div>
-
                 <div className="mt-3 grid gap-2">
                   {pastCleanings.length > 0 ? (
-                    pastCleanings.slice(0, 3).map((booking) => <PastCleaningRow key={booking.id} booking={booking} />)
+                    pastCleanings.slice(0, 3).map((booking) => (<PastCleaningRow key={booking.id} booking={booking} />))
                   ) : (
                     <div className="rounded-xl bg-surface p-3 sm:p-4">
                       <p className="text-xs sm:text-sm font-bold text-text-primary">Your first cleaning is coming</p>
-                      <p className="mt-1 text-xs text-text-secondary">Once your plan starts, completed cleanings will show here with receipts and details.</p>
+                      <p className="mt-1 text-xs text-text-secondary">Once your plan starts, completed cleanings will show here.</p>
                     </div>
                   )}
                 </div>
@@ -238,13 +321,13 @@ export default function SubscriptionsPage() {
         </div>
       </section>
 
-      <Sheet open={openActionSheet === nextPlan.id} onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          setOpenActionSheet(null);
-          setSelectedAction(null);
-          setConfirmingAction(false);
-        }
-      }}>
+      {/* Change/skip sheet */}
+      <Sheet
+        open={openActionSheet === nextPlan.id}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) { setOpenActionSheet(null); setSelectedAction(null); }
+        }}
+      >
         <SheetContent>
           <ChangeVisitSheetContent
             plan={nextPlan}
@@ -254,7 +337,6 @@ export default function SubscriptionsPage() {
               handleActionConfirm(action);
               setOpenActionSheet(null);
               setSelectedAction(null);
-              setConfirmingAction(false);
             }}
           />
         </SheetContent>
@@ -263,20 +345,40 @@ export default function SubscriptionsPage() {
   );
 }
 
-function PlanCard({ subscription }: { subscription: (typeof subscriptions)[number] }) {
+// ─── PlanCard ─────────────────────────────────────────────────────────────────
+
+function PlanCard({ subscription }: { subscription: SubscriptionRecord }) {
   const pastCleanings = getPastCleaningsForPlan(subscription);
   const nextVisit = subscription.upcomingVisits[0];
+  const isStarted = new Date(subscription.startDate) <= new Date();
+  const hasPaymentIssue = nextVisit?.paymentStatus === "retrying" || nextVisit?.paymentStatus === "failed";
 
   return (
     <article className="rounded-2xl bg-surface-muted p-3 sm:p-4">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-text-secondary">Every {subscription.cadence.toLowerCase()}</span>
+            {subscription.type === "custom" ? (
+              <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-text-secondary flex items-center gap-1.5">
+                <Sparkles className="size-3" aria-hidden="true" />
+                Custom schedule
+              </span>
+            ) : (
+              <span className="rounded-full bg-surface px-3 py-1 text-xs font-bold text-text-secondary">
+                {subscription.cadence}
+              </span>
+            )}
             <PlanState status={subscription.status} />
+            {!isStarted && (
+              <span className="rounded-full bg-info/10 px-3 py-1 text-xs font-bold text-info">
+                Starts {formatAccountDate(subscription.startDate)}
+              </span>
+            )}
           </div>
           <h3 className="mt-2 sm:mt-3 text-lg sm:text-xl font-bold text-text-primary">{subscription.service}</h3>
-          <p className="mt-1 sm:mt-2 text-xs sm:text-sm leading-5 sm:leading-6 text-text-secondary">{subscription.home} • {subscription.address}</p>
+          <p className="mt-1 sm:mt-2 text-xs sm:text-sm leading-5 sm:leading-6 text-text-secondary">
+            {subscription.home} • {subscription.address}
+          </p>
         </div>
         <div className="text-left sm:text-right flex-shrink-0">
           <p className="text-xs font-bold text-text-secondary">Monthly</p>
@@ -284,13 +386,40 @@ function PlanCard({ subscription }: { subscription: (typeof subscriptions)[numbe
         </div>
       </div>
 
-      <div className="mt-3 sm:mt-4 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-3">
-        <SimpleFact icon={<CalendarDays className="size-4" />} label="Next cleaning" value={nextVisit ? `${formatAccountDate(nextVisit.date)}` : "Not scheduled"} />
-        <SimpleFact icon={<UsersRound className="size-4" />} label="Your cleaners" value={formatTeam(subscription.team)} />
-        <SimpleFact icon={<History className="size-4" />} label="Completed" value={`${pastCleanings.length} ${pastCleanings.length === 1 ? "cleaning" : "cleanings"}`} />
-      </div>
+      {hasPaymentIssue && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 px-3 py-2">
+          <AlertCircle className="size-4 shrink-0 text-error" aria-hidden="true" />
+          <p className="text-xs font-bold text-error">
+            Payment issue — visit on hold
+            {nextVisit?.paymentRetryAttempt ? ` (attempt ${nextVisit.paymentRetryAttempt}/3)` : ""}
+          </p>
+        </div>
+      )}
 
-      {subscription.scope.length > 0 && (
+      {/* Custom schedule grid */}
+      {subscription.type === "custom" && subscription.schedules.length > 0 ? (
+        <div className="mt-3 sm:mt-4">
+          <p className="text-xs font-bold text-text-secondary mb-2">Weekly schedule</p>
+          <div className="flex flex-wrap gap-1.5">
+            {subscription.schedules.map((slot) => (
+              <div key={slot.dayOfWeek} className="rounded-xl bg-surface px-3 py-2 text-xs">
+                <span className="font-bold text-text-primary">{DAY_NAMES[slot.dayOfWeek]}</span>
+                <span className="text-text-secondary"> {slot.time}</span>
+                <span className="mx-1 text-text-secondary">·</span>
+                <span className="text-text-secondary">{slot.product}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 sm:mt-4 grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-3">
+          <SimpleFact icon={<CalendarDays className="size-4" />} label="Next cleaning" value={nextVisit ? formatAccountDate(nextVisit.date) : "Not scheduled"} />
+          <SimpleFact icon={<UsersRound className="size-4" />} label="Your cleaners" value={formatTeam(subscription.team)} />
+          <SimpleFact icon={<History className="size-4" />} label="Completed" value={`${pastCleanings.length} ${pastCleanings.length === 1 ? "cleaning" : "cleanings"}`} />
+        </div>
+      )}
+
+      {subscription.type !== "custom" && subscription.scope.length > 0 && (
         <div className="mt-3 sm:mt-4">
           <p className="text-xs font-bold text-text-secondary mb-2">What's included</p>
           <div className="flex flex-wrap gap-1 sm:gap-2">
@@ -309,13 +438,46 @@ function PlanCard({ subscription }: { subscription: (typeof subscriptions)[numbe
   );
 }
 
+// ─── Visit payment badge ───────────────────────────────────────────────────────
+
+function VisitPaymentBadge({ paymentStatus, attempt }: { paymentStatus: VisitPaymentStatus; attempt?: number }) {
+  if (paymentStatus === "confirmed") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-1 text-xs font-bold text-success whitespace-nowrap">
+        <CheckCircle2 className="size-3" aria-hidden="true" /> Confirmed
+      </span>
+    );
+  }
+  if (paymentStatus === "retrying") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-xs font-bold text-warning whitespace-nowrap">
+        <AlertCircle className="size-3" aria-hidden="true" /> Retry {attempt ?? ""}/3
+      </span>
+    );
+  }
+  if (paymentStatus === "failed") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-error/10 px-2 py-1 text-xs font-bold text-error whitespace-nowrap">Failed</span>
+    );
+  }
+  if (paymentStatus === "cancelled") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-text-secondary/10 px-2 py-1 text-xs font-bold text-text-secondary whitespace-nowrap">Cancelled</span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-surface px-2 py-1 text-xs font-bold text-text-secondary whitespace-nowrap">
+      <Clock3 className="size-3" aria-hidden="true" /> Pending
+    </span>
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function SimpleFact({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-xl bg-surface p-2 sm:p-3">
-      <div className="flex items-center gap-2 text-primary">
-        {icon}
-        <span className="text-xs font-bold">{label}</span>
-      </div>
+      <div className="flex items-center gap-2 text-primary">{icon}<span className="text-xs font-bold">{label}</span></div>
       <p className="mt-1 sm:mt-2 text-xs sm:text-sm font-bold leading-5 text-text-primary truncate">{value}</p>
     </div>
   );
@@ -323,33 +485,23 @@ function SimpleFact({ icon, label, value }: { icon: ReactNode; label: string; va
 
 function formatTeam(team: string) {
   const match = team.match(/^(.+?) x (\d+) (cleaners?)$/);
-
   if (!match) return team;
-
   const [, hours, cleanerCount, cleanerLabel] = match;
   return `${cleanerCount} ${cleanerLabel} for ${hours}`;
 }
 
-function PlanState({ status }: { status: (typeof subscriptions)[number]["status"] }) {
-  if (status === "paused") {
-    return (
-      <span className="inline-flex min-h-8 items-center gap-1 rounded-full bg-warning/10 px-3 text-xs font-bold text-warning">
-        <PauseCircle className="size-3.5" aria-hidden="true" />
-        Paused
-      </span>
-    );
-  }
-  if (status === "ending") {
-    return (
-      <span className="inline-flex min-h-8 items-center gap-1 rounded-full bg-error/10 px-3 text-xs font-bold text-error">
-        Ending soon
-      </span>
-    );
-  }
+function PlanState({ status }: { status: SubscriptionRecord["status"] }) {
+  if (status === "paused") return (
+    <span className="inline-flex min-h-8 items-center gap-1 rounded-full bg-warning/10 px-3 text-xs font-bold text-warning">
+      <PauseCircle className="size-3.5" aria-hidden="true" /> Paused
+    </span>
+  );
+  if (status === "ending") return (
+    <span className="inline-flex min-h-8 items-center gap-1 rounded-full bg-error/10 px-3 text-xs font-bold text-error">Ending soon</span>
+  );
   return (
     <span className="inline-flex min-h-8 items-center gap-1 rounded-full bg-success/10 px-3 text-xs font-bold text-success">
-      <CheckCircle2 className="size-3.5" aria-hidden="true" />
-      Active
+      <CheckCircle2 className="size-3.5" aria-hidden="true" /> Active
     </span>
   );
 }
@@ -374,9 +526,7 @@ function PastCleaningRow({ booking }: { booking: (typeof bookings)[number] }) {
       className="grid gap-2 sm:gap-3 rounded-xl bg-surface p-3 sm:p-4 transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
     >
       <span>
-        <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-text-primary">
-          ✓ {formatAccountDate(booking.date)}
-        </span>
+        <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-text-primary">✓ {formatAccountDate(booking.date)}</span>
         <span className="mt-0.5 sm:mt-1 block text-xs sm:text-sm text-text-secondary">{booking.arrivalWindow} with {booking.cleaner}</span>
       </span>
       <span className="text-xs sm:text-sm font-bold text-primary">See receipt →</span>
@@ -384,7 +534,7 @@ function PastCleaningRow({ booking }: { booking: (typeof bookings)[number] }) {
   );
 }
 
-function getPastCleaningsForPlan(subscription: (typeof subscriptions)[number]) {
+function getPastCleaningsForPlan(subscription: SubscriptionRecord) {
   return bookings.filter(
     (booking) =>
       (booking.status === "completed" || booking.status === "cancelled") &&
@@ -394,12 +544,9 @@ function getPastCleaningsForPlan(subscription: (typeof subscriptions)[number]) {
 }
 
 function ChangeVisitSheetContent({
-  plan,
-  selectedAction,
-  onSelectAction,
-  onConfirm,
+  plan, selectedAction, onSelectAction, onConfirm,
 }: {
-  plan: (typeof subscriptions)[number];
+  plan: SubscriptionRecord;
   selectedAction: "change" | "skip" | null;
   onSelectAction: (action: "change" | "skip" | null) => void;
   onConfirm: (action: "change" | "skip") => void;
@@ -407,8 +554,8 @@ function ChangeVisitSheetContent({
   const actionDetails = {
     change: {
       title: "Change next cleaning date",
-      description: `Reschedule your ${plan.service.toLowerCase()} from ${formatAccountDate(plan.nextVisit)}`,
-      confirmText: "This doesn't cancel your plan—just moves this visit.",
+      description: `Move your ${plan.service.toLowerCase()} from ${formatAccountDate(plan.nextVisit)}`,
+      confirmText: "This does not cancel your plan — just moves this visit forward.",
       buttonText: "Continue to reschedule",
     },
     skip: {
@@ -424,55 +571,37 @@ function ChangeVisitSheetContent({
   return (
     <>
       {!selectedAction ? (
-        // Main menu
         <>
           <SheetHeader>
             <SheetTitle>What would you like to do?</SheetTitle>
             <SheetDescription>{plan.service} on {formatAccountDate(plan.nextVisit)}</SheetDescription>
           </SheetHeader>
-
           <div className="mt-4 space-y-3">
-            <button
-              onClick={() => onSelectAction("change")}
-              className="w-full rounded-2xl border border-border bg-surface-muted p-4 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
-            >
+            <button onClick={() => onSelectAction("change")} className="w-full rounded-2xl border border-border bg-surface-muted p-4 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30">
               <p className="font-bold text-text-primary">Change the date</p>
               <p className="mt-1 text-sm text-text-secondary">Move this cleaning to a different day</p>
             </button>
-
-            <button
-              onClick={() => onSelectAction("skip")}
-              className="w-full rounded-2xl border border-border bg-surface-muted p-4 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
-            >
+            <button onClick={() => onSelectAction("skip")} className="w-full rounded-2xl border border-border bg-surface-muted p-4 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30">
               <p className="font-bold text-text-primary">Skip this cleaning</p>
               <p className="mt-1 text-sm text-text-secondary">Your plan stays active. Nothing changes.</p>
             </button>
           </div>
         </>
       ) : (
-        // Confirmation view
         <>
           <SheetHeader>
             <SheetTitle>{currentAction?.title}</SheetTitle>
             <SheetDescription>{currentAction?.description}</SheetDescription>
           </SheetHeader>
-
           <div className="mt-6 rounded-2xl bg-primary/10 p-4">
             <p className="text-xs font-bold text-primary mb-2">HEADS UP</p>
             <p className="text-sm text-text-secondary">{currentAction?.confirmText}</p>
           </div>
-
           <SheetFooter className="mt-6">
-            <button
-              onClick={() => onSelectAction(null)}
-              className="flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
-            >
+            <button onClick={() => onSelectAction(null)} className="flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-text-primary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px">
               Back
             </button>
-            <button
-              onClick={() => onConfirm(selectedAction)}
-              className="flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
-            >
+            <button onClick={() => onConfirm(selectedAction)} className="flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px">
               {currentAction?.buttonText}
             </button>
           </SheetFooter>
