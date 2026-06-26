@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState, useRef } from "react";
 import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
 import { bookings } from "@/lib/mock-account-data";
 import { MapPicker } from "@/components/MapPicker";
@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock3,
   Briefcase,
@@ -21,6 +22,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Plus,
 } from "lucide-react";
 
 type ServiceId = "standard" | "deep" | "move" | "office";
@@ -55,6 +57,9 @@ type BookingState = {
   lastName: string;
   email: string;
   phone: string;
+  addressVerified: boolean;
+  addressLabel: string;
+  addressPhone: string;
 };
 
 const SERVICES = [
@@ -160,6 +165,9 @@ const INITIAL_STATE: BookingState = {
   lastName: "",
   email: "",
   phone: "",
+  addressVerified: true,
+  addressLabel: "",
+  addressPhone: "",
 };
 
 const SAVED_ADDRESSES = [
@@ -173,7 +181,8 @@ const SAVED_ADDRESSES = [
     city: "New York",
     bedrooms: 2,
     bathrooms: 2,
-    homeType: "Apartment"
+    homeType: "Apartment",
+    phone: "212-555-0101"
   },
   { 
     label: "Office", 
@@ -185,8 +194,130 @@ const SAVED_ADDRESSES = [
     city: "New York",
     bedrooms: 0,
     bathrooms: 1,
-    homeType: "Office"
+    homeType: "Office",
+    phone: "212-555-0102"
+  },
+  { 
+    label: "Brooklyn Loft", 
+    isDefault: false,
+    iconType: "home",
+    address: "55 Water Street", 
+    unit: "Unit 201", 
+    zip: "11201", 
+    city: "Brooklyn",
+    bedrooms: 1,
+    bathrooms: 1.5,
+    homeType: "Apartment",
+    phone: "718-555-0103"
+  },
+  { 
+    label: "Parents' House", 
+    isDefault: false,
+    iconType: "home",
+    address: "142 Elmwood Ave", 
+    unit: "", 
+    zip: "07030", 
+    city: "Hoboken",
+    bedrooms: 4,
+    bathrooms: 3,
+    homeType: "House",
+    phone: "201-555-0104"
+  },
+  { 
+    label: "Studio", 
+    isDefault: false,
+    iconType: "home",
+    address: "742 Evergreen Terrace", 
+    unit: "Apt 1", 
+    zip: "10021", 
+    city: "New York",
+    bedrooms: 0,
+    bathrooms: 1,
+    homeType: "Apartment",
+    phone: "212-555-0105"
+  },
+  { 
+    label: "Gym Office", 
+    isDefault: false,
+    iconType: "office",
+    address: "300 Broadway", 
+    unit: "Suite 4", 
+    zip: "10007", 
+    city: "New York",
+    bedrooms: 0,
+    bathrooms: 2,
+    homeType: "Office",
+    phone: "212-555-0106"
+  },
+  { 
+    label: "Vacation Rental", 
+    isDefault: false,
+    iconType: "home",
+    address: "88 Ocean Parkway", 
+    unit: "Penthouse", 
+    zip: "11218", 
+    city: "Brooklyn",
+    bedrooms: 3,
+    bathrooms: 2.5,
+    homeType: "Apartment",
+    phone: "718-555-0107"
+  },
+  { 
+    label: "Manhattan Flat", 
+    isDefault: false,
+    iconType: "home",
+    address: "12 Pine Street", 
+    unit: "Apt 12A", 
+    zip: "10005", 
+    city: "New York",
+    bedrooms: 2,
+    bathrooms: 1,
+    homeType: "Apartment",
+    phone: "212-555-0108"
+  },
+  { 
+    label: "Townhouse", 
+    isDefault: false,
+    iconType: "home",
+    address: "413 West 14th Street", 
+    unit: "", 
+    zip: "10014", 
+    city: "New York",
+    bedrooms: 3,
+    bathrooms: 3,
+    homeType: "Townhouse",
+    phone: "212-555-0109"
+  },
+  { 
+    label: "Co-working Space", 
+    isDefault: false,
+    iconType: "office",
+    address: "154 Grand Street", 
+    unit: "Desk 42", 
+    zip: "10013", 
+    city: "New York",
+    bedrooms: 0,
+    bathrooms: 1,
+    homeType: "Office",
+    phone: "212-555-0110"
   }
+];
+
+const SUGGESTED_PLACES = [
+  { address: "225 West 23rd Street", zip: "10011", city: "New York" },
+  { address: "19 Mercer Street", zip: "10012", city: "New York" },
+  { address: "55 Water Street", zip: "11201", city: "Brooklyn" },
+  { address: "142 Elmwood Ave", zip: "07030", city: "Hoboken" },
+  { address: "742 Evergreen Terrace", zip: "10021", city: "New York" },
+  { address: "300 Broadway", zip: "10007", city: "New York" },
+  { address: "88 Ocean Parkway", zip: "11218", city: "Brooklyn" },
+  { address: "12 Pine Street", zip: "10005", city: "New York" },
+  { address: "413 West 14th Street", zip: "10014", city: "New York" },
+  { address: "154 Grand Street", zip: "10013", city: "New York" },
+  { address: "109 Mercer Street", zip: "10012", city: "New York" },
+  { address: "72 Central Park West", zip: "10023", city: "New York" },
+  { address: "1560 Broadway", zip: "10036", city: "New York" },
+  { address: "120 St Marks Place", zip: "10009", city: "New York" },
 ];
 
 function tomorrowISO() {
@@ -228,6 +359,46 @@ function BookingPageContent() {
   const [step, setStep] = useState(0);
   const [touched, setTouched] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [mapPreQuery, setMapPreQuery] = useState("");
+  const [isEditingCustomAddress, setIsEditingCustomAddress] = useState(false);
+  const addressScrollRef = useRef<HTMLDivElement>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<typeof SUGGESTED_PLACES>([]);
+
+  const handleAddressChange = (val: string) => {
+    update("address", val);
+    update("addressVerified", false);
+
+    if (val.trim().length > 1) {
+      const filtered = SUGGESTED_PLACES.filter((place) =>
+        place.address.toLowerCase().includes(val.toLowerCase())
+      );
+      setSearchSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSelectSuggestion = (place: typeof SUGGESTED_PLACES[0]) => {
+    update("address", place.address);
+    update("zip", place.zip);
+    update("city", place.city);
+    update("addressVerified", true);
+    setShowSuggestions(false);
+  };
+
+  const scrollAddresses = (direction: "left" | "right") => {
+    if (addressScrollRef.current) {
+      const scrollAmount = 340; // width + gap
+      addressScrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   const pastCleaners = useMemo(() => {
     const set = new Set<string>();
     bookings.forEach((b) => {
@@ -242,13 +413,25 @@ function BookingPageContent() {
     });
     return Array.from(set);
   }, []);
-  const [state, setState] = useState<BookingState>(() => ({
-    ...INITIAL_STATE,
-    serviceId: SERVICES.some((service) => service.id === initialService)
-      ? (initialService as ServiceId)
-      : INITIAL_STATE.serviceId,
-    zip: initialZip.replace(/\D/g, "").slice(0, 5),
-  }));
+  const [state, setState] = useState<BookingState>(() => {
+    const defaultAddr = SAVED_ADDRESSES.find((a) => a.isDefault) ?? SAVED_ADDRESSES[0];
+    return {
+      ...INITIAL_STATE,
+      serviceId: SERVICES.some((service) => service.id === initialService)
+        ? (initialService as ServiceId)
+        : INITIAL_STATE.serviceId,
+      zip: initialZip.replace(/\D/g, "").slice(0, 5) || (defaultAddr ? defaultAddr.zip : ""),
+      address: defaultAddr ? defaultAddr.address : "",
+      unit: defaultAddr ? defaultAddr.unit : "",
+      city: defaultAddr ? defaultAddr.city : "New York",
+      bedrooms: defaultAddr ? defaultAddr.bedrooms : 1,
+      bathrooms: defaultAddr ? defaultAddr.bathrooms : 1,
+      homeType: defaultAddr ? defaultAddr.homeType : "Apartment",
+      addressVerified: defaultAddr ? true : false,
+      addressLabel: defaultAddr ? defaultAddr.label : "",
+      addressPhone: defaultAddr ? defaultAddr.phone : "",
+    };
+  });
 
   const currentService = SERVICES.find((service) => service.id === state.serviceId) ?? SERVICES[0];
   const currentFrequency = FREQUENCIES.find((frequency) => frequency.id === state.frequencyId) ?? FREQUENCIES[0];
@@ -293,6 +476,13 @@ function BookingPageContent() {
       total,
     };
   }, [currentArrival.price, currentService, state.addons, state.cleaners, state.hours, state.supplies]);
+
+  const isSavedAddressActive = useMemo(() => {
+    if (isEditingCustomAddress) return false;
+    return SAVED_ADDRESSES.some(
+      (addr) => state.address === addr.address && state.unit === addr.unit
+    );
+  }, [state.address, state.unit, isEditingCustomAddress]);
 
   const errors = useMemo(() => {
     const result: string[] = [];
@@ -348,6 +538,12 @@ function BookingPageContent() {
   function continueFlow() {
     setTouched(true);
     if (errors.length > 0) return;
+
+    if (step === 0 && !state.addressVerified) {
+      setMapPreQuery(state.address);
+      setIsMapOpen(true);
+      return;
+    }
 
     if (step === 3) {
       sessionStorage.setItem(
@@ -459,99 +655,234 @@ function BookingPageContent() {
 
                 {/* Saved Addresses Section */}
                 <div>
-                  <p className="mb-3 text-sm font-bold text-text-primary">Your Saved Addresses</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {SAVED_ADDRESSES.map((addr) => {
-                      const isMatch = state.address === addr.address && state.unit === addr.unit;
-                      return (
-                        <button
-                          key={addr.label}
-                          type="button"
-                          onClick={() => {
-                            update("address", addr.address);
-                            update("unit", addr.unit);
-                            update("zip", addr.zip);
-                            update("city", addr.city);
-                            update("bedrooms", addr.bedrooms);
-                            update("bathrooms", addr.bathrooms);
-                            update("homeType", addr.homeType);
-                          }}
-                          className={cn(
-                            "relative flex items-start gap-4 rounded-2xl border p-5 text-left transition duration-200 active:translate-y-px cursor-pointer",
-                            isMatch
-                              ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
-                              : "border-border bg-surface hover:border-primary/40 hover:bg-surface-muted"
-                          )}
-                        >
-                          <div className={cn(
-                            "flex size-10 shrink-0 items-center justify-center rounded-full text-primary",
-                            isMatch ? "bg-primary/15" : "bg-surface-muted"
-                          )}>
-                            {addr.iconType === "home" ? <Home className="size-5" /> : <Briefcase className="size-5" />}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0 pr-6">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-text-primary text-sm">{addr.label}</span>
-                              {addr.isDefault && (
-                                <span className="inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Default</span>
-                              )}
-                            </div>
-                            <p className="mt-1.5 text-sm font-semibold text-text-primary truncate">
-                              {addr.address}{addr.unit ? `, ${addr.unit}` : ""}
-                            </p>
-                            <p className="text-xs text-text-secondary mt-0.5">
-                              {addr.city} {addr.zip}
-                            </p>
-                            <p className="text-xs text-primary font-semibold mt-2">
-                              {addr.bedrooms > 0 ? `${addr.bedrooms} bed` : "Studio"} · {addr.bathrooms} bath · {addr.homeType}
-                            </p>
-                          </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <p className="text-sm font-bold text-text-primary">Your Saved Addresses</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          update("address", "");
+                          update("unit", "");
+                          update("zip", "");
+                          update("city", "");
+                          update("bedrooms", 1);
+                          update("bathrooms", 1);
+                          update("homeType", "Apartment");
+                          update("addressVerified", false);
+                          update("addressLabel", "");
+                          update("addressPhone", "");
+                          setIsEditingCustomAddress(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 hover:bg-primary/20 px-2.5 py-1 text-[11px] font-bold text-primary transition active:scale-95 cursor-pointer focus-visible:outline-none"
+                      >
+                        <Plus className="size-3" /> Add New
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => scrollAddresses("left")}
+                        className="flex size-7 items-center justify-center rounded-full border border-border bg-surface hover:bg-surface-muted text-text-primary hover:border-primary/45 transition active:scale-95 cursor-pointer"
+                        aria-label="Scroll left"
+                      >
+                        <ChevronLeft className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollAddresses("right")}
+                        className="flex size-7 items-center justify-center rounded-full border border-border bg-surface hover:bg-surface-muted text-text-primary hover:border-primary/45 transition active:scale-95 cursor-pointer"
+                        aria-label="Scroll right"
+                      >
+                        <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  </div>
 
-                          {isMatch && (
-                            <span className="absolute right-4 top-4 flex size-5 items-center justify-center rounded-full bg-primary text-white">
-                              <Check className="size-3" strokeWidth={3} />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="relative">
+                    <div
+                      ref={addressScrollRef}
+                      className="flex flex-row flex-nowrap gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                    >
+                      {SAVED_ADDRESSES.map((addr) => {
+                        const isMatch = state.address === addr.address && state.unit === addr.unit;
+                        return (
+                          <button
+                            key={addr.label}
+                            type="button"
+                            onClick={() => {
+                              update("address", addr.address);
+                              update("unit", addr.unit);
+                              update("zip", addr.zip);
+                              update("city", addr.city);
+                              update("bedrooms", addr.bedrooms);
+                              update("bathrooms", addr.bathrooms);
+                              update("homeType", addr.homeType);
+                              update("addressVerified", true);
+                              update("addressLabel", addr.label);
+                              update("addressPhone", addr.phone);
+                              setIsEditingCustomAddress(false);
+                            }}
+                            className={cn(
+                              "relative flex w-[290px] sm:w-[320px] shrink-0 snap-start items-start gap-4 rounded-2xl border p-5 text-left transition duration-200 active:translate-y-px cursor-pointer",
+                              isMatch
+                                ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                                : "border-border bg-surface hover:border-primary/40 hover:bg-surface-muted"
+                            )}
+                          >
+                            <div className={cn(
+                              "flex size-10 shrink-0 items-center justify-center rounded-full text-primary",
+                              isMatch ? "bg-primary/15" : "bg-surface-muted"
+                            )}>
+                              {addr.iconType === "home" ? <Home className="size-5" /> : <Briefcase className="size-5" />}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0 pr-6">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-text-primary text-sm truncate">{addr.label}</span>
+                                {addr.isDefault && (
+                                  <span className="inline-block shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Default</span>
+                                )}
+                              </div>
+                              <p className="mt-1.5 text-sm font-semibold text-text-primary truncate">
+                                {addr.address}{addr.unit ? `, ${addr.unit}` : ""}
+                              </p>
+                              <p className="text-xs text-text-secondary mt-0.5 truncate">
+                                {addr.city} {addr.zip}
+                              </p>
+                              <p className="text-xs text-primary font-semibold mt-2 truncate">
+                                {addr.bedrooms > 0 ? `${addr.bedrooms} bed` : "Studio"} · {addr.bathrooms} bath · {addr.homeType}
+                              </p>
+                            </div>
+
+                            {isMatch && (
+                              <span className="absolute right-4 top-4 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                                <Check className="size-3" strokeWidth={3} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-[1fr_150px]">
-                  <Field label="Street address" htmlFor="address" required>
-                    <div className="relative flex items-center">
-                      <input id="address" value={state.address} onChange={(event) => update("address", event.target.value)} autoComplete="street-address" className="booking-input pr-12" placeholder="225 West 23rd Street" />
-                      <button
-                        type="button"
-                        onClick={() => setIsMapOpen(true)}
-                        className="absolute right-2.5 flex size-9 items-center justify-center rounded-full hover:bg-surface-muted text-primary transition active:scale-95 cursor-pointer"
-                        title="Select on map"
-                      >
-                        <MapPin className="size-5" />
-                      </button>
+                {isSavedAddressActive ? (
+                  <div className="rounded-2xl border border-border bg-surface-muted p-5 flex flex-wrap items-center justify-between gap-4 animate-fade-in">
+                    <div>
+                      <p className="text-xs text-primary font-bold uppercase tracking-wider">Selected Address Details</p>
+                      <p className="mt-1 text-base font-bold text-text-primary">
+                        {state.address}{state.unit ? `, ${state.unit}` : ""}
+                      </p>
+                      <p className="text-sm text-text-secondary mt-0.5">
+                        {state.city} {state.zip}
+                      </p>
+                      <p className="text-xs text-text-secondary mt-1.5 font-medium">
+                        {state.bedrooms > 0 ? `${state.bedrooms} bedrooms` : "Studio"} · {state.bathrooms} bathrooms · {state.homeType}
+                      </p>
                     </div>
-                  </Field>
-                  <Field label="Apt, suite" htmlFor="unit">
-                    <input id="unit" value={state.unit} onChange={(event) => update("unit", event.target.value)} autoComplete="address-line2" className="booking-input" placeholder="4B" />
-                  </Field>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditingCustomAddress(true);
+                      }}
+                      className="inline-flex min-h-9 items-center justify-center rounded-full border border-primary px-4 text-xs font-bold text-primary hover:bg-primary/5 transition active:scale-95 cursor-pointer"
+                    >
+                      Change or Edit Details
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-8 animate-fade-in">
+                    <div className="grid gap-4 md:grid-cols-[1fr_150px] relative">
+                      <Field
+                        label={
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>Street address</span>
+                            {state.address.trim() && state.addressVerified && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                <Check className="size-3" strokeWidth={3} /> Verified
+                              </span>
+                            )}
+                          </div>
+                        }
+                        htmlFor="address"
+                        required
+                      >
+                        <div className="relative flex items-center">
+                          <input
+                            id="address"
+                            value={state.address}
+                            onChange={(event) => handleAddressChange(event.target.value)}
+                            onFocus={() => {
+                              if (state.address) {
+                                handleAddressChange(state.address);
+                              }
+                            }}
+                            onBlur={() => {
+                              // Allow clicking the suggestions before hiding them
+                              setTimeout(() => setShowSuggestions(false), 200);
+                            }}
+                            autoComplete="off"
+                            className="booking-input pr-12"
+                            placeholder="225 West 23rd Street"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setIsMapOpen(true)}
+                            className="absolute right-2.5 flex size-9 items-center justify-center rounded-full hover:bg-surface-muted text-primary transition active:scale-95 cursor-pointer"
+                            title="Select on map"
+                          >
+                            <MapPin className="size-5" />
+                          </button>
 
-                <div className="grid gap-4 md:grid-cols-[1fr_150px]">
-                  <Field label="City" htmlFor="city" required>
-                    <input id="city" value={state.city} onChange={(event) => update("city", event.target.value)} autoComplete="address-level2" className="booking-input" />
-                  </Field>
-                  <Field label="ZIP code" htmlFor="zip" helper={state.zip.length === 5 ? "We will confirm local availability before assigning a cleaner." : "Enter the 5-digit ZIP for the cleaning address."} required>
-                    <input id="zip" value={state.zip} onChange={(event) => update("zip", event.target.value.replace(/\D/g, "").slice(0, 5))} autoComplete="postal-code" inputMode="numeric" className="booking-input" placeholder="10001" />
-                  </Field>
-                </div>
+                          {showSuggestions && searchSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 z-30 mt-1 max-h-60 overflow-y-auto rounded-xl border border-border bg-surface py-2 shadow-lg">
+                              {searchSuggestions.map((place) => (
+                                <button
+                                  key={place.address}
+                                  type="button"
+                                  onClick={() => handleSelectSuggestion(place)}
+                                  className="w-full px-4 py-2.5 text-left text-sm font-semibold hover:bg-surface-muted transition text-text-primary flex flex-col cursor-pointer"
+                                >
+                                  <span className="text-text-primary">{place.address}</span>
+                                  <span className="text-xs text-text-secondary">{place.city}, {place.zip}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Field>
+                      <Field label="Apt, suite" htmlFor="unit">
+                        <input id="unit" value={state.unit} onChange={(event) => update("unit", event.target.value)} autoComplete="address-line2" className="booking-input" placeholder="4B" />
+                      </Field>
+                    </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <SelectCard active={state.homeType === "Apartment"} title="Apartment" helper="Walk-up, elevator, condo" onClick={() => update("homeType", "Apartment")} icon={<Home className="size-5" />} />
-                  <SelectCard active={state.homeType === "House"} title="House" helper="Townhouse or single-family" onClick={() => update("homeType", "House")} icon={<Home className="size-5" />} />
-                  <SelectCard active={state.homeType === "Office"} title="Office" helper="Studio or small workplace" onClick={() => update("homeType", "Office")} icon={<Home className="size-5" />} />
-                </div>
+                    <div className="grid gap-4 md:grid-cols-[1fr_150px_200px]">
+                      <Field label="City" htmlFor="city" required>
+                        <input id="city" value={state.city} onChange={(event) => update("city", event.target.value)} autoComplete="address-level2" className="booking-input" />
+                      </Field>
+                      <Field label="ZIP code" htmlFor="zip" required>
+                        <input id="zip" value={state.zip} onChange={(event) => update("zip", event.target.value.replace(/\D/g, "").slice(0, 5))} autoComplete="postal-code" inputMode="numeric" className="booking-input" placeholder="10001" />
+                      </Field>
+                      <Field label="Phone at address" htmlFor="addressPhone" helper="For delivery/entry updates at this location">
+                        <input id="addressPhone" value={state.addressPhone} onChange={(event) => update("addressPhone", event.target.value)} autoComplete="tel" className="booking-input" placeholder="(555) 000-0000" />
+                      </Field>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-[1fr_250px]">
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-text-primary">Home type</label>
+                        <div className="grid gap-3 grid-cols-3">
+                          <SelectCard active={state.homeType === "Apartment"} title="Apartment" onClick={() => update("homeType", "Apartment")} icon={<Home className="size-5" />} />
+                          <SelectCard active={state.homeType === "House"} title="House" onClick={() => update("homeType", "House")} icon={<Home className="size-5" />} />
+                          <SelectCard active={state.homeType === "Office"} title="Office" onClick={() => update("homeType", "Office")} icon={<Briefcase className="size-5" />} />
+                        </div>
+                      </div>
+                      <Field label="Address label" htmlFor="addressLabel" helper="e.g. Home, Office, Beach House">
+                        <input id="addressLabel" value={state.addressLabel} onChange={(event) => update("addressLabel", event.target.value)} className="booking-input" placeholder="e.g. My Loft" />
+                      </Field>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -1121,7 +1452,13 @@ function BookingPageContent() {
           update("address", address);
           update("zip", zip);
           update("city", city);
+          update("addressVerified", true);
+          if (mapPreQuery) {
+            setMapPreQuery("");
+            setStep(1);
+          }
         }}
+        initialSearchQuery={mapPreQuery}
       />
     </main>
   );
@@ -1134,7 +1471,7 @@ function Field({
   required,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   htmlFor: string;
   helper?: string;
   required?: boolean;
@@ -1184,13 +1521,11 @@ function Counter({
 function SelectCard({
   active,
   title,
-  helper,
   icon,
   onClick,
 }: {
   active: boolean;
   title: string;
-  helper: string;
   icon: ReactNode;
   onClick: () => void;
 }) {
@@ -1199,13 +1534,19 @@ function SelectCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "min-h-28 rounded-2xl border p-4 text-left transition active:translate-y-px",
-        active ? "border-primary bg-primary/5" : "border-border bg-surface-muted hover:border-primary/40"
+        "flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition duration-200 active:translate-y-px cursor-pointer w-full focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30",
+        active
+          ? "border-primary bg-primary/5 text-primary shadow-[0_0_0_1px_#155e63]"
+          : "border-border bg-surface hover:border-primary/40 hover:bg-surface-muted text-text-primary"
       )}
     >
-      <span className="mb-3 flex size-10 items-center justify-center rounded-full bg-surface text-primary">{icon}</span>
-      <span className="block font-bold text-text-primary">{title}</span>
-      <span className="mt-1 block text-sm leading-5 text-text-secondary">{helper}</span>
+      <span className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-full transition",
+        active ? "bg-primary/15 text-primary" : "bg-surface-muted text-text-secondary"
+      )}>
+        {icon}
+      </span>
+      <span className="font-bold text-sm leading-none">{title}</span>
     </button>
   );
 }

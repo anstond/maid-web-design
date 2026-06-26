@@ -24,12 +24,34 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSelectAddress: (address: string, zip: string, city: string) => void;
+  initialSearchQuery?: string;
 };
 
-export function MapPicker({ isOpen, onClose, onSelectAddress }: Props) {
-  const [searchQuery, setSearchQuery] = useState("");
+export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery = "" }: Props) {
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedLoc, setSelectedLoc] = useState<MapLocation>(MOCK_LOCATIONS[0]);
   const [customMarker, setCustomMarker] = useState<{ x: number; y: number } | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSearchQuery(initialSearchQuery);
+      if (initialSearchQuery) {
+        const found = MOCK_LOCATIONS.find(
+          (l) =>
+            l.address.toLowerCase().includes(initialSearchQuery.toLowerCase()) ||
+            l.name.toLowerCase().includes(initialSearchQuery.toLowerCase())
+        );
+        if (found) {
+          setSelectedLoc(found);
+          setCustomMarker(null);
+        } else {
+          setSelectedLoc(MOCK_LOCATIONS[0]);
+        }
+      } else {
+        setSelectedLoc(MOCK_LOCATIONS[0]);
+      }
+    }
+  }, [isOpen, initialSearchQuery]);
 
   // If a location is matched by search
   const filteredLocations = useMemo(() => {
@@ -93,7 +115,7 @@ export function MapPicker({ isOpen, onClose, onSelectAddress }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative flex flex-col w-full max-w-3xl rounded-3xl bg-surface border border-border overflow-hidden shadow-2xl">
+      <div className="relative flex flex-col w-full max-w-3xl rounded-2xl bg-surface border border-border overflow-hidden shadow-2xl">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
