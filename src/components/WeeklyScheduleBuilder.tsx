@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { useState } from "react";
 import type { SubscriptionScheduleSlot } from "@/lib/mock-account-data";
 
@@ -120,7 +121,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                   "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:scale-95",
                   isSelected
                     ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
-                    : "bg-surface-muted text-text-secondary hover:bg-canvas-softer hover:text-text-primary",
+                    : "bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary",
                 ].join(" ")}
               >
                 {day.label}
@@ -138,15 +139,15 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
             {slots.map((slot) => {
               const dayLabel = DAYS.find((d) => d.dayOfWeek === slot.dayOfWeek)?.label ?? "";
               return (
-                <div key={slot.dayOfWeek} className="flex flex-wrap items-center gap-3 rounded-xl bg-surface-muted px-4 py-3">
-                  <span className="w-10 shrink-0 text-sm font-bold text-primary">{dayLabel}</span>
+                <div key={slot.dayOfWeek} className="grid gap-3 rounded-xl bg-surface-muted px-4 py-3 sm:grid-cols-[2.5rem_1fr_2fr_1fr_2.75rem] sm:items-center">
+                  <span className="text-sm font-bold text-primary sm:w-10">{dayLabel}</span>
 
                   <label className="sr-only" htmlFor={`time-${slot.dayOfWeek}`}>Arrival time for {dayLabel}</label>
                   <select
                     id={`time-${slot.dayOfWeek}`}
                     value={slot.time}
                     onChange={(e) => updateSlot(slot.dayOfWeek, "time", e.target.value)}
-                    className="min-h-10 flex-1 rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                    className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                   >
                     {TIME_SLOTS.map((t) => (<option key={t} value={t}>{t}</option>))}
                   </select>
@@ -160,7 +161,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                           id={`service-${slot.dayOfWeek}`}
                           value={service}
                           onChange={(e) => updateSlot(slot.dayOfWeek, "service", e.target.value)}
-                          className="min-h-10 flex-[2_2_0%] rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                          className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                         >
                           {SERVICES.map((s) => (<option key={s} value={s}>{s}</option>))}
                         </select>
@@ -170,7 +171,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                           id={`hours-${slot.dayOfWeek}`}
                           value={hours}
                           onChange={(e) => updateSlot(slot.dayOfWeek, "hours", e.target.value)}
-                          className="min-h-10 flex-1 rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                          className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                         >
                           {HOURS.map((h) => (<option key={h} value={h}>{h}</option>))}
                         </select>
@@ -182,12 +183,9 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                     type="button"
                     onClick={() => toggleDay(slot.dayOfWeek)}
                     aria-label={`Remove ${dayLabel}`}
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-secondary transition hover:bg-surface hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary transition hover:bg-surface hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30"
                   >
-                    <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-4">
-                      <line x1="4" y1="4" x2="12" y2="12" />
-                      <line x1="12" y1="4" x2="4" y2="12" />
-                    </svg>
+                    <X className="size-4" aria-hidden="true" />
                   </button>
                 </div>
               );
@@ -212,7 +210,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
           </div>
           {Object.keys(productGroups).length > 1 && (
             <p className="mt-2 text-xs text-text-secondary border-t border-border/50 pt-2">
-              Multiple services selected — we will create separate plans per service type.
+              Multiple services selected - we will create separate plans per service type.
             </p>
           )}
         </div>

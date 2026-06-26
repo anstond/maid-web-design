@@ -354,7 +354,6 @@ function getHourOptions(minimumHours: number, maxHours: number) {
 function BookingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialService = searchParams.get("service");
   const initialZip = searchParams.get("zip") ?? "";
 
   const initialStep = useMemo(() => {
@@ -520,134 +519,141 @@ function BookingPageContent() {
 
   // Listen for browser navigation (back/forward) changes in searchParams
   useEffect(() => {
-    const stepVal = searchParams.get("step");
-    if (stepVal !== null) {
-      const parsedStep = parseInt(stepVal, 10);
-      if (!isNaN(parsedStep) && parsedStep >= 0 && parsedStep <= 3 && parsedStep !== step) {
-        setStep(parsedStep);
-      }
-    }
-
-    setState((previous) => {
-      let changed = false;
-      const nextState = { ...previous };
-
-      const serviceVal = searchParams.get("service");
-      if (serviceVal && SERVICES.some(s => s.id === serviceVal) && serviceVal !== previous.serviceId) {
-        nextState.serviceId = serviceVal as ServiceId;
-        changed = true;
-      }
-
-      const hoursVal = searchParams.get("hours");
-      if (hoursVal) {
-        const parsed = parseInt(hoursVal, 10);
-        if (!isNaN(parsed) && parsed !== previous.hours) {
-          nextState.hours = parsed;
-          changed = true;
+    const frame = window.requestAnimationFrame(() => {
+      const stepVal = searchParams.get("step");
+      if (stepVal !== null) {
+        const parsedStep = parseInt(stepVal, 10);
+        if (!isNaN(parsedStep) && parsedStep >= 0 && parsedStep <= 3 && parsedStep !== step) {
+          setStep(parsedStep);
         }
       }
 
-      const cleanersVal = searchParams.get("cleaners");
-      if (cleanersVal) {
-        const parsed = parseInt(cleanersVal, 10);
-        if (!isNaN(parsed) && parsed !== previous.cleaners) {
-          nextState.cleaners = parsed;
+      setState((previous) => {
+        let changed = false;
+        const nextState = { ...previous };
+
+        const serviceVal = searchParams.get("service");
+        if (serviceVal && SERVICES.some(s => s.id === serviceVal) && serviceVal !== previous.serviceId) {
+          nextState.serviceId = serviceVal as ServiceId;
           changed = true;
         }
-      }
 
-      const frequencyVal = searchParams.get("frequency");
-      if (frequencyVal && FREQUENCIES.some(f => f.id === frequencyVal) && frequencyVal !== previous.frequencyId) {
-        nextState.frequencyId = frequencyVal as FrequencyId;
-        changed = true;
-      }
+        const hoursVal = searchParams.get("hours");
+        if (hoursVal) {
+          const parsed = parseInt(hoursVal, 10);
+          if (!isNaN(parsed) && parsed !== previous.hours) {
+            nextState.hours = parsed;
+            changed = true;
+          }
+        }
 
-      const startDateVal = searchParams.get("startDate");
-      if (startDateVal !== null && startDateVal !== previous.startDate) {
-        nextState.startDate = startDateVal;
-        changed = true;
-      }
+        const cleanersVal = searchParams.get("cleaners");
+        if (cleanersVal) {
+          const parsed = parseInt(cleanersVal, 10);
+          if (!isNaN(parsed) && parsed !== previous.cleaners) {
+            nextState.cleaners = parsed;
+            changed = true;
+          }
+        }
 
-      const dateVal = searchParams.get("date");
-      if (dateVal !== null && dateVal !== previous.date) {
-        nextState.date = dateVal;
-        changed = true;
-      }
+        const frequencyVal = searchParams.get("frequency");
+        if (frequencyVal && FREQUENCIES.some(f => f.id === frequencyVal) && frequencyVal !== previous.frequencyId) {
+          nextState.frequencyId = frequencyVal as FrequencyId;
+          changed = true;
+        }
 
-      const arrivalWindowVal = searchParams.get("arrivalWindow");
-      if (arrivalWindowVal && arrivalWindowVal !== previous.arrivalWindow) {
-        nextState.arrivalWindow = arrivalWindowVal;
-        changed = true;
-      }
+        const startDateVal = searchParams.get("startDate");
+        if (startDateVal !== null && startDateVal !== previous.startDate) {
+          nextState.startDate = startDateVal;
+          changed = true;
+        }
 
-      const cleanerPrefVal = searchParams.get("cleanerPreference");
-      if (cleanerPrefVal && cleanerPrefVal !== previous.cleanerPreference) {
-        nextState.cleanerPreference = cleanerPrefVal;
-        changed = true;
-      }
+        const dateVal = searchParams.get("date");
+        if (dateVal !== null && dateVal !== previous.date) {
+          nextState.date = dateVal;
+          changed = true;
+        }
 
-      const accessVal = searchParams.get("access");
-      if (accessVal && accessVal !== previous.access) {
-        nextState.access = accessVal;
-        changed = true;
-      }
+        const arrivalWindowVal = searchParams.get("arrivalWindow");
+        if (arrivalWindowVal && arrivalWindowVal !== previous.arrivalWindow) {
+          nextState.arrivalWindow = arrivalWindowVal;
+          changed = true;
+        }
 
-      const parkingVal = searchParams.get("parking");
-      if (parkingVal !== null && parkingVal !== previous.parking) {
-        nextState.parking = parkingVal;
-        changed = true;
-      }
+        const cleanerPrefVal = searchParams.get("cleanerPreference");
+        if (cleanerPrefVal && cleanerPrefVal !== previous.cleanerPreference) {
+          nextState.cleanerPreference = cleanerPrefVal;
+          changed = true;
+        }
 
-      const petsVal = searchParams.get("pets");
-      if (petsVal && petsVal !== previous.pets) {
-        nextState.pets = petsVal;
-        changed = true;
-      }
+        const accessVal = searchParams.get("access");
+        if (accessVal && accessVal !== previous.access) {
+          nextState.access = accessVal;
+          changed = true;
+        }
 
-      const suppliesVal = searchParams.get("supplies");
-      if (suppliesVal && suppliesVal !== previous.supplies) {
-        nextState.supplies = suppliesVal;
-        changed = true;
-      }
+        const parkingVal = searchParams.get("parking");
+        if (parkingVal !== null && parkingVal !== previous.parking) {
+          nextState.parking = parkingVal;
+          changed = true;
+        }
 
-      const zipVal = searchParams.get("zip");
-      if (zipVal && zipVal !== previous.zip) {
-        nextState.zip = zipVal;
-        changed = true;
-      }
+        const petsVal = searchParams.get("pets");
+        if (petsVal && petsVal !== previous.pets) {
+          nextState.pets = petsVal;
+          changed = true;
+        }
 
-      const addonsVal = searchParams.get("addons");
-      const nextAddons = addonsVal ? addonsVal.split(",") : [];
-      if (JSON.stringify(nextAddons) !== JSON.stringify(previous.addons)) {
-        nextState.addons = nextAddons;
-        changed = true;
-      }
+        const suppliesVal = searchParams.get("supplies");
+        if (suppliesVal && suppliesVal !== previous.supplies) {
+          nextState.supplies = suppliesVal;
+          changed = true;
+        }
 
-      return changed ? nextState : previous;
+        const zipVal = searchParams.get("zip");
+        if (zipVal && zipVal !== previous.zip) {
+          nextState.zip = zipVal;
+          changed = true;
+        }
+
+        const addonsVal = searchParams.get("addons");
+        const nextAddons = addonsVal ? addonsVal.split(",") : [];
+        if (JSON.stringify(nextAddons) !== JSON.stringify(previous.addons)) {
+          nextState.addons = nextAddons;
+          changed = true;
+        }
+
+        return changed ? nextState : previous;
+      });
     });
-  }, [searchParams]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [searchParams, step]);
 
   const currentService = SERVICES.find((service) => service.id === state.serviceId) ?? SERVICES[0];
   const currentFrequency = FREQUENCIES.find((frequency) => frequency.id === state.frequencyId) ?? FREQUENCIES[0];
   const currentArrival = ARRIVAL_WINDOWS.find((window) => window.id === state.arrivalWindow) ?? ARRIVAL_WINDOWS[1];
+  const currentServiceName = currentService.name;
+  const currentServiceRate = currentService.rate;
+  const currentServiceMinimumHours = currentService.minimumHours;
+  const currentServiceMaxHours = currentService.maxHours;
   const hourOptions = getHourOptions(currentService.minimumHours, currentService.maxHours);
   const cleanerOptions = currentService.cleanerOptions;
   const dateOptions = useMemo(() => getDateOptions(), []);
-  const recommendedHours = useMemo(() => {
+  const recommendedHours = (() => {
     const homeHours = 1.6 + state.bedrooms * 0.55 + state.bathrooms * 0.65;
     const addonHours = state.addons.reduce((sum, id) => {
       const addon = ADDONS.find((item) => item.id === id);
       return sum + (addon?.minutes ?? 0) / 60;
     }, 0);
-    const soloHours = Math.max(currentService.minimumHours, homeHours + addonHours);
+    const soloHours = Math.max(currentServiceMinimumHours, homeHours + addonHours);
     const visitHours = Math.ceil((soloHours / state.cleaners) * 2) / 2;
-    return Math.min(currentService.maxHours, Math.max(Math.ceil(currentService.minimumHours), Math.ceil(visitHours)));
-  }, [currentService, state.addons, state.bathrooms, state.bedrooms, state.cleaners]);
+    return Math.min(currentServiceMaxHours, Math.max(Math.ceil(currentServiceMinimumHours), Math.ceil(visitHours)));
+  })();
 
-  const estimate = useMemo(() => {
-    const visitHours = Math.max(currentService.minimumHours, state.hours);
+  const estimate = (() => {
+    const visitHours = Math.max(currentServiceMinimumHours, state.hours);
     const laborHours = visitHours * state.cleaners;
-    const labor = laborHours * currentService.rate;
+    const labor = laborHours * currentServiceRate;
     const addonTotal = state.addons.reduce((sum, id) => {
       const addon = ADDONS.find((item) => item.id === id);
       return sum + (addon?.price ?? 0);
@@ -669,7 +675,7 @@ function BookingPageContent() {
       serviceFee,
       total,
     };
-  }, [currentArrival.price, currentService, state.addons, state.cleaners, state.hours, state.supplies]);
+  })();
 
   const isSavedAddressActive = useMemo(() => {
     if (isEditingCustomAddress) return false;
@@ -678,15 +684,15 @@ function BookingPageContent() {
     );
   }, [state.address, state.unit, isEditingCustomAddress]);
 
-  const errors = useMemo(() => {
+  const errors = (() => {
     const result: string[] = [];
     if (step === 0) {
       if (state.zip.length !== 5) result.push("Enter a 5-digit ZIP code.");
       if (!state.address.trim()) result.push("Enter the street address.");
     }
     if (step === 1) {
-      if (!hourOptions.includes(state.hours)) result.push(`Choose ${hourOptions[0]}-${hourOptions[hourOptions.length - 1]} hours for ${currentService.name}.`);
-      if (!cleanerOptions.includes(state.cleaners)) result.push(`Choose an available cleaner count for ${currentService.name}.`);
+      if (!hourOptions.includes(state.hours)) result.push(`Choose ${hourOptions[0]}-${hourOptions[hourOptions.length - 1]} hours for ${currentServiceName}.`);
+      if (!cleanerOptions.includes(state.cleaners)) result.push(`Choose an available cleaner count for ${currentServiceName}.`);
     }
     if (step === 2) {
       if (state.frequencyId === "custom") {
@@ -703,7 +709,7 @@ function BookingPageContent() {
       if (state.phone.replace(/\D/g, "").length < 10) result.push("Enter a phone number for arrival updates.");
     }
     return result;
-  }, [cleanerOptions, currentService.name, hourOptions, state, step]);
+  })();
 
   function update<K extends keyof BookingState>(key: K, value: BookingState[K]) {
     setState((previous) => ({ ...previous, [key]: value }));
@@ -770,9 +776,15 @@ function BookingPageContent() {
   }
 
   const steps = ["Home", "Scope", "Schedule", "Review"];
+  const homeStepReady = state.zip.length === 5 && Boolean(state.address.trim());
+  const homeContinueLabel = homeStepReady
+    ? isSavedAddressActive
+      ? "Use this address"
+      : "Save and continue"
+    : "Choose an address";
 
   return (
-    <main className="min-h-[100dvh] bg-background text-text-primary">
+    <main className="min-h-[100dvh] bg-background pb-24 text-text-primary lg:pb-0">
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <button
@@ -790,11 +802,11 @@ function BookingPageContent() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8 lg:py-12">
+      <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 md:gap-8 md:py-8 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8 lg:py-12">
         <section aria-labelledby="booking-title" className="min-w-0">
-          <div className="mb-8">
+          <div className="mb-6 md:mb-8">
             <p className="mb-3 text-sm font-semibold text-primary">Book a home cleaning</p>
-            <h1 id="booking-title" className="max-w-3xl text-4xl font-bold leading-tight tracking-normal text-text-primary md:text-5xl">
+            <h1 id="booking-title" className="max-w-3xl text-3xl font-bold leading-tight tracking-normal text-text-primary sm:text-4xl md:text-5xl">
               A real appointment, priced before checkout.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-text-secondary">
@@ -802,7 +814,7 @@ function BookingPageContent() {
             </p>
           </div>
 
-          <nav aria-label="Booking progress" className="mb-6 rounded-2xl border border-border bg-surface p-2">
+          <nav aria-label="Booking progress" className="mb-4 rounded-2xl border border-border bg-surface p-1.5 sm:p-2 md:mb-6">
             <ol className="grid grid-cols-4 gap-1">
               {steps.map((label, index) => (
                 <li key={label}>
@@ -812,7 +824,7 @@ function BookingPageContent() {
                       if (index <= step) setStep(index);
                     }}
                     className={cn(
-                      "flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-2 text-sm font-semibold transition",
+                      "flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl px-1.5 text-xs font-semibold transition sm:gap-2 sm:px-2 sm:text-sm",
                       index === step && "bg-primary text-primary-foreground",
                       index < step && "bg-surface-muted text-primary",
                       index > step && "text-text-secondary"
@@ -820,27 +832,44 @@ function BookingPageContent() {
                     aria-current={index === step ? "step" : undefined}
                   >
                     {index < step ? <Check className="size-4" aria-hidden="true" /> : null}
-                    <span>{label}</span>
+                    <span className="truncate">{label}</span>
                   </button>
                 </li>
               ))}
             </ol>
           </nav>
 
-          <div className="rounded-2xl border border-border bg-surface p-5 shadow-[0_12px_40px_rgba(21,94,99,0.08)] sm:p-7">
+          <div className="mb-4 rounded-2xl border border-border bg-primary p-4 text-primary-foreground shadow-[0_12px_30px_rgba(21,94,99,0.16)] lg:hidden">
+            <p className="text-xs font-semibold uppercase tracking-normal text-primary-foreground/75">Live estimate</p>
+            <div className="mt-1 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-3xl font-bold tracking-normal">${estimate.total.toFixed(0)}</p>
+                <p className="mt-1 text-sm text-primary-foreground/80">
+                  {estimate.visitHours} visit hr x {estimate.cleanerCount} {estimate.cleanerCount === 1 ? "cleaner" : "cleaners"}
+                </p>
+              </div>
+              <Clock3 className="mb-1 size-6 text-primary-foreground/80" aria-hidden="true" />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface p-4 shadow-[0_12px_40px_rgba(21,94,99,0.08)] sm:p-7">
             {step === 0 ? (
               <div className="space-y-8">
-                <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                   <div>
+                    <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                      <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">1</span>
+                      Choose the service address
+                    </div>
                     <h2 className="text-2xl font-bold text-text-primary">Where should we send the cleaner?</h2>
                     <p className="mt-2 text-sm leading-6 text-text-secondary">
-                      Availability, parking, and building access change the real job. Start with the home.
+                      Select one saved address below, or add a new one. The selected address is what we use for availability and the next step.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsMapOpen(true)}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary px-5 text-sm font-bold text-primary hover:bg-primary/5 transition cursor-pointer"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-primary px-5 text-sm font-bold text-primary transition hover:bg-primary/5 sm:w-auto cursor-pointer"
                   >
                     <MapPin className="size-4" />
                     Select on Map
@@ -849,9 +878,12 @@ function BookingPageContent() {
 
                 {/* Saved Addresses Section */}
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                       <p className="text-sm font-bold text-text-primary">Your Saved Addresses</p>
+                      <span className="rounded-full bg-surface-muted px-2.5 py-1 text-[11px] font-bold text-text-secondary">
+                        Swipe to see more
+                      </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -867,7 +899,7 @@ function BookingPageContent() {
                           update("addressPhone", "");
                           setIsEditingCustomAddress(true);
                         }}
-                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 hover:bg-primary/20 px-2.5 py-1 text-[11px] font-bold text-primary transition active:scale-95 cursor-pointer focus-visible:outline-none"
+                        className="inline-flex min-h-9 items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary transition hover:bg-primary/20 active:scale-95 cursor-pointer focus-visible:outline-none"
                       >
                         <Plus className="size-3" /> Add New
                       </button>
@@ -876,7 +908,7 @@ function BookingPageContent() {
                       <button
                         type="button"
                         onClick={() => scrollAddresses("left")}
-                        className="flex size-7 items-center justify-center rounded-full border border-border bg-surface hover:bg-surface-muted text-text-primary hover:border-primary/45 transition active:scale-95 cursor-pointer"
+                        className="flex size-10 items-center justify-center rounded-full border border-border bg-surface text-text-primary transition hover:border-primary/45 hover:bg-surface-muted active:scale-95 cursor-pointer"
                         aria-label="Scroll left"
                       >
                         <ChevronLeft className="size-4" />
@@ -884,7 +916,7 @@ function BookingPageContent() {
                       <button
                         type="button"
                         onClick={() => scrollAddresses("right")}
-                        className="flex size-7 items-center justify-center rounded-full border border-border bg-surface hover:bg-surface-muted text-text-primary hover:border-primary/45 transition active:scale-95 cursor-pointer"
+                        className="flex size-10 items-center justify-center rounded-full border border-border bg-surface text-text-primary transition hover:border-primary/45 hover:bg-surface-muted active:scale-95 cursor-pointer"
                         aria-label="Scroll right"
                       >
                         <ChevronRight className="size-4" />
@@ -893,9 +925,10 @@ function BookingPageContent() {
                   </div>
 
                   <div className="relative">
+                    <div className="pointer-events-none absolute bottom-4 right-0 top-0 z-10 w-12 bg-gradient-to-l from-surface to-transparent sm:hidden" aria-hidden="true" />
                     <div
                       ref={addressScrollRef}
-                      className="flex flex-row flex-nowrap gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                      className="-mx-4 flex flex-row flex-nowrap gap-3 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] sm:mx-0 sm:gap-4 sm:px-0 [&::-webkit-scrollbar]:hidden"
                     >
                       {SAVED_ADDRESSES.map((addr) => {
                         const isMatch = state.address === addr.address && state.unit === addr.unit;
@@ -917,7 +950,7 @@ function BookingPageContent() {
                               setIsEditingCustomAddress(false);
                             }}
                             className={cn(
-                              "relative flex w-[290px] sm:w-[320px] shrink-0 snap-start items-start gap-4 rounded-2xl border p-5 text-left transition duration-200 active:translate-y-px cursor-pointer",
+                              "relative flex w-[min(82vw,320px)] shrink-0 snap-start items-start gap-4 rounded-2xl border p-4 text-left transition duration-200 active:translate-y-px sm:p-5 cursor-pointer",
                               isMatch
                                 ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
                                 : "border-border bg-surface hover:border-primary/40 hover:bg-surface-muted"
@@ -949,8 +982,9 @@ function BookingPageContent() {
                             </div>
 
                             {isMatch && (
-                              <span className="absolute right-4 top-4 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                              <span className="absolute right-3 top-3 inline-flex min-h-7 items-center gap-1 rounded-full bg-primary px-2.5 text-[11px] font-bold text-white">
                                 <Check className="size-3" strokeWidth={3} />
+                                Selected
                               </span>
                             )}
                           </button>
@@ -961,9 +995,12 @@ function BookingPageContent() {
                 </div>
 
                 {isSavedAddressActive ? (
-                  <div className="rounded-2xl border border-border bg-surface-muted p-5 flex flex-wrap items-center justify-between gap-4 animate-fade-in">
-                    <div>
-                      <p className="text-xs text-primary font-bold uppercase tracking-wider">Selected Address Details</p>
+                  <div className="flex flex-col gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 animate-fade-in sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+                    <div className="min-w-0">
+                      <p className="inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
+                        <Check className="size-3" aria-hidden="true" />
+                        Ready to continue
+                      </p>
                       <p className="mt-1 text-base font-bold text-text-primary">
                         {state.address}{state.unit ? `, ${state.unit}` : ""}
                       </p>
@@ -979,14 +1016,20 @@ function BookingPageContent() {
                       onClick={() => {
                         setIsEditingCustomAddress(true);
                       }}
-                      className="inline-flex min-h-9 items-center justify-center rounded-full border border-primary px-4 text-xs font-bold text-primary hover:bg-primary/5 transition active:scale-95 cursor-pointer"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-primary px-4 text-xs font-bold text-primary transition hover:bg-primary/5 active:scale-95 sm:w-auto cursor-pointer"
                     >
                       Change or Edit Details
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-8 animate-fade-in">
-                    <div className="grid gap-4 md:grid-cols-[1fr_150px] relative">
+                    <div className="rounded-2xl border border-border bg-surface-muted p-4">
+                      <p className="text-sm font-bold text-text-primary">Add a new address</p>
+                      <p className="mt-1 text-sm leading-6 text-text-secondary">
+                        Fill the required address fields below. When the address is complete, Continue will move you to scope.
+                      </p>
+                    </div>
+                    <div className="relative grid gap-4 md:grid-cols-[1fr_150px]">
                       <Field
                         label={
                           <div className="flex flex-wrap items-center gap-2">
@@ -1022,7 +1065,7 @@ function BookingPageContent() {
                           <button
                             type="button"
                             onClick={() => setIsMapOpen(true)}
-                            className="absolute right-2.5 flex size-9 items-center justify-center rounded-full hover:bg-surface-muted text-primary transition active:scale-95 cursor-pointer"
+                            className="absolute right-2 flex size-10 items-center justify-center rounded-full text-primary transition hover:bg-surface-muted active:scale-95 cursor-pointer"
                             title="Select on map"
                           >
                             <MapPin className="size-5" />
@@ -1065,7 +1108,7 @@ function BookingPageContent() {
                     <div className="grid gap-4 md:grid-cols-[1fr_250px]">
                       <div>
                         <label className="mb-2 block text-sm font-semibold text-text-primary">Home type</label>
-                        <div className="grid gap-3 grid-cols-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                           <SelectCard active={state.homeType === "Apartment"} title="Apartment" onClick={() => update("homeType", "Apartment")} icon={<Home className="size-5" />} />
                           <SelectCard active={state.homeType === "House"} title="House" onClick={() => update("homeType", "House")} icon={<Home className="size-5" />} />
                           <SelectCard active={state.homeType === "Office"} title="Office" onClick={() => update("homeType", "Office")} icon={<Briefcase className="size-5" />} />
@@ -1124,8 +1167,8 @@ function BookingPageContent() {
                   ))}
                 </div>
 
-                <div className="p-2.5 rounded-[2rem] border border-border/80 bg-surface-muted/60 shadow-[0_8px_30px_rgba(21,94,99,0.03)] grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
-                  <div className="bg-surface rounded-[calc(2rem-0.625rem)] border border-border/60 p-6 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] flex flex-col justify-between gap-5">
+                <div className="grid gap-3 rounded-[1.5rem] border border-border/80 bg-surface-muted/60 p-2 shadow-[0_8px_30px_rgba(21,94,99,0.03)] md:grid-cols-[1.2fr_0.8fr] md:rounded-[2rem] md:p-2.5">
+                  <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
                     <div>
                       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                         <div className="space-y-1">
@@ -1152,7 +1195,7 @@ function BookingPageContent() {
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                         {hourOptions.map((hours) => {
                           const isSelected = state.hours === hours;
                           const isRec = hours === recommendedHours;
@@ -1179,7 +1222,7 @@ function BookingPageContent() {
                     </div>
                   </div>
 
-                  <div className="bg-surface rounded-[calc(2rem-0.625rem)] border border-border/60 p-6 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] flex flex-col justify-between gap-5">
+                  <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
                     <div>
                       <h3 className="mb-1 text-lg font-bold tracking-tight text-text-primary">Cleaner count</h3>
                       <p className="mb-4 text-sm leading-relaxed text-text-secondary">
@@ -1317,7 +1360,7 @@ function BookingPageContent() {
                                   "flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold transition active:translate-y-px",
                                   isSelected
                                     ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
-                                    : "bg-surface-muted text-text-secondary hover:bg-canvas-softer hover:text-text-primary border border-border"
+                                    : "border border-border bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary"
                                 )}
                               >
                                 {slot.label}
@@ -1383,7 +1426,7 @@ function BookingPageContent() {
                               <div className="mt-2 space-y-0.5">
                                 {Object.entries(productGroups).map(([product, count]) => (
                                   <p key={product} className="text-xs text-text-secondary">
-                                    → <span className="font-bold">{product}</span> ({count}× per week)
+                                    <span className="font-bold">{product}</span> ({count}x per week)
                                   </p>
                                 ))}
                               </div>
@@ -1406,7 +1449,7 @@ function BookingPageContent() {
                       </p>
                     ) : (
                       <p className="mt-1 text-sm text-text-secondary">
-                        Choose who you'd prefer to assign to your booking.
+                        Choose who you would prefer to assign to your booking.
                       </p>
                     )}
                   </div>
@@ -1454,7 +1497,7 @@ function BookingPageContent() {
                               : "border-border bg-surface hover:border-primary/40 cursor-pointer"
                           )}
                         >
-                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accentW/25 text-primary font-bold text-sm">
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-warm/25 text-primary font-bold text-sm">
                             {initials}
                           </div>
                           <div className="flex-1 min-w-0 pr-4">
@@ -1576,19 +1619,19 @@ function BookingPageContent() {
                 </div>
 
                 {/* Logged in User Card */}
-                <div className="rounded-2xl border border-border bg-surface-muted p-5 flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-muted p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+                  <div className="flex min-w-0 items-center gap-4">
                     <img src={accountProfile.picture} alt={accountProfile.name} className="size-12 rounded-full object-cover" />
                     <div>
                       <p className="text-xs text-primary font-bold uppercase tracking-wider">Logged In Account</p>
                       <h3 className="text-base font-bold text-text-primary">{state.firstName} {state.lastName}</h3>
-                      <p className="text-sm text-text-secondary">{state.email} · {state.phone}</p>
+                      <p className="break-all text-sm text-text-secondary">{state.email} · {state.phone}</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowEditContact(!showEditContact)}
-                    className="inline-flex min-h-9 items-center justify-center rounded-full border border-primary px-4 text-xs font-bold text-primary hover:bg-primary/5 transition active:scale-95 cursor-pointer"
+                    className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-primary px-4 text-xs font-bold text-primary transition hover:bg-primary/5 active:scale-95 sm:w-auto cursor-pointer"
                   >
                     {showEditContact ? "View summary" : "Edit contact info"}
                   </button>
@@ -1794,7 +1837,7 @@ function BookingPageContent() {
                 {state.notes && (
                   <div className="rounded-2xl border border-border bg-surface p-5">
                     <span className="text-text-secondary text-sm block mb-1">Priority cleaning notes</span>
-                    <p className="text-sm font-semibold text-text-primary italic">"{state.notes}"</p>
+                    <p className="text-sm font-semibold italic text-text-primary">&quot;{state.notes}&quot;</p>
                   </div>
                 )}
               </div>
@@ -1811,14 +1854,14 @@ function BookingPageContent() {
                 {step === 0 ? "Cancel" : "Back"}
               </button>
               <button type="button" onClick={continueFlow} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px">
-                {step === 3 ? "Continue to payment" : "Continue"}
+                {step === 0 ? homeContinueLabel : step === 3 ? "Continue to payment" : "Continue"}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         </section>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start" aria-label="Booking estimate">
+        <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start" aria-label="Booking estimate">
           <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_40px_rgba(21,94,99,0.08)]">
             <div className="bg-primary p-5 text-primary-foreground">
               <p className="text-sm font-semibold text-primary-foreground/80">Live estimate</p>
@@ -1857,6 +1900,22 @@ function BookingPageContent() {
             </div>
           </div>
         </aside>
+      </div>
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 p-3 shadow-[0_-12px_30px_rgba(31,41,55,0.10)] backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold text-text-secondary">Due today</p>
+            <p className="text-xl font-bold tabular-nums text-text-primary">${estimate.total.toFixed(2)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={continueFlow}
+            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:translate-y-px"
+          >
+            {step === 0 ? homeContinueLabel : step === 3 ? "Payment" : "Continue"}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
       <MapPicker
         isOpen={isMapOpen}

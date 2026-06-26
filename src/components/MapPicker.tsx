@@ -33,7 +33,9 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
   const [customMarker, setCustomMarker] = useState<{ x: number; y: number } | null>(null);
 
   React.useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+
+    const frame = window.requestAnimationFrame(() => {
       setSearchQuery(initialSearchQuery);
       if (initialSearchQuery) {
         const found = MOCK_LOCATIONS.find(
@@ -50,7 +52,9 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
       } else {
         setSelectedLoc(MOCK_LOCATIONS[0]);
       }
-    }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [isOpen, initialSearchQuery]);
 
   // If a location is matched by search
@@ -114,19 +118,19 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative flex flex-col w-full max-w-3xl rounded-2xl bg-surface border border-border overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="relative flex h-[100dvh] max-h-[100dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-2xl border border-border bg-surface shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:rounded-2xl">
         
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div>
+        <div className="flex items-start justify-between gap-4 border-b border-border px-4 py-4 sm:px-6">
+          <div className="min-w-0">
             <h3 className="text-lg font-bold text-text-primary">Select Cleaning Address</h3>
             <p className="text-xs text-text-secondary font-medium mt-0.5">Click pins, click anywhere on grid streets, or search Manhattan locations</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-9 items-center justify-center rounded-full hover:bg-surface-muted transition text-text-secondary hover:text-text-primary cursor-pointer"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary transition hover:bg-surface-muted hover:text-text-primary cursor-pointer"
             aria-label="Close map picker"
           >
             <X className="size-5" />
@@ -134,10 +138,10 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
         </div>
 
         {/* Content Area */}
-        <div className="grid gap-0 md:grid-cols-[1fr_260px] h-[400px]">
+        <div className="grid min-h-0 flex-1 grid-rows-[minmax(220px,1fr)_minmax(140px,0.65fr)] gap-0 md:h-[430px] md:grid-cols-[1fr_260px] md:grid-rows-none">
           
           {/* Map Section */}
-          <div className="relative bg-[#f4ebd0]/20 h-full overflow-hidden select-none">
+          <div className="relative min-h-0 overflow-hidden bg-[#f4ebd0]/20 select-none">
             {/* Styled Mock Map Grid (streets, Central Park, Hudson River) */}
             <div
               className="absolute inset-0 cursor-crosshair"
@@ -176,7 +180,7 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
                       setCustomMarker(null);
                     }}
                     style={{ left: `${loc.x}%`, top: `${loc.y}%` }}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 group z-10 flex size-8 items-center justify-center transition active:scale-90 cursor-pointer"
+                    className="absolute -translate-x-1/2 -translate-y-1/2 group z-10 flex size-11 items-center justify-center transition active:scale-90 cursor-pointer"
                   >
                     <span className={`absolute inset-0 rounded-full animate-ping duration-1000 opacity-20 ${isSelected ? "bg-primary" : "bg-primary/40 group-hover:block hidden"}`} />
                     <MapPin className={`size-6 transition-transform group-hover:-translate-y-0.5 ${isSelected ? "text-primary scale-110" : "text-primary/60"}`} />
@@ -197,7 +201,7 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
 
             {/* Glassmorphism search input */}
             <div className="absolute top-4 left-4 right-4 md:right-auto md:w-80 z-20">
-              <div className="relative flex items-center bg-surface/95 backdrop-blur-md border border-border shadow-lg rounded-full px-4 py-2">
+              <div className="relative flex min-h-11 items-center rounded-full border border-border bg-surface/95 px-4 py-2 shadow-lg backdrop-blur-md">
                 <Search className="size-4 text-text-secondary shrink-0 mr-2" />
                 <input
                   type="text"
@@ -210,7 +214,7 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    className="size-5 flex items-center justify-center rounded-full hover:bg-slate-200 text-text-secondary cursor-pointer"
+                    className="flex size-8 items-center justify-center rounded-full text-text-secondary hover:bg-slate-200 cursor-pointer"
                   >
                     <X className="size-3" />
                   </button>
@@ -220,7 +224,7 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
           </div>
 
           {/* Sidebar / List Section */}
-          <div className="border-t md:border-t-0 md:border-l border-border flex flex-col h-full bg-surface-muted">
+          <div className="flex min-h-0 flex-col border-t border-border bg-surface-muted md:h-full md:border-l md:border-t-0">
             <div className="p-4 border-b border-border bg-surface">
               <p className="text-xs font-bold text-primary uppercase tracking-wider">Available Locations</p>
             </div>
@@ -236,7 +240,7 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
                       setSelectedLoc(loc);
                       setCustomMarker(null);
                     }}
-                    className={`flex flex-col w-full text-left p-3 rounded-2xl transition cursor-pointer ${
+                    className={`flex min-h-14 w-full flex-col justify-center rounded-2xl p-3 text-left transition cursor-pointer ${
                       isSelected
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "hover:bg-surface text-text-primary animate-fade-in"
@@ -257,20 +261,20 @@ export function MapPicker({ isOpen, onClose, onSelectAddress, initialSearchQuery
         </div>
 
         {/* Footer info & confirm */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-border px-6 py-4 bg-surface-muted gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 border-t border-border bg-surface-muted px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <MapPin className="size-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-text-secondary font-semibold uppercase tracking-wider">Selected Location</p>
-              <p className="text-sm font-bold text-text-primary">{selectedLoc.address}, {selectedLoc.city} {selectedLoc.zip}</p>
+              <p className="break-words text-sm font-bold text-text-primary">{selectedLoc.address}, {selectedLoc.city} {selectedLoc.zip}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleConfirm}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary-hover active:translate-y-px cursor-pointer"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary-hover active:translate-y-px sm:w-auto cursor-pointer"
           >
             <Check className="size-4" />
             Confirm Location
