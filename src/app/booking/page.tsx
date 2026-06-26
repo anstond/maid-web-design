@@ -2,6 +2,8 @@
 
 import { Suspense, useMemo, useState } from "react";
 import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
+import { bookings } from "@/lib/mock-account-data";
+import { MapPicker } from "@/components/MapPicker";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -12,6 +14,7 @@ import {
   Check,
   ChevronRight,
   Clock3,
+  Briefcase,
   Home,
   KeyRound,
   MapPin,
@@ -159,6 +162,33 @@ const INITIAL_STATE: BookingState = {
   phone: "",
 };
 
+const SAVED_ADDRESSES = [
+  { 
+    label: "Home", 
+    isDefault: true,
+    iconType: "home",
+    address: "225 West 23rd Street", 
+    unit: "Apt 4B", 
+    zip: "10011", 
+    city: "New York",
+    bedrooms: 2,
+    bathrooms: 2,
+    homeType: "Apartment"
+  },
+  { 
+    label: "Office", 
+    isDefault: false,
+    iconType: "office",
+    address: "19 Mercer Street", 
+    unit: "Floor 3", 
+    zip: "10012", 
+    city: "New York",
+    bedrooms: 0,
+    bathrooms: 1,
+    homeType: "Office"
+  }
+];
+
 function tomorrowISO() {
   const date = new Date();
   date.setDate(date.getDate() + 1);
@@ -197,6 +227,21 @@ function BookingPageContent() {
   const initialZip = searchParams.get("zip") ?? "";
   const [step, setStep] = useState(0);
   const [touched, setTouched] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
+  const pastCleaners = useMemo(() => {
+    const set = new Set<string>();
+    bookings.forEach((b) => {
+      if (b.status === "completed" && b.cleaner) {
+        b.cleaner.split(/ and |,/).forEach((name) => {
+          const trimmed = name.trim();
+          if (trimmed && trimmed !== "Assignment pending") {
+            set.add(trimmed);
+          }
+        });
+      }
+    });
+    return Array.from(set);
+  }, []);
   const [state, setState] = useState<BookingState>(() => ({
     ...INITIAL_STATE,
     serviceId: SERVICES.some((service) => service.id === initialService)
@@ -395,16 +440,98 @@ function BookingPageContent() {
           <div className="rounded-2xl border border-border bg-surface p-5 shadow-[0_12px_40px_rgba(21,94,99,0.08)] sm:p-7">
             {step === 0 ? (
               <div className="space-y-8">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-text-primary">Where should we send the cleaner?</h2>
+                    <p className="mt-2 text-sm leading-6 text-text-secondary">
+                      Availability, parking, and building access change the real job. Start with the home.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsMapOpen(true)}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary px-5 text-sm font-bold text-primary hover:bg-primary/5 transition cursor-pointer"
+                  >
+                    <MapPin className="size-4" />
+                    Select on Map
+                  </button>
+                </div>
+
+                {/* Saved Addresses Section */}
                 <div>
-                  <h2 className="text-2xl font-bold text-text-primary">Where should we send the cleaner?</h2>
-                  <p className="mt-2 text-sm leading-6 text-text-secondary">
-                    Availability, parking, and building access change the real job. Start with the home.
-                  </p>
+                  <p className="mb-3 text-sm font-bold text-text-primary">Your Saved Addresses</p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {SAVED_ADDRESSES.map((addr) => {
+                      const isMatch = state.address === addr.address && state.unit === addr.unit;
+                      return (
+                        <button
+                          key={addr.label}
+                          type="button"
+                          onClick={() => {
+                            update("address", addr.address);
+                            update("unit", addr.unit);
+                            update("zip", addr.zip);
+                            update("city", addr.city);
+                            update("bedrooms", addr.bedrooms);
+                            update("bathrooms", addr.bathrooms);
+                            update("homeType", addr.homeType);
+                          }}
+                          className={cn(
+                            "relative flex items-start gap-4 rounded-2xl border p-5 text-left transition duration-200 active:translate-y-px cursor-pointer",
+                            isMatch
+                              ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                              : "border-border bg-surface hover:border-primary/40 hover:bg-surface-muted"
+                          )}
+                        >
+                          <div className={cn(
+                            "flex size-10 shrink-0 items-center justify-center rounded-full text-primary",
+                            isMatch ? "bg-primary/15" : "bg-surface-muted"
+                          )}>
+                            {addr.iconType === "home" ? <Home className="size-5" /> : <Briefcase className="size-5" />}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0 pr-6">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-text-primary text-sm">{addr.label}</span>
+                              {addr.isDefault && (
+                                <span className="inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Default</span>
+                              )}
+                            </div>
+                            <p className="mt-1.5 text-sm font-semibold text-text-primary truncate">
+                              {addr.address}{addr.unit ? `, ${addr.unit}` : ""}
+                            </p>
+                            <p className="text-xs text-text-secondary mt-0.5">
+                              {addr.city} {addr.zip}
+                            </p>
+                            <p className="text-xs text-primary font-semibold mt-2">
+                              {addr.bedrooms > 0 ? `${addr.bedrooms} bed` : "Studio"} · {addr.bathrooms} bath · {addr.homeType}
+                            </p>
+                          </div>
+
+                          {isMatch && (
+                            <span className="absolute right-4 top-4 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                              <Check className="size-3" strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-[1fr_150px]">
                   <Field label="Street address" htmlFor="address" required>
-                    <input id="address" value={state.address} onChange={(event) => update("address", event.target.value)} autoComplete="street-address" className="booking-input" placeholder="225 West 23rd Street" />
+                    <div className="relative flex items-center">
+                      <input id="address" value={state.address} onChange={(event) => update("address", event.target.value)} autoComplete="street-address" className="booking-input pr-12" placeholder="225 West 23rd Street" />
+                      <button
+                        type="button"
+                        onClick={() => setIsMapOpen(true)}
+                        className="absolute right-2.5 flex size-9 items-center justify-center rounded-full hover:bg-surface-muted text-primary transition active:scale-95 cursor-pointer"
+                        title="Select on map"
+                      >
+                        <MapPin className="size-5" />
+                      </button>
+                    </div>
                   </Field>
                   <Field label="Apt, suite" htmlFor="unit">
                     <input id="unit" value={state.unit} onChange={(event) => update("unit", event.target.value)} autoComplete="address-line2" className="booking-input" placeholder="4B" />
@@ -424,11 +551,6 @@ function BookingPageContent() {
                   <SelectCard active={state.homeType === "Apartment"} title="Apartment" helper="Walk-up, elevator, condo" onClick={() => update("homeType", "Apartment")} icon={<Home className="size-5" />} />
                   <SelectCard active={state.homeType === "House"} title="House" helper="Townhouse or single-family" onClick={() => update("homeType", "House")} icon={<Home className="size-5" />} />
                   <SelectCard active={state.homeType === "Office"} title="Office" helper="Studio or small workplace" onClick={() => update("homeType", "Office")} icon={<Home className="size-5" />} />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Counter label="Bedrooms" value={state.bedrooms} min={0} max={6} onChange={(value) => update("bedrooms", value)} />
-                  <Counter label="Bathrooms" value={state.bathrooms} min={1} max={5} onChange={(value) => update("bathrooms", value)} />
                 </div>
               </div>
             ) : null}
@@ -721,14 +843,138 @@ function BookingPageContent() {
                 </div>
 
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Cleaner preference" htmlFor="cleanerPreference">
-                    <select id="cleanerPreference" value={state.cleanerPreference} onChange={(event) => update("cleanerPreference", event.target.value)} className="booking-input">
-                      <option value="best-match">Best available match</option>
-                      <option value="same-cleaner">Prefer the same cleaner for recurring visits</option>
-                      <option value="female-cleaner">Prefer a female cleaner when available</option>
-                    </select>
-                  </Field>
+                {/* Cleaner Preference Section (Premium Cards) */}
+                <div className="border-t border-border/55 pt-6">
+                  <div className="mb-4">
+                    <h3 className="text-base font-bold text-text-primary">Cleaner preference</h3>
+                    {pastCleaners.length > 0 ? (
+                      <p className="mt-1 text-sm text-text-secondary">
+                        You have cleaned with <span className="font-semibold text-primary">{pastCleaners.join(" and ")}</span> before. Select them to request them again.
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-sm text-text-secondary">
+                        Choose who you'd prefer to assign to your booking.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {/* Best available match */}
+                    <button
+                      type="button"
+                      onClick={() => update("cleanerPreference", "best-match")}
+                      className={cn(
+                        "relative flex min-h-24 items-start gap-3 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                        state.cleanerPreference === "best-match"
+                          ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                          : "border-border bg-surface hover:border-primary/40 cursor-pointer"
+                      )}
+                    >
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Sparkles className="size-5" />
+                      </div>
+                      <div className="flex-1 min-w-0 pr-4">
+                        <span className="block font-bold text-text-primary text-sm">Best available match</span>
+                        <span className="mt-1 block text-xs leading-normal text-text-secondary">We will match the highest-rated cleaner in your area.</span>
+                      </div>
+                      {state.cleanerPreference === "best-match" && (
+                        <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                          <Check className="size-3" strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Past cleaners */}
+                    {pastCleaners.map((cleaner) => {
+                      const cleanerValue = `prefer-${cleaner.toLowerCase().replace(/\s+/g, "-")}`;
+                      const isActive = state.cleanerPreference === cleanerValue;
+                      const initials = cleaner.split(" ").map(n => n[0]).join("");
+                      return (
+                        <button
+                          key={cleaner}
+                          type="button"
+                          onClick={() => update("cleanerPreference", cleanerValue)}
+                          className={cn(
+                            "relative flex min-h-24 items-start gap-3 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                            isActive
+                              ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                              : "border-border bg-surface hover:border-primary/40 cursor-pointer"
+                          )}
+                        >
+                          <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accentW/25 text-primary font-bold text-sm">
+                            {initials}
+                          </div>
+                          <div className="flex-1 min-w-0 pr-4">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="block font-bold text-text-primary text-sm">{cleaner}</span>
+                              <span className="inline-block rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary tracking-wide uppercase shrink-0">Past Cleaner</span>
+                            </div>
+                            <span className="mt-1 block text-xs leading-normal text-text-secondary">Assigned previously. Highly rated, knows your home setup.</span>
+                          </div>
+                          {isActive && (
+                            <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                              <Check className="size-3" strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    {/* Prefer same cleaner (only if recurring plan) */}
+                    {state.frequencyId !== "once" && (
+                      <button
+                        type="button"
+                        onClick={() => update("cleanerPreference", "same-cleaner")}
+                        className={cn(
+                          "relative flex min-h-24 items-start gap-3 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                          state.cleanerPreference === "same-cleaner"
+                            ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                            : "border-border bg-surface hover:border-primary/40 cursor-pointer"
+                        )}
+                      >
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+                          <UserRound className="size-5" />
+                        </div>
+                        <div className="flex-1 min-w-0 pr-4">
+                          <span className="block font-bold text-text-primary text-sm">Keep same cleaner</span>
+                          <span className="mt-1 block text-xs leading-normal text-text-secondary">Keep the same professional for subsequent recurring cleanings.</span>
+                        </div>
+                        {state.cleanerPreference === "same-cleaner" && (
+                          <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                            <Check className="size-3" strokeWidth={3} />
+                          </span>
+                        )}
+                      </button>
+                    )}
+
+                    {/* Prefer female cleaner */}
+                    <button
+                      type="button"
+                      onClick={() => update("cleanerPreference", "female-cleaner")}
+                      className={cn(
+                        "relative flex min-h-24 items-start gap-3 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                        state.cleanerPreference === "female-cleaner"
+                          ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                          : "border-border bg-surface hover:border-primary/40 cursor-pointer"
+                      )}
+                    >
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+                        <UserRound className="size-5" />
+                      </div>
+                      <div className="flex-1 min-w-0 pr-4">
+                        <span className="block font-bold text-text-primary text-sm">Female cleaner</span>
+                        <span className="mt-1 block text-xs leading-normal text-text-secondary">Request a female professional, subject to scheduling availability.</span>
+                      </div>
+                      {state.cleanerPreference === "female-cleaner" && (
+                        <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                          <Check className="size-3" strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 border-t border-border/55 pt-6">
                   <Field label="Entry instructions" htmlFor="access" required>
                     <select id="access" value={state.access} onChange={(event) => update("access", event.target.value)} className="booking-input">
                       <option>I will be home</option>
@@ -736,12 +982,6 @@ function BookingPageContent() {
                       <option>Lockbox or smart lock</option>
                       <option>Call on arrival</option>
                     </select>
-                  </Field>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Parking or transit notes" htmlFor="parking" helper="Examples: loading zone, garage code, street parking, subway entrance." required>
-                    <input id="parking" value={state.parking} onChange={(event) => update("parking", event.target.value)} className="booking-input" placeholder="Garage entrance on 8th Ave" />
                   </Field>
                   <Field label="Pets" htmlFor="pets">
                     <select id="pets" value={state.pets} onChange={(event) => update("pets", event.target.value)} className="booking-input">
@@ -754,12 +994,18 @@ function BookingPageContent() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Parking or transit notes" htmlFor="parking" helper="Examples: loading zone, garage code, street parking, subway entrance." required>
+                    <input id="parking" value={state.parking} onChange={(event) => update("parking", event.target.value)} className="booking-input" placeholder="Garage entrance on 8th Ave" />
+                  </Field>
                   <Field label="Cleaning supplies" htmlFor="supplies">
                     <select id="supplies" value={state.supplies} onChange={(event) => update("supplies", event.target.value)} className="booking-input">
                       <option>Bring professional supplies</option>
                       <option>I will provide supplies</option>
                     </select>
                   </Field>
+                </div>
+
+                <div>
                   <Field label="Priority notes" htmlFor="notes" helper="Mention fragile surfaces, heavy buildup, or rooms to skip.">
                     <textarea id="notes" value={state.notes} onChange={(event) => update("notes", event.target.value)} className="booking-input min-h-24 resize-y" placeholder="Please focus on the kitchen grout and guest bath." />
                   </Field>
@@ -868,6 +1114,15 @@ function BookingPageContent() {
           </div>
         </aside>
       </div>
+      <MapPicker
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        onSelectAddress={(address, zip, city) => {
+          update("address", address);
+          update("zip", zip);
+          update("city", city);
+        }}
+      />
     </main>
   );
 }
