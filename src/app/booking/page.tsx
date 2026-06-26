@@ -115,10 +115,19 @@ const ADDONS = [
 ];
 
 const ARRIVAL_WINDOWS = [
-  { id: "8-10", label: "8:00 AM - 10:00 AM", price: 0 },
-  { id: "10-12", label: "10:00 AM - 12:00 PM", price: 0 },
-  { id: "12-2", label: "12:00 PM - 2:00 PM", price: 6 },
-  { id: "2-4", label: "2:00 PM - 4:00 PM", price: 10 },
+  { id: "9:00 AM", label: "9:00 AM", price: 0 },
+  { id: "10:00 AM", label: "10:00 AM", price: 0 },
+  { id: "11:00 AM", label: "11:00 AM", price: 0 },
+  { id: "12:00 PM", label: "12:00 PM", price: 0 },
+  { id: "1:00 PM", label: "1:00 PM", price: 0 },
+  { id: "2:00 PM", label: "2:00 PM", price: 0 },
+  { id: "3:00 PM", label: "3:00 PM", price: 0 },
+  { id: "4:00 PM", label: "4:00 PM", price: 0 },
+  { id: "5:00 PM", label: "5:00 PM", price: 0 },
+  { id: "6:00 PM", label: "6:00 PM", price: 0 },
+  { id: "7:00 PM", label: "7:00 PM", price: 0 },
+  { id: "8:00 PM", label: "8:00 PM", price: 0 },
+  { id: "9:00 PM", label: "9:00 PM", price: 0 },
 ];
 
 const INITIAL_STATE: BookingState = {
@@ -137,7 +146,7 @@ const INITIAL_STATE: BookingState = {
   startDate: "",
   addons: [],
   date: "",
-  arrivalWindow: "10-12",
+  arrivalWindow: "10:00 AM",
   cleanerPreference: "best-match",
   access: "I will be home",
   parking: "",
@@ -621,21 +630,25 @@ function BookingPageContent() {
 
                       <div>
                         <h3 className="mb-3 text-base font-bold text-text-primary">Time</h3>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {ARRIVAL_WINDOWS.map((slot) => (
-                            <button
-                              key={slot.id}
-                              type="button"
-                              onClick={() => update("arrivalWindow", slot.id)}
-                              className={cn(
-                                "flex min-h-14 items-center justify-between rounded-xl border px-4 text-left text-sm font-semibold transition active:translate-y-px",
-                                state.arrivalWindow === slot.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted hover:border-primary/40"
-                              )}
-                            >
-                              {slot.label}
-                              {slot.price ? <span>+${slot.price}</span> : <span>Included</span>}
-                            </button>
-                          ))}
+                        <div className="flex flex-wrap gap-2">
+                          {ARRIVAL_WINDOWS.map((slot) => {
+                            const isSelected = state.arrivalWindow === slot.id;
+                            return (
+                              <button
+                                key={slot.id}
+                                type="button"
+                                onClick={() => update("arrivalWindow", slot.id)}
+                                className={cn(
+                                  "flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold transition active:translate-y-px",
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
+                                    : "bg-surface-muted text-text-secondary hover:bg-canvas-softer hover:text-text-primary border border-border"
+                                )}
+                              >
+                                {slot.label}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
