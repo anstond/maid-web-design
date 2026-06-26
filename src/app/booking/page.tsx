@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState, useRef } from "react";
+import { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
 import { bookings, accountProfile } from "@/lib/mock-account-data";
 import { MapPicker } from "@/components/MapPicker";
@@ -356,7 +356,15 @@ function BookingPageContent() {
   const searchParams = useSearchParams();
   const initialService = searchParams.get("service");
   const initialZip = searchParams.get("zip") ?? "";
-  const [step, setStep] = useState(0);
+
+  const initialStep = useMemo(() => {
+    const stepVal = searchParams.get("step");
+    if (!stepVal) return 0;
+    const parsed = parseInt(stepVal, 10);
+    return isNaN(parsed) || parsed < 0 || parsed > 3 ? 0 : parsed;
+  }, [searchParams]);
+
+  const [step, setStep] = useState(initialStep);
   const [showEditContact, setShowEditContact] = useState(false);
   const [touched, setTouched] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -414,16 +422,32 @@ function BookingPageContent() {
     });
     return Array.from(set);
   }, []);
+
   const [state, setState] = useState<BookingState>(() => {
     const defaultAddr = SAVED_ADDRESSES.find((a) => a.isDefault) ?? SAVED_ADDRESSES[0];
+    
+    const initialServiceId = (searchParams.get("service") as ServiceId) || "standard";
+    const initialFrequencyId = (searchParams.get("frequency") as FrequencyId) || "once";
+    const initialHours = searchParams.get("hours") ? parseInt(searchParams.get("hours")!, 10) : 3;
+    const initialCleaners = searchParams.get("cleaners") ? parseInt(searchParams.get("cleaners")!, 10) : 1;
+    const initialStartDate = searchParams.get("startDate") ?? "";
+    const initialDate = searchParams.get("date") ?? "";
+    const initialArrivalWindow = searchParams.get("arrivalWindow") ?? "10:00 AM";
+    const initialCleanerPreference = searchParams.get("cleanerPreference") ?? "best-match";
+    const initialAccess = searchParams.get("access") ?? "I will be home";
+    const initialParking = searchParams.get("parking") ?? "";
+    const initialPets = searchParams.get("pets") ?? "No pets";
+    const initialSupplies = searchParams.get("supplies") ?? "Bring professional supplies";
+    const initialAddons = searchParams.get("addons") ? searchParams.get("addons")!.split(",") : [];
+
     return {
       ...INITIAL_STATE,
       firstName: accountProfile.name.split(" ")[0] || "",
       lastName: accountProfile.name.split(" ").slice(1).join(" ") || "",
       email: accountProfile.email || "",
       phone: accountProfile.phone || "",
-      serviceId: SERVICES.some((service) => service.id === initialService)
-        ? (initialService as ServiceId)
+      serviceId: SERVICES.some((service) => service.id === initialServiceId)
+        ? (initialServiceId as ServiceId)
         : INITIAL_STATE.serviceId,
       zip: initialZip.replace(/\D/g, "").slice(0, 5) || (defaultAddr ? defaultAddr.zip : ""),
       address: defaultAddr ? defaultAddr.address : "",
@@ -435,8 +459,173 @@ function BookingPageContent() {
       addressVerified: defaultAddr ? true : false,
       addressLabel: defaultAddr ? defaultAddr.label : "",
       addressPhone: defaultAddr ? defaultAddr.phone : "",
+      hours: initialHours,
+      cleaners: initialCleaners,
+      frequencyId: initialFrequencyId,
+      startDate: initialStartDate,
+      date: initialDate,
+      arrivalWindow: initialArrivalWindow,
+      cleanerPreference: initialCleanerPreference,
+      access: initialAccess,
+      parking: initialParking,
+      pets: initialPets,
+      supplies: initialSupplies,
+      addons: initialAddons,
     };
   });
+
+  // Effect to synchronize state and step to URL search params (non-PII only)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("step", String(step));
+    params.set("service", state.serviceId);
+    params.set("hours", String(state.hours));
+    params.set("cleaners", String(state.cleaners));
+    params.set("frequency", state.frequencyId);
+    if (state.startDate) params.set("startDate", state.startDate);
+    if (state.date) params.set("date", state.date);
+    params.set("arrivalWindow", state.arrivalWindow);
+    params.set("cleanerPreference", state.cleanerPreference);
+    params.set("access", state.access);
+    if (state.parking) params.set("parking", state.parking);
+    params.set("pets", state.pets);
+    params.set("supplies", state.supplies);
+    if (state.addons && state.addons.length > 0) {
+      params.set("addons", state.addons.join(","));
+    }
+    if (state.zip) params.set("zip", state.zip);
+
+    const newSearch = `?${params.toString()}`;
+    if (typeof window !== "undefined" && window.location.search !== newSearch) {
+      router.replace(`/booking${newSearch}`, { scroll: false });
+    }
+  }, [
+    step,
+    state.serviceId,
+    state.hours,
+    state.cleaners,
+    state.frequencyId,
+    state.startDate,
+    state.date,
+    state.arrivalWindow,
+    state.cleanerPreference,
+    state.access,
+    state.parking,
+    state.pets,
+    state.supplies,
+    state.addons,
+    state.zip,
+    router,
+  ]);
+
+  // Listen for browser navigation (back/forward) changes in searchParams
+  useEffect(() => {
+    const stepVal = searchParams.get("step");
+    if (stepVal !== null) {
+      const parsedStep = parseInt(stepVal, 10);
+      if (!isNaN(parsedStep) && parsedStep >= 0 && parsedStep <= 3 && parsedStep !== step) {
+        setStep(parsedStep);
+      }
+    }
+
+    setState((previous) => {
+      let changed = false;
+      const nextState = { ...previous };
+
+      const serviceVal = searchParams.get("service");
+      if (serviceVal && SERVICES.some(s => s.id === serviceVal) && serviceVal !== previous.serviceId) {
+        nextState.serviceId = serviceVal as ServiceId;
+        changed = true;
+      }
+
+      const hoursVal = searchParams.get("hours");
+      if (hoursVal) {
+        const parsed = parseInt(hoursVal, 10);
+        if (!isNaN(parsed) && parsed !== previous.hours) {
+          nextState.hours = parsed;
+          changed = true;
+        }
+      }
+
+      const cleanersVal = searchParams.get("cleaners");
+      if (cleanersVal) {
+        const parsed = parseInt(cleanersVal, 10);
+        if (!isNaN(parsed) && parsed !== previous.cleaners) {
+          nextState.cleaners = parsed;
+          changed = true;
+        }
+      }
+
+      const frequencyVal = searchParams.get("frequency");
+      if (frequencyVal && FREQUENCIES.some(f => f.id === frequencyVal) && frequencyVal !== previous.frequencyId) {
+        nextState.frequencyId = frequencyVal as FrequencyId;
+        changed = true;
+      }
+
+      const startDateVal = searchParams.get("startDate");
+      if (startDateVal !== null && startDateVal !== previous.startDate) {
+        nextState.startDate = startDateVal;
+        changed = true;
+      }
+
+      const dateVal = searchParams.get("date");
+      if (dateVal !== null && dateVal !== previous.date) {
+        nextState.date = dateVal;
+        changed = true;
+      }
+
+      const arrivalWindowVal = searchParams.get("arrivalWindow");
+      if (arrivalWindowVal && arrivalWindowVal !== previous.arrivalWindow) {
+        nextState.arrivalWindow = arrivalWindowVal;
+        changed = true;
+      }
+
+      const cleanerPrefVal = searchParams.get("cleanerPreference");
+      if (cleanerPrefVal && cleanerPrefVal !== previous.cleanerPreference) {
+        nextState.cleanerPreference = cleanerPrefVal;
+        changed = true;
+      }
+
+      const accessVal = searchParams.get("access");
+      if (accessVal && accessVal !== previous.access) {
+        nextState.access = accessVal;
+        changed = true;
+      }
+
+      const parkingVal = searchParams.get("parking");
+      if (parkingVal !== null && parkingVal !== previous.parking) {
+        nextState.parking = parkingVal;
+        changed = true;
+      }
+
+      const petsVal = searchParams.get("pets");
+      if (petsVal && petsVal !== previous.pets) {
+        nextState.pets = petsVal;
+        changed = true;
+      }
+
+      const suppliesVal = searchParams.get("supplies");
+      if (suppliesVal && suppliesVal !== previous.supplies) {
+        nextState.supplies = suppliesVal;
+        changed = true;
+      }
+
+      const zipVal = searchParams.get("zip");
+      if (zipVal && zipVal !== previous.zip) {
+        nextState.zip = zipVal;
+        changed = true;
+      }
+
+      const addonsVal = searchParams.get("addons");
+      const nextAddons = addonsVal ? addonsVal.split(",") : [];
+      if (JSON.stringify(nextAddons) !== JSON.stringify(previous.addons)) {
+        nextState.addons = nextAddons;
+        changed = true;
+      }
+
+      return changed ? nextState : previous;
+    });
+  }, [searchParams]);
 
   const currentService = SERVICES.find((service) => service.id === state.serviceId) ?? SERVICES[0];
   const currentFrequency = FREQUENCIES.find((frequency) => frequency.id === state.frequencyId) ?? FREQUENCIES[0];
@@ -566,7 +755,7 @@ function BookingPageContent() {
     }
 
     setTouched(false);
-    setStep((current) => current + 1);
+    setStep(step + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -576,7 +765,7 @@ function BookingPageContent() {
       router.push("/");
       return;
     }
-    setStep((current) => current - 1);
+    setStep(step - 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
