@@ -2,7 +2,7 @@
 
 import { Suspense, useMemo, useState, useRef } from "react";
 import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
-import { bookings } from "@/lib/mock-account-data";
+import { bookings, accountProfile } from "@/lib/mock-account-data";
 import { MapPicker } from "@/components/MapPicker";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -68,9 +68,9 @@ const SERVICES = [
     name: "Standard clean",
     description: "Recurring upkeep for lived-in homes.",
     rate: 42,
-    minimumHours: 2.5,
-    maxHours: 8,
-    cleanerOptions: [1, 2],
+    minimumHours: 2,
+    maxHours: 9,
+    cleanerOptions: [1, 2, 3, 4, 5, 6],
     included: ["Kitchen and bathrooms", "Dusting and floors", "Beds made with fresh linens"],
   },
   {
@@ -78,9 +78,9 @@ const SERVICES = [
     name: "Deep clean",
     description: "First visit, seasonal reset, or heavier buildup.",
     rate: 54,
-    minimumHours: 3.5,
-    maxHours: 10,
-    cleanerOptions: [1, 2, 3],
+    minimumHours: 2,
+    maxHours: 9,
+    cleanerOptions: [1, 2, 3, 4, 5, 6],
     included: ["Standard clean", "Baseboards and doors", "Heavy buildup attention"],
   },
   {
@@ -88,9 +88,9 @@ const SERVICES = [
     name: "Move clean",
     description: "Empty-home clean before keys change hands.",
     rate: 58,
-    minimumHours: 4,
-    maxHours: 10,
-    cleanerOptions: [2, 3, 4],
+    minimumHours: 2,
+    maxHours: 9,
+    cleanerOptions: [1, 2, 3, 4, 5, 6],
     included: ["Inside cabinets", "Appliance exteriors", "Closets and empty rooms"],
   },
   {
@@ -98,9 +98,9 @@ const SERVICES = [
     name: "Small office",
     description: "Workspaces, studios, and storefronts.",
     rate: 50,
-    minimumHours: 3,
-    maxHours: 10,
-    cleanerOptions: [1, 2, 3, 4],
+    minimumHours: 2,
+    maxHours: 9,
+    cleanerOptions: [1, 2, 3, 4, 5, 6],
     included: ["Desks and common areas", "Restrooms", "Trash and floors"],
   },
 ];
@@ -357,6 +357,7 @@ function BookingPageContent() {
   const initialService = searchParams.get("service");
   const initialZip = searchParams.get("zip") ?? "";
   const [step, setStep] = useState(0);
+  const [showEditContact, setShowEditContact] = useState(false);
   const [touched, setTouched] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [mapPreQuery, setMapPreQuery] = useState("");
@@ -417,6 +418,10 @@ function BookingPageContent() {
     const defaultAddr = SAVED_ADDRESSES.find((a) => a.isDefault) ?? SAVED_ADDRESSES[0];
     return {
       ...INITIAL_STATE,
+      firstName: accountProfile.name.split(" ")[0] || "",
+      lastName: accountProfile.name.split(" ").slice(1).join(" ") || "",
+      email: accountProfile.email || "",
+      phone: accountProfile.phone || "",
       serviceId: SERVICES.some((service) => service.id === initialService)
         ? (initialService as ServiceId)
         : INITIAL_STATE.serviceId,
@@ -930,63 +935,91 @@ function BookingPageContent() {
                   ))}
                 </div>
 
-                <div className="grid gap-5 rounded-2xl border border-border bg-surface-muted p-4 md:grid-cols-[1.2fr_0.8fr]">
-                  <div>
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-base font-bold text-text-primary">Visit hours</h3>
-                        <p className="mt-1 text-sm leading-5 text-text-secondary">
-                          {currentService.name} allows {hourOptions[0]}-{hourOptions[hourOptions.length - 1]} hours. Recommended: {recommendedHours} hours.
-                        </p>
+                <div className="p-2.5 rounded-[2rem] border border-border/80 bg-surface-muted/60 shadow-[0_8px_30px_rgba(21,94,99,0.03)] grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
+                  <div className="bg-surface rounded-[calc(2rem-0.625rem)] border border-border/60 p-6 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] flex flex-col justify-between gap-5">
+                    <div>
+                      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold tracking-tight text-text-primary">Visit hours</h3>
+                            {state.hours === recommendedHours && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary animate-fade-in">
+                                Recommended
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm leading-relaxed text-text-secondary">
+                            {currentService.name} allows {hourOptions[0]}-{hourOptions[hourOptions.length - 1]} hours. Recommended: {recommendedHours} hours.
+                          </p>
+                        </div>
+                        {state.hours !== recommendedHours && (
+                          <button
+                            type="button"
+                            onClick={() => update("hours", recommendedHours)}
+                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/25 bg-surface px-4 py-1 text-xs font-bold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                          >
+                            <Sparkles className="size-3" />
+                            Use recommended
+                          </button>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => update("hours", recommendedHours)}
-                        className="min-h-10 rounded-full bg-surface px-4 text-sm font-bold text-primary transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
-                      >
-                        Use recommended
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                      {hourOptions.map((hours) => (
-                        <button
-                          key={hours}
-                          type="button"
-                          onClick={() => update("hours", hours)}
-                          className={cn(
-                            "min-h-12 rounded-xl border px-3 text-sm font-bold transition active:translate-y-px",
-                            state.hours === hours ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-text-primary hover:border-primary/40"
-                          )}
-                        >
-                          {hours} hr
-                        </button>
-                      ))}
+                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                        {hourOptions.map((hours) => {
+                          const isSelected = state.hours === hours;
+                          const isRec = hours === recommendedHours;
+                          return (
+                            <button
+                              key={hours}
+                              type="button"
+                              onClick={() => update("hours", hours)}
+                              className={cn(
+                                "min-h-12 rounded-xl border text-sm font-bold transition-all duration-300 active:scale-95 cursor-pointer relative overflow-hidden",
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/10"
+                                  : "border-border bg-surface text-text-primary hover:border-primary/45 hover:bg-surface-muted/30"
+                              )}
+                            >
+                              <span>{hours} hr</span>
+                              {isRec && !isSelected && (
+                                <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary animate-pulse" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="mb-3 text-base font-bold text-text-primary">Cleaner count</h3>
-                    <div className="grid gap-2">
-                      {cleanerOptions.map((cleaners) => (
-                        <button
-                          key={cleaners}
-                          type="button"
-                          onClick={() => update("cleaners", cleaners)}
-                          className={cn(
-                            "flex min-h-12 items-center justify-between rounded-xl border px-4 text-sm font-bold transition active:translate-y-px",
-                            state.cleaners === cleaners ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface text-text-primary hover:border-primary/40"
-                          )}
-                        >
-                          <span>{cleaners} {cleaners === 1 ? "cleaner" : "cleaners"}</span>
-                          <span className={state.cleaners === cleaners ? "text-primary-foreground/80" : "text-text-secondary"}>
-                            {(state.hours * cleaners).toFixed(1).replace(".0", "")} labor hr
-                          </span>
-                        </button>
-                      ))}
+                  <div className="bg-surface rounded-[calc(2rem-0.625rem)] border border-border/60 p-6 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] flex flex-col justify-between gap-5">
+                    <div>
+                      <h3 className="mb-1 text-lg font-bold tracking-tight text-text-primary">Cleaner count</h3>
+                      <p className="mb-4 text-sm leading-relaxed text-text-secondary">
+                        Labor hours are visit hours multiplied by cleaner count.
+                      </p>
+                      <div className="grid gap-2">
+                        {cleanerOptions.map((cleaners) => {
+                          const isSelected = state.cleaners === cleaners;
+                          return (
+                            <button
+                              key={cleaners}
+                              type="button"
+                              onClick={() => update("cleaners", cleaners)}
+                              className={cn(
+                                "flex min-h-12 items-center justify-between rounded-xl border px-4 text-sm font-bold transition-all duration-300 active:scale-[0.98] cursor-pointer",
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/10"
+                                  : "border-border bg-surface text-text-primary hover:border-primary/45 hover:bg-surface-muted/30"
+                              )}
+                            >
+                              <span>{cleaners} {cleaners === 1 ? "cleaner" : "cleaners"}</span>
+                              <span className={isSelected ? "text-primary-foreground/80" : "text-text-secondary"}>
+                                {(state.hours * cleaners).toFixed(1).replace(".0", "")} labor hr
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <p className="mt-3 text-xs leading-5 text-text-secondary">
-                      Labor hours are visit hours multiplied by cleaner count.
-                    </p>
                   </div>
                 </div>
 
@@ -1345,45 +1378,236 @@ function BookingPageContent() {
             ) : null}
 
             {step === 3 ? (
-              <div className="space-y-8">
+              <div className="space-y-8 animate-fade-in">
                 <div>
-                  <h2 className="text-2xl font-bold text-text-primary">Review and add contact details.</h2>
+                  <h2 className="text-2xl font-bold text-text-primary">Review your plan details.</h2>
                   <p className="mt-2 text-sm leading-6 text-text-secondary">
-                    The cleaner gets the arrival notes after payment. You get confirmation by email and text.
+                    You are logged in. Review what is included in your plan before proceeding to payment.
                   </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="First name" htmlFor="firstName" required>
-                    <input id="firstName" value={state.firstName} onChange={(event) => update("firstName", event.target.value)} autoComplete="given-name" className="booking-input" />
-                  </Field>
-                  <Field label="Last name" htmlFor="lastName" required>
-                    <input id="lastName" value={state.lastName} onChange={(event) => update("lastName", event.target.value)} autoComplete="family-name" className="booking-input" />
-                  </Field>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Email" htmlFor="email" required>
-                    <input id="email" type="email" value={state.email} onChange={(event) => update("email", event.target.value)} autoComplete="email" className="booking-input" />
-                  </Field>
-                  <Field label="Mobile phone" htmlFor="phone" helper="Used only for arrival updates." required>
-                    <input id="phone" type="tel" value={state.phone} onChange={(event) => update("phone", event.target.value)} autoComplete="tel" className="booking-input" placeholder="(212) 555-0148" />
-                  </Field>
+                {/* Logged in User Card */}
+                <div className="rounded-2xl border border-border bg-surface-muted p-5 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <img src={accountProfile.picture} alt={accountProfile.name} className="size-12 rounded-full object-cover" />
+                    <div>
+                      <p className="text-xs text-primary font-bold uppercase tracking-wider">Logged In Account</p>
+                      <h3 className="text-base font-bold text-text-primary">{state.firstName} {state.lastName}</h3>
+                      <p className="text-sm text-text-secondary">{state.email} · {state.phone}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditContact(!showEditContact)}
+                    className="inline-flex min-h-9 items-center justify-center rounded-full border border-primary px-4 text-xs font-bold text-primary hover:bg-primary/5 transition active:scale-95 cursor-pointer"
+                  >
+                    {showEditContact ? "View summary" : "Edit contact info"}
+                  </button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <SummaryTile icon={<MapPin className="size-5" />} title="Home" body={`${state.address}${state.unit ? `, ${state.unit}` : ""}, ${state.city} ${state.zip}`} />
-                  <SummaryTile
-                    icon={<CalendarDays className="size-5" />}
-                    title="Schedule"
-                    body={
-                      state.frequencyId === "custom"
-                        ? `Starts ${state.startDate || "Date not set"} (Custom weekly schedule)`
-                        : `${state.date || "Date not set"} between ${currentArrival.label}`
-                    }
-                  />
-                  <SummaryTile icon={<Sparkles className="size-5" />} title="Service" body={`${currentService.name}, ${state.hours} hr, ${state.cleaners} ${state.cleaners === 1 ? "cleaner" : "cleaners"}`} />
-                  <SummaryTile icon={<KeyRound className="size-5" />} title="Arrival notes" body={`${state.access}. ${state.parking || "Parking notes missing"}`} />
+                {showEditContact && (
+                  <div className="grid gap-4 p-5 rounded-2xl border border-border bg-surface animate-fade-in">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field label="First name" htmlFor="firstName" required>
+                        <input id="firstName" value={state.firstName} onChange={(event) => update("firstName", event.target.value)} autoComplete="given-name" className="booking-input" />
+                      </Field>
+                      <Field label="Last name" htmlFor="lastName" required>
+                        <input id="lastName" value={state.lastName} onChange={(event) => update("lastName", event.target.value)} autoComplete="family-name" className="booking-input" />
+                      </Field>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field label="Email" htmlFor="email" required>
+                        <input id="email" type="email" value={state.email} onChange={(event) => update("email", event.target.value)} autoComplete="email" className="booking-input" />
+                      </Field>
+                      <Field label="Mobile phone" htmlFor="phone" helper="Used only for arrival updates." required>
+                        <input id="phone" type="tel" value={state.phone} onChange={(event) => update("phone", event.target.value)} autoComplete="tel" className="booking-input" placeholder="(212) 555-0148" />
+                      </Field>
+                    </div>
+                  </div>
+                )}
+
+                {/* Plan commitment description */}
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                  <h3 className="text-base font-bold text-primary flex items-center gap-2">
+                    <ShieldCheck className="size-5" />
+                    {state.frequencyId === "once" ? "One-Time Service Agreement" : "Subscription Plan Commitment"}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-text-secondary">
+                    {state.frequencyId === "once" ? (
+                      "You are booking a single visit. No recurring commitment. Billed automatically only after the clean is completed."
+                    ) : state.frequencyId === "custom" ? (
+                      `You are signing up for a custom weekly cleaning plan (${state.customSchedules.length} visit${state.customSchedules.length === 1 ? "" : "s"} per week). Plan starts on ${state.startDate ? new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(state.startDate + "T12:00:00")) : "start date"}. Billed after each completed visit. Cancel, pause, or reschedule anytime from your customer account page.`
+                    ) : (
+                      `You are signing up for a recurring ${currentFrequency.label.toLowerCase()} cleaning plan. Billed after each completed visit. Cancel, pause, or reschedule any upcoming visit up to 24 hours in advance with no fees.`
+                    )}
+                  </p>
                 </div>
+
+                {/* Grid showing everything they are signing up for */}
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Service & Scope Card */}
+                  <div className="rounded-2xl border border-border bg-surface p-5">
+                    <h3 className="font-bold text-text-primary text-base flex items-center gap-2 mb-3">
+                      <Sparkles className="size-4 text-primary" />
+                      Cleaning Scope
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="text-text-secondary block text-xs">Service type</span>
+                        <span className="font-bold text-text-primary text-base">{currentService.name}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Team size & Duration</span>
+                        <span className="font-semibold text-text-primary">{state.hours} hr visit · {state.cleaners} {state.cleaners === 1 ? "cleaner" : "cleaners"} ({(state.hours * state.cleaners).toFixed(1).replace(".0", "")} labor hrs)</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Included tasks</span>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {currentService.included.map((task) => (
+                            <span key={task} className="inline-block rounded-full bg-surface-muted border border-border px-2.5 py-0.5 text-xs text-text-secondary">{task}</span>
+                          ))}
+                        </div>
+                      </div>
+                      {state.addons.length > 0 && (
+                        <div>
+                          <span className="text-text-secondary block text-xs">Selected extra tasks</span>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {state.addons.map((addonId) => {
+                              const addon = ADDONS.find((a) => a.id === addonId);
+                              return (
+                                <span key={addonId} className="inline-block rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-xs text-primary font-bold">
+                                  + {addon?.label || addonId}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Schedule & Timing Card */}
+                  <div className="rounded-2xl border border-border bg-surface p-5">
+                    <h3 className="font-bold text-text-primary text-base flex items-center gap-2 mb-3">
+                      <CalendarDays className="size-4 text-primary" />
+                      Schedule & Frequency
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="text-text-secondary block text-xs">Plan frequency</span>
+                        <span className="font-bold text-text-primary text-base">{currentFrequency.label}</span>
+                      </div>
+                      {state.frequencyId === "custom" ? (
+                        <>
+                          <div>
+                            <span className="text-text-secondary block text-xs">Start Date</span>
+                            <span className="font-semibold text-text-primary">
+                              {state.startDate ? new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(state.startDate + "T12:00:00")) : "Not set"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-text-secondary block text-xs">Weekly slots</span>
+                            <div className="mt-1.5 space-y-1">
+                              {state.customSchedules.map((slot, index) => {
+                                const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                                return (
+                                  <div key={index} className="flex justify-between text-xs border-b border-border/40 pb-1">
+                                    <span className="font-bold text-text-primary">{days[slot.dayOfWeek]} @ {slot.time}</span>
+                                    <span className="text-text-secondary">{slot.product}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <span className="text-text-secondary block text-xs">First Visit Date</span>
+                            <span className="font-semibold text-text-primary">
+                              {state.date ? new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(state.date + "T12:00:00")) : "Not set"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-text-secondary block text-xs">Arrival Window</span>
+                            <span className="font-semibold text-text-primary">{state.arrivalWindow}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Address & Home details */}
+                  <div className="rounded-2xl border border-border bg-surface p-5">
+                    <h3 className="font-bold text-text-primary text-base flex items-center gap-2 mb-3">
+                      <MapPin className="size-4 text-primary" />
+                      Location Details
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="text-text-secondary block text-xs">Service address</span>
+                        <span className="font-semibold text-text-primary">{state.address}{state.unit ? `, ${state.unit}` : ""}, {state.city} {state.zip}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Home specifications</span>
+                        <span className="font-semibold text-text-primary">{state.bedrooms > 0 ? `${state.bedrooms} Bed` : "Studio"} · {state.bathrooms} Bath · {state.homeType}</span>
+                      </div>
+                      {state.addressPhone && (
+                        <div>
+                          <span className="text-text-secondary block text-xs">Contact phone at address</span>
+                          <span className="font-semibold text-text-primary">{state.addressPhone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Logistics & Logistics Details */}
+                  <div className="rounded-2xl border border-border bg-surface p-5">
+                    <h3 className="font-bold text-text-primary text-base flex items-center gap-2 mb-3">
+                      <KeyRound className="size-4 text-primary" />
+                      Logistics & Access
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="text-text-secondary block text-xs">Vetted professional preference</span>
+                        <span className="font-semibold text-text-primary capitalize">
+                          {state.cleanerPreference === "best-match" ? (
+                            "Best available match (highest-rated local cleaner)"
+                          ) : state.cleanerPreference === "same-cleaner" ? (
+                            "Keep same cleaner for subsequent visits"
+                          ) : state.cleanerPreference === "female-cleaner" ? (
+                            "Female cleaner requested"
+                          ) : (
+                            `Preferred Cleaner: ${state.cleanerPreference.replace("prefer-", "").replace(/-/g, " ")}`
+                          )}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Entry instructions</span>
+                        <span className="font-semibold text-text-primary">{state.access}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Parking & Transit notes</span>
+                        <span className="font-semibold text-text-primary">{state.parking || "None provided"}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Pets at home</span>
+                        <span className="font-semibold text-text-primary">{state.pets}</span>
+                      </div>
+                      <div>
+                        <span className="text-text-secondary block text-xs">Supplies preference</span>
+                        <span className="font-semibold text-text-primary">{state.supplies}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {state.notes && (
+                  <div className="rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-text-secondary text-sm block mb-1">Priority cleaning notes</span>
+                    <p className="text-sm font-semibold text-text-primary italic">"{state.notes}"</p>
+                  </div>
+                )}
               </div>
             ) : null}
 
