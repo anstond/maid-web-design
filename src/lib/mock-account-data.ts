@@ -31,6 +31,21 @@ export type BookingRecord = {
   notes: string;
   addons: Array<{ label: string; price: number }>;
   timeline: Array<{ label: string; time: string; state: "done" | "current" | "upcoming" }>;
+  orderId?: string;
+  quoteId?: string;
+};
+
+export type BookingOrder = {
+  id: string;
+  userId: string;
+  totalAmountCents: number;
+  couponCode?: string;
+  status: "confirmed" | "cancelled";
+  stripeInvoiceId?: string;
+  stripePaymentIntentId?: string;
+  requestSameMaid: boolean;
+  bookingIds: string[];
+  createdAt: string;
 };
 
 export type SubscriptionRecord = {
@@ -578,8 +593,52 @@ export const subscriptions: SubscriptionRecord[] = [
   },
 ];
 
+export function getSavedBookings(): BookingRecord[] {
+  if (typeof window === "undefined") return bookings;
+  const stored = localStorage.getItem("apartmentmaid_custom_bookings");
+  if (!stored) return bookings;
+  try {
+    const customBookings = JSON.parse(stored) as BookingRecord[];
+    // Merge custom bookings, ensuring we don't duplicate static bookings
+    const customFiltered = customBookings.filter(cb => !bookings.some(sb => sb.id === cb.id));
+    return [...customFiltered, ...bookings];
+  } catch {
+    return bookings;
+  }
+}
+
+export function saveBooking(booking: BookingRecord) {
+  if (typeof window === "undefined") return;
+  const customBookings = getSavedBookings().filter(b => !bookings.some(sb => sb.id === b.id));
+  const filtered = customBookings.filter(b => b.id !== booking.id);
+  filtered.push(booking);
+  localStorage.setItem("apartmentmaid_custom_bookings", JSON.stringify(filtered));
+}
+
+export function getSavedOrders(): BookingOrder[] {
+  if (typeof window === "undefined") return [];
+  const stored = localStorage.getItem("apartmentmaid_orders");
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored) as BookingOrder[];
+  } catch {
+    return [];
+  }
+}
+
+export function getOrder(id: string): BookingOrder | undefined {
+  return getSavedOrders().find(o => o.id === id);
+}
+
+export function saveOrder(order: BookingOrder) {
+  if (typeof window === "undefined") return;
+  const current = getSavedOrders().filter(o => o.id !== order.id);
+  current.push(order);
+  localStorage.setItem("apartmentmaid_orders", JSON.stringify(current));
+}
+
 export function getBooking(id: string) {
-  return bookings.find((booking) => booking.id === id);
+  return getSavedBookings().find((booking) => booking.id === id);
 }
 
 export function getSubscription(id: string) {

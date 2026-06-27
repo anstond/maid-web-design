@@ -238,6 +238,7 @@ components:
   link-blue:
     textColor: "{colors.link}"
     typography: "{typography.body-md}"
+
   link-on-dark:
     textColor: "{colors.on-dark}"
     typography: "{typography.body-md}"
@@ -336,6 +337,11 @@ The single shape signature is the pill. Every interactive element rounds to `{ro
 - Editorial 4:3 illustrations of riders / drivers / cars are the only consistent decorative system; no gradients, no atmospheric backdrops, no shadows that aren't card-elevation hints.
 - A signature alternating-band rhythm: white feature card → black promo card (with white text and white CTA) → white feature card → black footer. The black bands are NOT hero-only; they appear mid-page as promo callouts.
 - A signature ride-request form card on the hero: pickup pin input + destination input + date/time chip + black "See prices" pill, all stacked inside a `{rounded.xl}` shadowed card.
+
+## Booking Flow Iterations
+
+- Cleaner count uses a compact counter instead of stacked selector cards. This follows the existing circular counter control language, keeps service-specific min/max bounds, and reserves the larger card treatment for choices with meaningful descriptive content.
+- Add-ons must be visible before a customer can mentally complete the scope step. Step 2 should show a compact "Popular add-ons" strip before the larger scope controls, keep the full extra-tasks grid in the same step, and use a one-time inline "Want to add common extras?" nudge when a customer tries to continue with no add-ons selected.
 
 ## Colors
 
@@ -486,6 +492,25 @@ The pill `button-primary` renders at ~44 px tall (10 px vertical padding + 24 px
 - **Avatars** (where used): square or `{rounded.full}` circle, never `{rounded.lg}` rounded-square.
 
 ## Components
+
+### Account Action Sheet
+
+Profile page edit, add, default, and close-account actions should use a shadcn-style Radix sheet instead of inline fixed overlays. On mobile the surface slides from the bottom with rounded top corners, a portaled overlay, stacked footer actions, and 44 px minimum touch targets. From the `sm` breakpoint upward, the same component resolves to a centered dialog. Use `{colors.surface}`, `{colors.border}`, `{colors.primary}`, `{colors.text-primary}`, and `{colors.text-secondary}` tokens.
+
+### Customer Account Pages
+
+Bookings and subscriptions are customer-facing service surfaces, not operator dashboards. They should lead with the next visit or next recurring visit, then show only the actions a customer can take now. Avoid KPI grids, monthly rollups as page anchors, account-standing panels, and dense support modules on list pages.
+
+Account navigation must stay connected to the public website. The account shell uses a compact top bar with ApartmentMaid as a home link, a visible Home shortcut, a Book cleaning shortcut, and a horizontal account nav with active-page state. This keeps the user oriented without repeating the full marketing nav inside account flows.
+
+Use this hierarchy for customer account list pages:
+- First block: next visit, next recurring visit, or the single action that needs attention.
+- Second block: the relevant list of visits or plans.
+- Third block: optional contextual CTA, such as adding a one-time visit.
+
+Cards should use the existing `{rounded.xl}` 16 px radius and `{colors.canvas}` / `{colors.canvas-soft}` surfaces. Primary actions remain `{rounded.pill}` pills in `{colors.primary}`. Prices and estimates can appear inside list cards, but they should not read as dashboard metrics unless the page is explicitly a billing surface.
+
+Latest iteration: regular-cleaning pages should feel like consumer service pages, not enterprise dashboards. Lead with a single friendly "next cleaning" card, plain-language actions like "Change next visit" and "Skip next cleaning," then show each plan with next visit, monthly cost, what is included, and past cleanings. Past cleanings from a plan should link to the booking/receipt detail, with a fallback message when a plan has no completed visits yet. Avoid customer-facing jargon such as "cadence," "scope," "routine," and "estimate"; use "how often," "included," "regular cleaning," and "monthly cost" instead.
 
 ### Buttons
 
@@ -643,3 +668,15 @@ The pill `button-primary` renders at ~44 px tall (10 px vertical padding + 24 px
 ### Blog page pattern
 
 Editorial resource pages use the warm `{colors.canvas}` base with a static semantic topic list, one two-column featured article, and a three-column guide grid. Follow with a deep-teal booking CTA; cards use `{rounded.xl}` (16 px), while every interactive control uses `{rounded.pill}`.
+
+### Booking flow mobile pattern
+
+The `/booking` flow keeps the desktop two-column estimate rail at `lg` and above. Below `lg`, show a compact teal live-estimate card near the top of the flow and a fixed bottom action bar with the current total and primary continue/payment action. This keeps price and progression visible on phones without forcing users to scroll past the full estimate panel.
+
+Phone booking controls should use at least 44 px touch targets, full-width primary actions, single-column form groups, and horizontally scrollable saved-address cards sized to the viewport (`min(82vw, 320px)`). Modal selection surfaces in the booking flow should resolve to bottom sheets on phones, then centered dialogs from `sm` upward.
+
+Each booking step should make the required customer action explicit before the primary CTA. The home step starts with "Choose the service address," labels the selected saved-address card, shows a "Ready to continue" state, and changes the CTA from generic "Continue" to "Use this address" or "Save and continue" depending on the selection path.
+
+For horizontally scrollable choice rails on phones, use a contextual floating hint instead of a popup. The saved-address rail uses a small pill over the right edge ("Swipe for more" + chevron), paired with the fade edge. Hide the hint after the customer scrolls, taps an arrow, selects a card, or starts adding a new address.
+
+On phone, booking selection cards should privilege quick scanning over full detail. Service cards show name, short description, price, and visit-hour range only; included-task bullets appear from the `sm` breakpoint upward where the card can breathe.

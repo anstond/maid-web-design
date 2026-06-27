@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck, CalendarDays } from "lucide-react";
+import { saveBooking, saveOrder, type BookingRecord, type BookingOrder } from "@/lib/mock-account-data";
 
 type BookingData = {
   address: string;
@@ -24,6 +25,9 @@ type BookingData = {
   lastName: string;
   email: string;
   phone: string;
+  homeType: string;
+  supplies: string;
+  addons: string[];
   estimate: {
     estimatedHours: number;
     visitHours: number;
@@ -35,10 +39,14 @@ type BookingData = {
     arrivalFee: number;
     serviceFee: number;
     total: number;
+    isMulti?: boolean;
+    visitsCount?: number;
   };
   frequencyId?: string;
   startDate?: string;
   customSchedules?: Array<{ dayOfWeek: number; time: string; product: string }>;
+  isMultiDate?: boolean;
+  selectedDates?: Array<{ date: string; arrivalWindow: string }>;
 };
 
 type PaymentState = {
@@ -80,6 +88,8 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
+  const [createdOrder, setCreatedOrder] = useState<BookingOrder | null>(null);
+  const [createdBookingIds, setCreatedBookingIds] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -131,8 +141,81 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!booking) return;
+
     setIsSubmitting(true);
     await new Promise((resolve) => setTimeout(resolve, 900));
+
+    // Generate Mock Order and Booking records
+    const orderId = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
+    const bookingIds: string[] = [];
+
+    const baseBooking: Omit<BookingRecord, "id" | "date" | "arrivalWindow" | "total"> = {
+      status: "scheduled",
+      service: booking.serviceName,
+      frequency: booking.frequencyName,
+      address: `${booking.address}${booking.unit ? `, ${booking.unit}` : ""}, ${booking.city} ${booking.zip}`,
+      home: `${booking.bedrooms} bed, ${booking.bathrooms} bath ${booking.homeType.toLowerCase()}`,
+      team: `${booking.estimate.visitHours} hr x ${booking.estimate.cleanerCount} cleaner${booking.estimate.cleanerCount > 1 ? "s" : ""}`,
+      cleaner: "Best available match",
+      paymentStatus: "Paid",
+      supplies: booking.supplies || "Bring professional supplies",
+      access: booking.access,
+      parking: booking.parking || "Street parking notes provided",
+      pets: booking.pets || "No pets",
+      notes: booking.notes || "",
+      addons: (booking.addons || []).map(addonId => ({ label: addonId, price: 0 })),
+      timeline: [
+        { label: "Booking created", time: "Just now", state: "done" },
+        { label: "Payment authorized", time: "Just now", state: "done" },
+        { label: "Cleaner assignment", time: "Before visit", state: "current" },
+        { label: "Cleaning visit", time: "Scheduled", state: "upcoming" },
+      ],
+      orderId: orderId,
+    };
+
+    if (booking.frequencyId === "once" && booking.isMultiDate && booking.selectedDates && booking.selectedDates.length > 0) {
+      booking.selectedDates.forEach((visit) => {
+        const bId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+        bookingIds.push(bId);
+
+        const newBooking: BookingRecord = {
+          ...baseBooking,
+          id: bId,
+          date: visit.date,
+          arrivalWindow: visit.arrivalWindow,
+          total: booking.estimate.total / booking.selectedDates!.length,
+        };
+        saveBooking(newBooking);
+      });
+    } else {
+      const bId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
+      bookingIds.push(bId);
+
+      const newBooking: BookingRecord = {
+        ...baseBooking,
+        id: bId,
+        date: booking.date,
+        arrivalWindow: booking.arrivalWindowLabel,
+        total: booking.estimate.total,
+      };
+      saveBooking(newBooking);
+    }
+
+    const orderRecord: BookingOrder = {
+      id: orderId,
+      userId: booking.email,
+      totalAmountCents: Math.round(booking.estimate.total * 100),
+      status: "confirmed",
+      requestSameMaid: false,
+      bookingIds: bookingIds,
+      createdAt: new Date().toISOString(),
+    };
+
+    saveOrder(orderRecord);
+    setCreatedOrder(orderRecord);
+    setCreatedBookingIds(bookingIds);
+
     setConfirmed(true);
     setIsSubmitting(false);
     sessionStorage.removeItem("apartmentmaid_booking");
@@ -159,34 +242,98 @@ export default function CheckoutPage() {
   }
 
   if (confirmed) {
+    const isMulti = createdBookingIds.length > 1;
+
     return (
       <main className="min-h-[100dvh] bg-background px-4 py-12 text-text-primary">
         <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-6 text-center shadow-[0_12px_40px_rgba(21,94,99,0.08)] sm:p-8">
           <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <Check className="size-8" aria-hidden="true" />
           </div>
-          <h1 className="mt-6 text-3xl font-bold">Your cleaning is booked.</h1>
+          <h1 className="mt-6 text-3xl font-bold">
+            {isMulti ? "Your cleaning visits are booked!" : "Your cleaning is booked!"}
+          </h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-text-secondary">
-            Confirmation was sent to {booking.email}. Your cleaner assignment and arrival instructions will arrive before the visit.
+            Confirmation was sent to {booking.email}. Your cleaner assignment and arrival instructions will arrive before each visit.
           </p>
 
-          <div className="mt-8 grid gap-3 rounded-2xl bg-surface-muted p-4 text-left text-sm sm:grid-cols-2">
-            <SummaryLine label="Service" value={booking.serviceName} />
-            <SummaryLine
-              label={booking.frequencyId === "custom" ? "Starts on" : "When"}
-              value={
-                booking.frequencyId === "custom"
-                  ? formatDate(booking.startDate ?? booking.date)
-                  : `${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`
-              }
-            />
-            <SummaryLine label="Home" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}`} />
-            <SummaryLine label="Total paid" value={`$${booking.estimate.total.toFixed(2)}`} />
-          </div>
+          {createdOrder && (
+            <div className="mt-4">
+              <span className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1.5">
+                Order reference: {createdOrder.id}
+              </span>
+            </div>
+          )}
 
-          <Link href="/" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground">
-            Back to home
-          </Link>
+          {isMulti ? (
+            <div className="mt-8 space-y-4 text-left">
+              <div className="rounded-2xl border border-border bg-surface-muted p-5">
+                <div className="flex items-center gap-2 mb-3 font-bold text-text-primary">
+                  <CalendarDays className="size-5 text-primary" />
+                  Scheduled Visits ({createdBookingIds.length})
+                </div>
+                <div className="divide-y divide-border/50 max-h-60 overflow-y-auto pr-1">
+                  {booking.selectedDates?.map((visit, index) => (
+                    <div key={index} className="py-2.5 flex items-center justify-between text-sm">
+                      <span className="font-semibold text-text-primary">
+                        Visit {index + 1}: {formatDate(visit.date)}
+                      </span>
+                      <span className="text-text-secondary font-medium">{visit.arrivalWindow}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 rounded-2xl bg-surface p-4 text-left text-sm border border-border">
+                <div className="flex justify-between">
+                  <span className="text-text-secondary font-medium">Service</span>
+                  <span className="font-bold text-text-primary">{booking.serviceName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-secondary font-medium">Total paid</span>
+                  <span className="font-bold text-text-primary">${booking.estimate.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-3 rounded-2xl bg-surface-muted p-4 text-left text-sm sm:grid-cols-2">
+              <SummaryLine label="Service" value={booking.serviceName} />
+              <SummaryLine
+                label={booking.frequencyId === "custom" ? "Starts on" : "When"}
+                value={
+                  booking.frequencyId === "custom"
+                    ? formatDate(booking.startDate ?? booking.date)
+                    : `${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`
+                }
+              />
+              <SummaryLine label="Home" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}`} />
+              <SummaryLine label="Total paid" value={`$${booking.estimate.total.toFixed(2)}`} />
+            </div>
+          )}
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            {isMulti ? (
+              <Link
+                href={`/orders/${createdOrder?.id || ""}`}
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition hover:bg-primary-hover active:translate-y-px"
+              >
+                Go to Order Details
+              </Link>
+            ) : (
+              <Link
+                href={`/account/bookings/${createdBookingIds[0] || ""}`}
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-[0_10px_24px_rgba(21,94,99,0.20)] transition hover:bg-primary-hover active:translate-y-px"
+              >
+                Go to Booking Details
+              </Link>
+            )}
+            <Link
+              href="/"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-border bg-surface px-6 text-sm font-bold text-text-primary transition hover:border-primary/40"
+            >
+              Back to home
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -222,14 +369,28 @@ export default function CheckoutPage() {
             <SummaryLine label="Contact" value={`${booking.email}, ${booking.phone}`} />
             <SummaryLine label="Service" value={`${booking.serviceName}, ${booking.frequencyName}`} />
             <SummaryLine label="Team" value={`${booking.estimate.visitHours} hr × ${booking.estimate.cleanerCount} ${booking.estimate.cleanerCount === 1 ? "cleaner" : "cleaners"}`} />
-            <SummaryLine
-              label={booking.frequencyId === "custom" ? "Starts on" : "Schedule"}
-              value={
-                booking.frequencyId === "custom"
-                  ? formatDate(booking.startDate ?? booking.date)
-                  : `${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`
-              }
-            />
+            {booking.isMultiDate && booking.selectedDates ? (
+              <div className="col-span-full border-t border-border/40 pt-3 mt-1">
+                <p className="text-xs font-bold text-primary mb-2">Visits Scheduled ({booking.selectedDates.length})</p>
+                <div className="grid gap-2 max-h-36 overflow-y-auto pr-1">
+                  {booking.selectedDates.map((visit, index) => (
+                    <div key={index} className="flex justify-between text-xs bg-surface p-2 rounded-xl border border-border">
+                      <span className="font-bold text-text-primary">Visit {index + 1}: {formatDate(visit.date)}</span>
+                      <span className="text-text-secondary">{visit.arrivalWindow}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <SummaryLine
+                label={booking.frequencyId === "custom" ? "Starts on" : "Schedule"}
+                value={
+                  booking.frequencyId === "custom"
+                    ? formatDate(booking.startDate ?? booking.date)
+                    : `${formatDate(booking.date)}, ${booking.arrivalWindowLabel}`
+                }
+              />
+            )}
             <SummaryLine label="Address" value={`${booking.address}${booking.unit ? `, ${booking.unit}` : ""}, ${booking.city} ${booking.zip}`} />
             <SummaryLine label="Access" value={booking.access} />
             <SummaryLine label="Parking" value={booking.parking} />

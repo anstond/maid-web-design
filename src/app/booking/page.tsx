@@ -60,6 +60,8 @@ type BookingState = {
   addressVerified: boolean;
   addressLabel: string;
   addressPhone: string;
+  isMultiDate?: boolean;
+  selectedDates?: Array<{ date: string; arrivalWindow: string }>;
 };
 
 const SERVICES = [
@@ -170,6 +172,8 @@ const INITIAL_STATE: BookingState = {
   addressVerified: true,
   addressLabel: "",
   addressPhone: "",
+  isMultiDate: false,
+  selectedDates: [],
 };
 
 const SAVED_ADDRESSES = [
@@ -667,8 +671,46 @@ function BookingPageContent() {
       return sum + (addon?.price ?? 0);
     }, 0);
     const suppliesFee = state.supplies === "I will provide supplies" ? 0 : 12;
-    const subtotal = labor + addonTotal + suppliesFee + currentArrival.price;
     const serviceFee = 8;
+
+    if (state.frequencyId === "once" && state.isMultiDate && state.selectedDates && state.selectedDates.length > 0) {
+      let totalLabor = 0;
+      let totalAddons = 0;
+      let totalSupplies = 0;
+      let totalArrivalFee = 0;
+      let totalServiceFee = 0;
+      let total = 0;
+
+      state.selectedDates.forEach((visit) => {
+        const visitArrival = ARRIVAL_WINDOWS.find((w) => w.id === visit.arrivalWindow) || currentArrival;
+        const visitSubtotal = labor + addonTotal + suppliesFee + visitArrival.price;
+        const visitTotal = visitSubtotal + serviceFee;
+
+        totalLabor += labor;
+        totalAddons += addonTotal;
+        totalSupplies += suppliesFee;
+        totalArrivalFee += visitArrival.price;
+        totalServiceFee += serviceFee;
+        total += visitTotal;
+      });
+
+      return {
+        estimatedHours: visitHours,
+        visitHours,
+        laborHours,
+        cleanerCount: state.cleaners,
+        labor: totalLabor,
+        addonTotal: totalAddons,
+        suppliesFee: totalSupplies,
+        arrivalFee: totalArrivalFee,
+        serviceFee: totalServiceFee,
+        total,
+        isMulti: true,
+        visitsCount: state.selectedDates.length,
+      };
+    }
+
+    const subtotal = labor + addonTotal + suppliesFee + currentArrival.price;
     const total = subtotal + serviceFee;
 
     return {
@@ -682,6 +724,8 @@ function BookingPageContent() {
       arrivalFee: currentArrival.price,
       serviceFee,
       total,
+      isMulti: false,
+      visitsCount: 1,
     };
   })();
 
@@ -707,7 +751,15 @@ function BookingPageContent() {
         if (!state.startDate) result.push("Choose a subscription start date.");
         if (state.customSchedules.length === 0) result.push("Pick at least one day for your custom schedule.");
       } else {
-        if (!state.date) result.push("Choose a date.");
+        if (state.frequencyId === "once" && state.isMultiDate) {
+          if (!state.selectedDates || state.selectedDates.length === 0) {
+            result.push("Select at least one date for your visits.");
+          } else if (state.selectedDates.some(sd => !sd.arrivalWindow)) {
+            result.push("Set arrival window for all visits.");
+          }
+        } else {
+          if (!state.date) result.push("Choose a date.");
+        }
       }
       if (!state.parking.trim()) result.push("Add parking or transit notes.");
     }
@@ -1377,61 +1429,232 @@ function BookingPageContent() {
                     ))}
                   </div>
 
+                  {state.frequencyId === "once" && (
+                    <div className="mt-6 border-t border-border/55 pt-6">
+                      <h3 className="mb-3 text-base font-bold text-text-primary">Visits quantity</h3>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            update("isMultiDate", false);
+                          }}
+                          className={cn(
+                            "min-h-16 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                            !state.isMultiDate ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted hover:border-primary/40 text-text-primary"
+                          )}
+                        >
+                          <span className="block font-bold">Single Visit</span>
+                          <span className={cn("mt-1 block text-xs", !state.isMultiDate ? "text-primary-foreground/85" : "text-text-secondary")}>
+                            Just one cleaning visit
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            update("isMultiDate", true);
+                            if (!state.selectedDates || state.selectedDates.length === 0) {
+                              update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM" }]);
+                            }
+                          }}
+                          className={cn(
+                            "min-h-16 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                            state.isMultiDate ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted hover:border-primary/40 text-text-primary"
+                          )}
+                        >
+                          <span className="block font-bold">Multiple Visits</span>
+                          <span className={cn("mt-1 block text-xs", state.isMultiDate ? "text-primary-foreground/85" : "text-text-secondary")}>
+                            Book multiple visits in one checkout
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Standard date and time selection — hidden for custom plans */}
                   {state.frequencyId !== "custom" && (
-                    <div className="mt-8 space-y-5 border-t border-border/55 pt-6">
-                      <div>
-                        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                    <div className="mt-8 space-y-6 border-t border-border/55 pt-6">
+                      {state.frequencyId === "once" && state.isMultiDate ? (
+                        <div className="space-y-6">
                           <div>
-                            <h3 className="text-base font-bold text-text-primary">Date</h3>
-                            <p className="mt-1 text-sm leading-5 text-text-secondary">Pick one of the next available dates or use the calendar.</p>
-                          </div>
-                          <div className="w-full sm:w-48">
-                            <label htmlFor="date" className="sr-only">Choose a custom date</label>
-                            <input id="date" type="date" min={tomorrowISO()} value={state.date} onChange={(event) => update("date", event.target.value)} className="booking-input" />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                          {dateOptions.map((option) => (
-                            <button
-                              key={option.iso}
-                              type="button"
-                              onClick={() => update("date", option.iso)}
-                              className={cn(
-                                "min-h-20 rounded-2xl border p-3 text-left transition active:translate-y-px",
-                                state.date === option.iso ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
-                              )}
-                            >
-                              <span className={cn("block text-xs font-bold", state.date === option.iso ? "text-primary-foreground/75" : "text-text-secondary")}>{option.weekday}</span>
-                              <span className="mt-1 block text-base font-bold">{option.monthDay}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                            <div className="mb-3">
+                              <h3 className="text-base font-bold text-text-primary">Select Dates</h3>
+                              <p className="mt-1 text-sm leading-5 text-text-secondary">
+                                Toggle dates in the grid or add custom dates below.
+                              </p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                              {dateOptions.map((option) => {
+                                const currentSelected = state.selectedDates || [];
+                                const isSelected = currentSelected.some((sd) => sd.date === option.iso);
+                                const selectIndex = currentSelected.findIndex((sd) => sd.date === option.iso);
+                                return (
+                                  <button
+                                    key={option.iso}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        if (currentSelected.length > 1) {
+                                          update("selectedDates", currentSelected.filter((sd) => sd.date !== option.iso));
+                                        }
+                                      } else {
+                                        update("selectedDates", [...currentSelected, { date: option.iso, arrivalWindow: state.arrivalWindow || "10:00 AM" }].sort((a, b) => a.date.localeCompare(b.date)));
+                                      }
+                                    }}
+                                    className={cn(
+                                      "relative min-h-20 rounded-2xl border p-3 text-left transition active:translate-y-px",
+                                      isSelected ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
+                                    )}
+                                  >
+                                    <span className={cn("block text-xs font-bold", isSelected ? "text-primary-foreground/75" : "text-text-secondary")}>{option.weekday}</span>
+                                    <span className="mt-1 block text-sm font-bold">{option.monthDay}</span>
+                                    {isSelected && (
+                                      <span className="absolute right-2 bottom-2 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-black text-primary">
+                                        {selectIndex + 1}
+                                      </span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
 
-                      <div>
-                        <h3 className="mb-3 text-base font-bold text-text-primary">Time</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {ARRIVAL_WINDOWS.map((slot) => {
-                            const isSelected = state.arrivalWindow === slot.id;
-                            return (
-                              <button
-                                key={slot.id}
-                                type="button"
-                                onClick={() => update("arrivalWindow", slot.id)}
-                                className={cn(
-                                  "flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold transition active:translate-y-px",
-                                  isSelected
-                                    ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
-                                    : "border border-border bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary"
-                                )}
-                              >
-                                {slot.label}
-                              </button>
-                            );
-                          })}
+                            <div className="mt-3 flex items-center gap-3 bg-surface-muted rounded-2xl p-4 border border-border">
+                              <span className="text-sm font-bold text-text-primary">Add custom date:</span>
+                              <input
+                                type="date"
+                                min={tomorrowISO()}
+                                className="booking-input max-w-xs"
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val) {
+                                    const currentSelected = state.selectedDates || [];
+                                    if (!currentSelected.some((sd) => sd.date === val)) {
+                                      update("selectedDates", [...currentSelected, { date: val, arrivalWindow: state.arrivalWindow || "10:00 AM" }].sort((a, b) => a.date.localeCompare(b.date)));
+                                    }
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="border-t border-border/55 pt-6">
+                            <h3 className="mb-4 text-base font-bold text-text-primary">Set arrival times for each visit</h3>
+                            <div className="space-y-4">
+                              {(state.selectedDates || []).map((visit, index) => (
+                                <div key={visit.date} className="rounded-2xl border border-border bg-surface p-4 shadow-[0_4px_12px_rgba(21,94,99,0.03)]">
+                                  <div className="flex items-center justify-between border-b border-border/50 pb-3 mb-3">
+                                    <div className="flex items-center gap-3">
+                                      <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-black text-primary-foreground">
+                                        {index + 1}
+                                      </span>
+                                      <span className="text-sm font-bold text-text-primary">
+                                        {new Intl.DateTimeFormat("en-US", {
+                                          weekday: "short",
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric"
+                                        }).format(new Date(`${visit.date}T12:00:00`))}
+                                      </span>
+                                    </div>
+                                    {(state.selectedDates || []).length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          update("selectedDates", (state.selectedDates || []).filter((sd) => sd.date !== visit.date));
+                                        }}
+                                        className="text-xs font-bold text-error hover:underline"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap gap-2">
+                                    {ARRIVAL_WINDOWS.map((slot) => {
+                                      const isSelected = visit.arrivalWindow === slot.id;
+                                      return (
+                                        <button
+                                          key={slot.id}
+                                          type="button"
+                                          onClick={() => {
+                                            const updated = (state.selectedDates || []).map((sd) =>
+                                              sd.date === visit.date ? { ...sd, arrivalWindow: slot.id } : sd
+                                            );
+                                            update("selectedDates", updated);
+                                          }}
+                                          className={cn(
+                                            "flex min-h-10 items-center justify-center rounded-full px-4 text-xs font-bold transition active:translate-y-px",
+                                            isSelected
+                                              ? "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(21,94,99,0.20)]"
+                                              : "border border-border bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary"
+                                          )}
+                                        >
+                                          {slot.label}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <>
+                          <div>
+                            <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+                              <div>
+                                <h3 className="text-base font-bold text-text-primary">Date</h3>
+                                <p className="mt-1 text-sm leading-5 text-text-secondary">Pick one of the next available dates or use the calendar.</p>
+                              </div>
+                              <div className="w-full sm:w-48">
+                                <label htmlFor="date" className="sr-only">Choose a custom date</label>
+                                <input id="date" type="date" min={tomorrowISO()} value={state.date} onChange={(event) => update("date", event.target.value)} className="booking-input" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                              {dateOptions.map((option) => (
+                                <button
+                                  key={option.iso}
+                                  type="button"
+                                  onClick={() => update("date", option.iso)}
+                                  className={cn(
+                                    "min-h-20 rounded-2xl border p-3 text-left transition active:translate-y-px",
+                                    state.date === option.iso ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
+                                  )}
+                                >
+                                  <span className={cn("block text-xs font-bold", state.date === option.iso ? "text-primary-foreground/75" : "text-text-secondary")}>{option.weekday}</span>
+                                  <span className="mt-1 block text-base font-bold">{option.monthDay}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <h3 className="mb-3 text-base font-bold text-text-primary">Time</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {ARRIVAL_WINDOWS.map((slot) => {
+                                const isSelected = state.arrivalWindow === slot.id;
+                                return (
+                                  <button
+                                    key={slot.id}
+                                    type="button"
+                                    onClick={() => update("arrivalWindow", slot.id)}
+                                    className={cn(
+                                      "flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-bold transition active:translate-y-px",
+                                      isSelected
+                                        ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
+                                        : "border border-border bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary"
+                                    )}
+                                  >
+                                    {slot.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -1792,7 +2015,27 @@ function BookingPageContent() {
                         <span className="text-text-secondary block text-xs">Plan frequency</span>
                         <span className="font-bold text-text-primary text-base">{currentFrequency.label}</span>
                       </div>
-                      {state.frequencyId === "custom" ? (
+                      {state.frequencyId === "once" && state.isMultiDate ? (
+                        <>
+                          <div>
+                            <span className="text-text-secondary block text-xs">Visits Quantity</span>
+                            <span className="font-bold text-text-primary text-base">{(state.selectedDates || []).length} Visits (One-Time)</span>
+                          </div>
+                          <div>
+                            <span className="text-text-secondary block text-xs">Dates & Times</span>
+                            <div className="mt-1.5 space-y-1 max-h-36 overflow-y-auto pr-1">
+                              {(state.selectedDates || []).map((visit, index) => (
+                                <div key={index} className="flex justify-between text-xs border-b border-border/40 pb-1">
+                                  <span className="font-bold text-text-primary">
+                                    {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(visit.date + "T12:00:00"))}
+                                  </span>
+                                  <span className="text-text-secondary">{visit.arrivalWindow}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : state.frequencyId === "custom" ? (
                         <>
                           <div>
                             <span className="text-text-secondary block text-xs">Start Date</span>

@@ -4,13 +4,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, ArrowRight } from "lucide-react";
 import { ActionLink, PageHeader, StatusPill, SummaryCard } from "@/components/account/AccountPrimitives";
-import { bookings, formatAccountDate } from "@/lib/mock-account-data";
+import { getSavedBookings, formatAccountDate, type BookingRecord } from "@/lib/mock-account-data";
+import { useEffect } from "react";
 
 export default function BookingsPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "upcoming" | "past">("all");
-  const upcoming = bookings.filter((booking) => booking.status !== "completed" && booking.status !== "cancelled");
-  const past = bookings.filter((booking) => booking.status === "completed" || booking.status === "cancelled");
-  const needsAttention = bookings.find((booking) => booking.status === "needs_attention");
+  const [allBookings, setAllBookings] = useState<BookingRecord[]>([]);
+
+  useEffect(() => {
+    setAllBookings(getSavedBookings());
+  }, []);
+
+  const upcoming = allBookings.filter((booking) => booking.status !== "completed" && booking.status !== "cancelled");
+  const past = allBookings.filter((booking) => booking.status === "completed" || booking.status === "cancelled");
+  const needsAttention = allBookings.find((booking) => booking.status === "needs_attention");
   const nextVisit = upcoming[0];
 
   const showUpcoming = activeFilter === "all" || activeFilter === "upcoming";
@@ -136,7 +143,7 @@ export default function BookingsPage() {
         <SummaryCard title={`Scheduled cleanings (${upcoming.length})`}>
           <div className="grid gap-3">
             {upcoming.map((booking) => (
-              <UpcomingBookingRow key={booking.id} booking={booking} />
+              <UpcomingBookingRow key={booking.id} booking={booking} allBookings={allBookings} />
             ))}
           </div>
         </SummaryCard>
@@ -146,7 +153,7 @@ export default function BookingsPage() {
         <SummaryCard title={`Your cleaning history (${past.length})`}>
           <div className="grid gap-3">
             {past.map((booking) => (
-              <PastBookingRow key={booking.id} booking={booking} />
+              <PastBookingRow key={booking.id} booking={booking} allBookings={allBookings} />
             ))}
           </div>
         </SummaryCard>
@@ -165,10 +172,20 @@ export default function BookingsPage() {
   );
 }
 
-function UpcomingBookingRow({ booking }: { booking: (typeof bookings)[number] }) {
+function getBookingHref(booking: BookingRecord, allBookings: BookingRecord[]) {
+  if (booking.orderId) {
+    const siblings = allBookings.filter(b => b.orderId === booking.orderId);
+    if (siblings.length > 1) {
+      return `/orders/${booking.orderId}`;
+    }
+  }
+  return `/account/bookings/${booking.id}`;
+}
+
+function UpcomingBookingRow({ booking, allBookings }: { booking: BookingRecord; allBookings: BookingRecord[] }) {
   return (
     <Link
-      href={`/account/bookings/${booking.id}`}
+      href={getBookingHref(booking, allBookings)}
       className="group grid gap-2 sm:gap-3 rounded-2xl bg-surface-muted p-3 sm:p-4 transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
     >
       <div>
@@ -184,13 +201,13 @@ function UpcomingBookingRow({ booking }: { booking: (typeof bookings)[number] })
   );
 }
 
-function PastBookingRow({ booking }: { booking: (typeof bookings)[number] }) {
+function PastBookingRow({ booking, allBookings }: { booking: BookingRecord; allBookings: BookingRecord[] }) {
   const arrivalTime = booking.timeline.find((item) => item.label.toLowerCase().includes("arrived"))?.time || "N/A";
   const completionTime = booking.timeline.find((item) => item.label.toLowerCase().includes("complete"))?.time || "N/A";
 
   return (
     <Link
-      href={`/account/bookings/${booking.id}`}
+      href={getBookingHref(booking, allBookings)}
       className="group grid gap-2 sm:gap-3 rounded-2xl bg-surface-muted p-3 sm:p-4 transition hover:bg-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
     >
       <div>

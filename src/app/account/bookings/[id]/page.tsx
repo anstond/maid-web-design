@@ -1,17 +1,34 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, CreditCard, KeyRound, MapPin, MessageCircle, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { CommandCard, DetailRow, HeroPanel, Money, SecondaryButton, StatusPill, SummaryCard, Timeline } from "@/components/account/AccountPrimitives";
-import { bookings, formatAccountDate, getBooking } from "@/lib/mock-account-data";
+import { getBooking, formatAccountDate, type BookingRecord } from "@/lib/mock-account-data";
 
-export function generateStaticParams() {
-  return bookings.map((booking) => ({ id: booking.id }));
-}
+export default function BookingDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [booking, setBooking] = useState<BookingRecord | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const booking = getBooking(id);
+  useEffect(() => {
+    const b = getBooking(id);
+    if (b) {
+      setBooking(b);
+    }
+    setLoading(false);
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[300px] flex items-center justify-center">
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!booking) notFound();
 
