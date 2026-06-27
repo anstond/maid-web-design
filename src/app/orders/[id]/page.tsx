@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -73,6 +74,7 @@ export default function OrderDetailsPage() {
         createdAt: new Date().toISOString(),
       });
       localStorage.setItem("apartmentmaid_refund_reviews", JSON.stringify(existingReviews));
+      toast.success("Visit cancelled successfully! Refund processing.");
     }
     loadOrderDetails();
     setActionLoading(false);
@@ -104,6 +106,7 @@ export default function OrderDetailsPage() {
         createdAt: new Date().toISOString(),
       });
       localStorage.setItem("apartmentmaid_refund_reviews", JSON.stringify(existingReviews));
+      toast.success("Entire order cancelled successfully! Refund processing.");
     }
     loadOrderDetails();
     setActionLoading(false);

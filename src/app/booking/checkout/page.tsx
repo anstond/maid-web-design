@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck, CalendarDays } from "lucide-react";
 import { saveBooking, saveOrder, type BookingRecord, type BookingOrder } from "@/lib/mock-account-data";
@@ -137,7 +138,9 @@ export default function CheckoutPage() {
     setError("");
 
     if (!formValid) {
-      setError("Check the payment fields before confirming.");
+      const msg = "Check the payment fields before confirming.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -239,6 +242,7 @@ export default function CheckoutPage() {
     setCreatedOrder(orderRecord);
     setCreatedBookingIds(bookingIds);
 
+    toast.success("Payment authorized successfully! Your cleaning is scheduled.");
     setConfirmed(true);
     setIsSubmitting(false);
     sessionStorage.removeItem("apartmentmaid_booking");

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useMemo, useState, useRef, useEffect } from "react";
+import { toast } from "sonner";
 import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
 import { bookings, accountProfile } from "@/lib/mock-account-data";
 import { MapPicker } from "@/components/MapPicker";
@@ -813,7 +814,10 @@ function BookingPageContent() {
 
   function continueFlow() {
     setTouched(true);
-    if (errors.length > 0) return;
+    if (errors.length > 0) {
+      errors.forEach((err) => toast.error(err));
+      return;
+    }
 
     if (step === 1 && state.addons.length === 0 && !addonNudgeDismissed) {
       setShowAddonNudge(true);
