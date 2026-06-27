@@ -46,7 +46,7 @@ type BookingData = {
   startDate?: string;
   customSchedules?: Array<{ dayOfWeek: number; time: string; product: string }>;
   isMultiDate?: boolean;
-  selectedDates?: Array<{ date: string; arrivalWindow: string }>;
+  selectedDates?: Array<{ date: string; arrivalWindow: string; serviceId?: string; hours?: number }>;
 };
 
 type PaymentState = {
@@ -179,12 +179,35 @@ export default function CheckoutPage() {
         const bId = `BK-${Math.floor(1000 + Math.random() * 9000)}`;
         bookingIds.push(bId);
 
+        const serviceNames: Record<string, string> = {
+          standard: "Standard clean",
+          deep: "Deep clean",
+          move: "Move clean",
+          office: "Small office",
+        };
+        const visitServiceName = serviceNames[visit.serviceId || ""] || booking.serviceName;
+
+        const serviceRates: Record<string, number> = { standard: 42, deep: 54, move: 58, office: 50 };
+        const serviceMinHours: Record<string, number> = { standard: 2, deep: 2, move: 2, office: 2 };
+        const rate = serviceRates[visit.serviceId || ""] || 42;
+        const minHours = serviceMinHours[visit.serviceId || ""] || 2;
+        const visitHoursCalculated = Math.max(minHours, visit.hours || booking.estimate.visitHours);
+        const visitLabor = visitHoursCalculated * booking.estimate.cleanerCount * rate;
+        const shareCount = booking.selectedDates!.length;
+        const visitAddonTotal = booking.estimate.addonTotal / shareCount;
+        const visitSuppliesFee = booking.estimate.suppliesFee / shareCount;
+        const visitArrivalFee = booking.estimate.arrivalFee / shareCount;
+        const visitServiceFee = 8;
+        const visitTotal = visitLabor + visitAddonTotal + visitSuppliesFee + visitArrivalFee + visitServiceFee;
+
         const newBooking: BookingRecord = {
           ...baseBooking,
           id: bId,
+          service: visitServiceName,
           date: visit.date,
           arrivalWindow: visit.arrivalWindow,
-          total: booking.estimate.total / booking.selectedDates!.length,
+          team: `${visitHoursCalculated} hr × ${booking.estimate.cleanerCount} ${booking.estimate.cleanerCount === 1 ? "cleaner" : "cleaners"}`,
+          total: visitTotal,
         };
         saveBooking(newBooking);
       });
@@ -273,14 +296,25 @@ export default function CheckoutPage() {
                   Scheduled Visits ({createdBookingIds.length})
                 </div>
                 <div className="divide-y divide-border/50 max-h-60 overflow-y-auto pr-1">
-                  {booking.selectedDates?.map((visit, index) => (
-                    <div key={index} className="py-2.5 flex items-center justify-between text-sm">
-                      <span className="font-semibold text-text-primary">
-                        Visit {index + 1}: {formatDate(visit.date)}
-                      </span>
-                      <span className="text-text-secondary font-medium">{visit.arrivalWindow}</span>
-                    </div>
-                  ))}
+                  {booking.selectedDates?.map((visit, index) => {
+                    const serviceNames: Record<string, string> = {
+                      standard: "Standard clean",
+                      deep: "Deep clean",
+                      move: "Move clean",
+                      office: "Small office",
+                    };
+                    const visitServiceName = serviceNames[visit.serviceId || ""] || booking.serviceName;
+                    const visitHours = visit.hours || booking.estimate.visitHours;
+                    return (
+                      <div key={index} className="py-2.5 flex items-center justify-between text-sm">
+                        <span className="font-semibold text-text-primary">
+                          Visit {index + 1}: {formatDate(visit.date)}
+                          <span className="ml-2 text-[10px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5 border border-primary/20">{visitServiceName} ({visitHours}h)</span>
+                        </span>
+                        <span className="text-text-secondary font-medium">{visit.arrivalWindow}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -373,12 +407,25 @@ export default function CheckoutPage() {
               <div className="col-span-full border-t border-border/40 pt-3 mt-1">
                 <p className="text-xs font-bold text-primary mb-2">Visits Scheduled ({booking.selectedDates.length})</p>
                 <div className="grid gap-2 max-h-36 overflow-y-auto pr-1">
-                  {booking.selectedDates.map((visit, index) => (
-                    <div key={index} className="flex justify-between text-xs bg-surface p-2 rounded-xl border border-border">
-                      <span className="font-bold text-text-primary">Visit {index + 1}: {formatDate(visit.date)}</span>
-                      <span className="text-text-secondary">{visit.arrivalWindow}</span>
-                    </div>
-                  ))}
+                  {booking.selectedDates.map((visit, index) => {
+                    const serviceNames: Record<string, string> = {
+                      standard: "Standard clean",
+                      deep: "Deep clean",
+                      move: "Move clean",
+                      office: "Small office",
+                    };
+                    const visitServiceName = serviceNames[visit.serviceId || ""] || booking.serviceName;
+                    const visitHours = visit.hours || booking.estimate.visitHours;
+                    return (
+                      <div key={index} className="flex justify-between text-xs bg-surface p-2 rounded-xl border border-border items-center">
+                        <span className="font-bold text-text-primary">
+                          Visit {index + 1}: {formatDate(visit.date)}
+                          <span className="ml-2 text-[9px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5 border border-primary/20">{visitServiceName} ({visitHours}h)</span>
+                        </span>
+                        <span className="text-text-secondary">{visit.arrivalWindow}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : (

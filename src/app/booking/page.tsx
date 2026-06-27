@@ -61,7 +61,7 @@ type BookingState = {
   addressLabel: string;
   addressPhone: string;
   isMultiDate?: boolean;
-  selectedDates?: Array<{ date: string; arrivalWindow: string }>;
+  selectedDates?: Array<{ date: string; arrivalWindow: string; serviceId: ServiceId; hours: number }>;
 };
 
 const SERVICES = [
@@ -682,11 +682,15 @@ function BookingPageContent() {
       let total = 0;
 
       state.selectedDates.forEach((visit) => {
+        const visitService = SERVICES.find((s) => s.id === visit.serviceId) || currentService;
+        const visitHoursCalculated = Math.max(visitService.minimumHours, visit.hours || state.hours);
+        const visitLabor = visitHoursCalculated * state.cleaners * visitService.rate;
+
         const visitArrival = ARRIVAL_WINDOWS.find((w) => w.id === visit.arrivalWindow) || currentArrival;
-        const visitSubtotal = labor + addonTotal + suppliesFee + visitArrival.price;
+        const visitSubtotal = visitLabor + addonTotal + suppliesFee + visitArrival.price;
         const visitTotal = visitSubtotal + serviceFee;
 
-        totalLabor += labor;
+        totalLabor += visitLabor;
         totalAddons += addonTotal;
         totalSupplies += suppliesFee;
         totalArrivalFee += visitArrival.price;
@@ -1453,7 +1457,7 @@ function BookingPageContent() {
                           onClick={() => {
                             update("isMultiDate", true);
                             if (!state.selectedDates || state.selectedDates.length === 0) {
-                              update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM" }]);
+                              update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }]);
                             }
                           }}
                           className={cn(
@@ -1497,7 +1501,7 @@ function BookingPageContent() {
                                           update("selectedDates", currentSelected.filter((sd) => sd.date !== option.iso));
                                         }
                                       } else {
-                                        update("selectedDates", [...currentSelected, { date: option.iso, arrivalWindow: state.arrivalWindow || "10:00 AM" }].sort((a, b) => a.date.localeCompare(b.date)));
+                                        update("selectedDates", [...currentSelected, { date: option.iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }].sort((a, b) => a.date.localeCompare(b.date)));
                                       }
                                     }}
                                     className={cn(
@@ -1528,7 +1532,7 @@ function BookingPageContent() {
                                   if (val) {
                                     const currentSelected = state.selectedDates || [];
                                     if (!currentSelected.some((sd) => sd.date === val)) {
-                                      update("selectedDates", [...currentSelected, { date: val, arrivalWindow: state.arrivalWindow || "10:00 AM" }].sort((a, b) => a.date.localeCompare(b.date)));
+                                      update("selectedDates", [...currentSelected, { date: val, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }].sort((a, b) => a.date.localeCompare(b.date)));
                                     }
                                     e.target.value = "";
                                   }
@@ -1568,8 +1572,68 @@ function BookingPageContent() {
                                       </button>
                                     )}
                                   </div>
-                                  
-                                  <div className="flex flex-wrap gap-2">
+
+                                  <div className="mb-4 bg-surface-muted p-3 rounded-xl border border-border/50">
+                                    <span className="block text-xs font-bold text-text-secondary uppercase mb-2">Service Type (Product)</span>
+                                    <div className="flex flex-wrap gap-2">
+                                      {SERVICES.map((s) => {
+                                        const isSelected = (visit.serviceId || state.serviceId) === s.id;
+                                        return (
+                                          <button
+                                            key={s.id}
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = (state.selectedDates || []).map((sd) =>
+                                                sd.date === visit.date ? { ...sd, serviceId: s.id } : sd
+                                              );
+                                              update("selectedDates", updated);
+                                            }}
+                                            className={cn(
+                                              "flex min-h-8 items-center justify-center rounded-full px-3 text-xs font-bold transition active:translate-y-px",
+                                              isSelected
+                                                ? "bg-primary text-primary-foreground shadow-[0_2px_6px_rgba(21,94,99,0.15)]"
+                                                : "border border-border bg-surface text-text-secondary hover:bg-accent-soft hover:text-text-primary"
+                                            )}
+                                          >
+                                            {s.name}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  <div className="mb-4 bg-surface-muted p-3 rounded-xl border border-border/50">
+                                    <span className="block text-xs font-bold text-text-secondary uppercase mb-2">Visit Duration</span>
+                                    <div className="flex flex-wrap gap-2">
+                                      {[2, 3, 4, 5, 6, 7, 8, 9].map((hr) => {
+                                        const isSelected = (visit.hours || state.hours) === hr;
+                                        return (
+                                          <button
+                                            key={hr}
+                                            type="button"
+                                            onClick={() => {
+                                              const updated = (state.selectedDates || []).map((sd) =>
+                                                sd.date === visit.date ? { ...sd, hours: hr } : sd
+                                              );
+                                              update("selectedDates", updated);
+                                            }}
+                                            className={cn(
+                                              "flex size-9 items-center justify-center rounded-full text-xs font-bold transition active:translate-y-px",
+                                              isSelected
+                                                ? "bg-primary text-primary-foreground shadow-[0_2px_6px_rgba(21,94,99,0.15)]"
+                                                : "border border-border bg-surface text-text-secondary hover:bg-accent-soft hover:text-text-primary"
+                                            )}
+                                          >
+                                            {hr}h
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <span className="block text-xs font-bold text-text-secondary uppercase mb-2">Arrival Time</span>
+                                    <div className="flex flex-wrap gap-2">
                                     {ARRIVAL_WINDOWS.map((slot) => {
                                       const isSelected = visit.arrivalWindow === slot.id;
                                       return (
@@ -1595,7 +1659,8 @@ function BookingPageContent() {
                                     })}
                                   </div>
                                 </div>
-                              ))}
+                              </div>
+                            ))}
                             </div>
                           </div>
                         </div>
@@ -2023,15 +2088,20 @@ function BookingPageContent() {
                           </div>
                           <div>
                             <span className="text-text-secondary block text-xs">Dates & Times</span>
-                            <div className="mt-1.5 space-y-1 max-h-36 overflow-y-auto pr-1">
-                              {(state.selectedDates || []).map((visit, index) => (
-                                <div key={index} className="flex justify-between text-xs border-b border-border/40 pb-1">
-                                  <span className="font-bold text-text-primary">
-                                    {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(visit.date + "T12:00:00"))}
-                                  </span>
-                                  <span className="text-text-secondary">{visit.arrivalWindow}</span>
-                                </div>
-                              ))}
+                            <div className="mt-1.5 space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                              {(state.selectedDates || []).map((visit, index) => {
+                                const visitService = SERVICES.find((s) => s.id === visit.serviceId) || currentService;
+                                const visitHours = visit.hours || state.hours;
+                                return (
+                                  <div key={index} className="flex justify-between text-xs border-b border-border/40 pb-1 items-center">
+                                    <span className="font-bold text-text-primary">
+                                      {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(visit.date + "T12:00:00"))}
+                                      <span className="ml-1 text-[10px] font-normal text-primary bg-primary/10 rounded px-1 py-0.5 border border-primary/15">{visitService.name} ({visitHours}h)</span>
+                                    </span>
+                                    <span className="text-text-secondary">{visit.arrivalWindow}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </>
