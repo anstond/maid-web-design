@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
 import { bookings, accountProfile } from "@/lib/mock-account-data";
 import { MapPicker } from "@/components/MapPicker";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -24,10 +25,11 @@ import {
   Sparkles,
   UserRound,
   Plus,
+  RefreshCw,
 } from "lucide-react";
 
-type ServiceId = "standard" | "deep" | "move" | "office";
-type FrequencyId = "once" | "weekly" | "biweekly" | "monthly" | "custom";
+type ServiceId = "standard" | "deep" | "move" | "office" | "";
+type FrequencyId = "once" | "weekly" | "biweekly" | "monthly" | "custom" | "";
 
 type BookingState = {
   zip: string;
@@ -151,20 +153,20 @@ const INITIAL_STATE: BookingState = {
   homeType: "Apartment",
   bedrooms: 1,
   bathrooms: 1,
-  serviceId: "standard",
-  hours: 3,
-  cleaners: 1,
-  frequencyId: "once",
+  serviceId: "",
+  hours: 0,
+  cleaners: 0,
+  frequencyId: "",
   customSchedules: [],
   startDate: "",
   addons: [],
   date: "",
-  arrivalWindow: "10:00 AM",
-  cleanerPreference: "best-match",
-  access: "I will be home",
+  arrivalWindow: "",
+  cleanerPreference: "",
+  access: "",
   parking: "",
-  pets: "No pets",
-  supplies: "Bring professional supplies",
+  pets: "",
+  supplies: "",
   notes: "",
   firstName: "",
   lastName: "",
@@ -371,6 +373,9 @@ function BookingPageContent() {
   }, [searchParams]);
 
   const [step, setStep] = useState(initialStep);
+  const [activeMobileSheet, setActiveMobileSheet] = useState<"service" | "extras" | "schedule" | "access" | "cleaner" | null>(null);
+  const [activeSubStep1, setActiveSubStep1] = useState<"service" | "labor" | "extras">("service");
+  const [activeSubStep2, setActiveSubStep2] = useState<"schedule" | "cleaner" | "access">("schedule");
   const [showEditContact, setShowEditContact] = useState(false);
   const [touched, setTouched] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -437,18 +442,18 @@ function BookingPageContent() {
   const [state, setState] = useState<BookingState>(() => {
     const defaultAddr = SAVED_ADDRESSES.find((a) => a.isDefault) ?? SAVED_ADDRESSES[0];
     
-    const initialServiceId = (searchParams.get("service") as ServiceId) || "standard";
-    const initialFrequencyId = (searchParams.get("frequency") as FrequencyId) || "once";
-    const initialHours = searchParams.get("hours") ? parseInt(searchParams.get("hours")!, 10) : 3;
-    const initialCleaners = searchParams.get("cleaners") ? parseInt(searchParams.get("cleaners")!, 10) : 1;
+    const initialServiceId = (searchParams.get("service") as ServiceId) || "";
+    const initialFrequencyId = (searchParams.get("frequency") as FrequencyId) || "";
+    const initialHours = searchParams.get("hours") ? parseInt(searchParams.get("hours")!, 10) : 0;
+    const initialCleaners = searchParams.get("cleaners") ? parseInt(searchParams.get("cleaners")!, 10) : 0;
     const initialStartDate = searchParams.get("startDate") ?? "";
     const initialDate = searchParams.get("date") ?? "";
-    const initialArrivalWindow = searchParams.get("arrivalWindow") ?? "10:00 AM";
-    const initialCleanerPreference = searchParams.get("cleanerPreference") ?? "best-match";
-    const initialAccess = searchParams.get("access") ?? "I will be home";
+    const initialArrivalWindow = searchParams.get("arrivalWindow") ?? "";
+    const initialCleanerPreference = searchParams.get("cleanerPreference") ?? "";
+    const initialAccess = searchParams.get("access") ?? "";
     const initialParking = searchParams.get("parking") ?? "";
-    const initialPets = searchParams.get("pets") ?? "No pets";
-    const initialSupplies = searchParams.get("supplies") ?? "Bring professional supplies";
+    const initialPets = searchParams.get("pets") ?? "";
+    const initialSupplies = searchParams.get("supplies") ?? "";
     const initialAddons = searchParams.get("addons") ? searchParams.get("addons")!.split(",") : [];
 
     return {
@@ -748,14 +753,16 @@ function BookingPageContent() {
       if (!state.address.trim()) result.push("Enter the street address.");
     }
     if (step === 1) {
+      if (!state.serviceId) result.push("Select a service type.");
       if (!hourOptions.includes(state.hours)) result.push(`Choose ${hourOptions[0]}-${hourOptions[hourOptions.length - 1]} hours for ${currentServiceName}.`);
       if (!cleanerOptions.includes(state.cleaners)) result.push(`Choose an available cleaner count for ${currentServiceName}.`);
     }
     if (step === 2) {
+      if (!state.frequencyId) result.push("Select a cleaning frequency.");
       if (state.frequencyId === "custom") {
         if (!state.startDate) result.push("Choose a subscription start date.");
         if (state.customSchedules.length === 0) result.push("Pick at least one day for your custom schedule.");
-      } else {
+      } else if (state.frequencyId) {
         if (state.frequencyId === "once" && state.isMultiDate) {
           if (!state.selectedDates || state.selectedDates.length === 0) {
             result.push("Select at least one date for your visits.");
@@ -764,8 +771,12 @@ function BookingPageContent() {
           }
         } else {
           if (!state.date) result.push("Choose a date.");
+          if (!state.arrivalWindow) result.push("Choose an arrival window.");
         }
       }
+      if (!state.cleanerPreference) result.push("Select a cleaner preference.");
+      if (!state.access) result.push("Select entry instructions.");
+      if (!state.supplies) result.push("Select cleaning supplies option.");
       if (!state.parking.trim()) result.push("Add parking or transit notes.");
     }
     if (step === 3) {
@@ -803,6 +814,7 @@ function BookingPageContent() {
 
   function goToExtras() {
     setShowAddonNudge(false);
+    setActiveSubStep1("extras");
     addonsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -1215,268 +1227,488 @@ function BookingPageContent() {
 
             {step === 1 ? (
               <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-bold text-text-primary">What should this visit cover?</h2>
-                  <p className="mt-2 text-sm leading-6 text-text-secondary">
-                    Choose the cleaning type and any extra tasks. The estimate updates as work is added.
-                  </p>
-                </div>
-
-                <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4" aria-labelledby="popular-addons-title">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 id="popular-addons-title" className="text-base font-bold text-text-primary">Popular add-ons</h3>
-                      <p className="mt-1 text-sm text-text-secondary">Most customers add one small task while we are already there.</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={goToExtras}
-                      className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/25 bg-surface px-4 text-sm font-bold text-primary transition hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
-                    >
-                      View all extras
-                    </button>
-                  </div>
-                  <div className="-mx-4 flex flex-row flex-nowrap gap-2 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-none sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
-                    {popularAddons.map((addon) => {
-                      const selected = state.addons.includes(addon.id);
-                      return (
-                        <button
-                          key={addon.id}
-                          type="button"
-                          onClick={() => toggleAddon(addon.id)}
-                          className={cn(
-                            "flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 text-left text-sm font-bold transition active:translate-y-px w-[260px] shrink-0 snap-start sm:w-auto",
-                            selected
-                              ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(21,94,99,0.14)]"
-                              : "border-primary/20 bg-surface text-text-primary hover:border-primary/45"
-                          )}
-                          aria-pressed={selected}
-                        >
-                          <span>{addon.label}</span>
-                          <span className={cn("shrink-0", selected ? "text-primary-foreground/80" : "text-primary")}>+${addon.price}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-
-                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-                  {SERVICES.map((service) => (
-                    <button
-                      key={service.id}
-                      type="button"
-                      onClick={() => selectService(service.id)}
-                      className={cn(
-                        "rounded-2xl border p-4 text-left transition active:translate-y-px sm:min-h-44 sm:p-5",
-                        state.serviceId === service.id
-                          ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
-                          : "border-border bg-surface-muted hover:border-primary/40"
-                      )}
-                    >
-                      <span className="flex items-start justify-between gap-3 sm:gap-4">
-                        <span className="min-w-0">
-                          <span className="block text-base font-bold text-text-primary sm:text-lg">{service.name}</span>
-                          <span className="mt-1 block text-sm leading-5 text-text-secondary sm:leading-6">{service.description}</span>
-                        </span>
-                        <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-primary sm:px-3 sm:text-sm">${service.rate}/hr</span>
-                      </span>
-                      <span className="mt-2 block text-xs font-semibold text-primary sm:mt-3 sm:text-sm">
-                        {Math.ceil(service.minimumHours)}-{service.maxHours} visit hours
-                      </span>
-                      <span className="mt-4 hidden gap-2 text-sm text-text-secondary sm:grid">
-                        {service.included.map((item) => (
-                          <span key={item} className="flex gap-2">
-                            <Check className="mt-0.5 size-4 text-primary" aria-hidden="true" />
-                            {item}
-                          </span>
-                        ))}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid gap-3 rounded-[1.5rem] border border-border/80 bg-surface-muted/60 p-2 shadow-[0_8px_30px_rgba(21,94,99,0.03)] md:grid-cols-[1.2fr_0.8fr] md:rounded-[2rem] md:p-2.5">
-                  <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
-                    <div>
-                      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-bold tracking-tight text-text-primary">Visit hours</h3>
-                            {state.hours === recommendedHours && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary animate-fade-in">
-                                Recommended
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm leading-relaxed text-text-secondary">
-                            {currentService.name} allows {hourOptions[0]}-{hourOptions[hourOptions.length - 1]} hours. Recommended: {recommendedHours} hours.
-                          </p>
-                        </div>
-                        {state.hours !== recommendedHours && (
-                          <button
-                            type="button"
-                            onClick={() => update("hours", recommendedHours)}
-                            className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/25 bg-surface px-4 py-1 text-xs font-bold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 self-start sm:self-auto"
-                          >
-                            <Sparkles className="size-3" />
-                            Use recommended
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                        {hourOptions.map((hours) => {
-                          const isSelected = state.hours === hours;
-                          const isRec = hours === recommendedHours;
-                          return (
-                            <button
-                              key={hours}
-                              type="button"
-                              onClick={() => update("hours", hours)}
-                              className={cn(
-                                "min-h-12 rounded-xl border text-sm font-bold transition-all duration-300 active:scale-95 cursor-pointer relative overflow-hidden",
-                                isSelected
-                                  ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/10"
-                                  : "border-border bg-surface text-text-primary hover:border-primary/45 hover:bg-surface-muted/30"
-                              )}
-                            >
-                              <span>{hours} hr</span>
-                              {isRec && !isSelected && (
-                                <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary animate-pulse" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                {/* Desktop View */}
+                <div className="hidden lg:block space-y-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-text-primary">What should this visit cover?</h2>
+                    <p className="mt-2 text-sm leading-6 text-text-secondary">
+                      Choose the cleaning type and any extra tasks. The estimate updates as work is added.
+                    </p>
                   </div>
 
-                  <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
-                    <div className="flex h-full flex-col justify-between gap-5">
+                  <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4" aria-labelledby="popular-addons-title">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h3 className="mb-1 text-lg font-bold tracking-tight text-text-primary">Cleaner count</h3>
-                        <p className="text-sm leading-relaxed text-text-secondary">
-                          Adjust the team size for this visit.
-                        </p>
+                        <h3 id="popular-addons-title" className="text-base font-bold text-text-primary">Popular add-ons</h3>
+                        <p className="mt-1 text-sm text-text-secondary">Most customers add one small task while we are already there.</p>
                       </div>
-
-                      <div className="grid gap-3">
-                        <Counter
-                          label="Cleaners"
-                          value={state.cleaners}
-                          min={cleanerOptions[0]}
-                          max={cleanerOptions[cleanerOptions.length - 1]}
-                          onChange={(cleaners) => update("cleaners", cleaners)}
-                        />
-                        <div className="rounded-xl bg-surface-muted px-4 py-3 text-sm text-text-secondary">
-                          <span className="font-semibold text-text-primary">
-                            {state.cleaners} {state.cleaners === 1 ? "cleaner" : "cleaners"}
-                          </span>{" "}
-                          gives {(state.hours * state.cleaners).toFixed(1).replace(".0", "")} labor hr for this visit.
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <fieldset ref={addonsRef} className="scroll-mt-28">
-                  <legend className="mb-3 text-base font-bold text-text-primary">Extra tasks</legend>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {ADDONS.map((addon) => {
-                      const selected = state.addons.includes(addon.id);
-                      return (
-                        <button
-                          key={addon.id}
-                          type="button"
-                          onClick={() => toggleAddon(addon.id)}
-                          className={cn(
-                            "flex min-h-20 items-start justify-between gap-4 rounded-2xl border p-4 text-left transition active:translate-y-px",
-                            selected ? "border-primary bg-primary/5" : "border-border bg-surface-muted hover:border-primary/40"
-                          )}
-                          aria-pressed={selected}
-                        >
-                          <span>
-                            <span className="block font-bold text-text-primary">{addon.label}</span>
-                            <span className="mt-1 block text-sm text-text-secondary">{addon.helper}</span>
-                          </span>
-                          <span className="shrink-0 rounded-full bg-surface px-3 py-1 text-sm font-bold text-primary">+${addon.price}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              </div>
-            ) : null}
-
-            {step === 2 ? (
-              <div className="space-y-8">
-                <div>
-                  <h2 className="text-2xl font-bold text-text-primary">Choose frequency and schedule.</h2>
-                  <p className="mt-2 text-sm leading-6 text-text-secondary">
-                    Select how often you would like us to clean and set your arrival dates. Access and parking details come next on the same screen.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="mb-3 text-base font-bold text-text-primary">How often should we clean?</h3>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {FREQUENCIES.map((frequency) => (
                       <button
-                        key={frequency.id}
                         type="button"
-                        onClick={() => update("frequencyId", frequency.id)}
+                        onClick={goToExtras}
+                        className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/25 bg-surface px-4 text-sm font-bold text-primary transition hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+                      >
+                        View all extras
+                      </button>
+                    </div>
+                    <div className="-mx-4 flex flex-row flex-nowrap gap-2 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-none sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+                      {popularAddons.map((addon) => {
+                        const selected = state.addons.includes(addon.id);
+                        return (
+                          <button
+                            key={addon.id}
+                            type="button"
+                            onClick={() => toggleAddon(addon.id)}
+                            className={cn(
+                              "flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 text-left text-sm font-bold transition active:translate-y-px w-[260px] shrink-0 snap-start sm:w-auto",
+                              selected
+                                ? "border-primary bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(21,94,99,0.14)]"
+                                : "border-primary/20 bg-surface text-text-primary hover:border-primary/45"
+                            )}
+                            aria-pressed={selected}
+                          >
+                            <span>{addon.label}</span>
+                            <span className={cn("shrink-0", selected ? "text-primary-foreground/80" : "text-primary")}>+${addon.price}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                    {SERVICES.map((service) => (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => selectService(service.id)}
                         className={cn(
-                          "min-h-20 rounded-2xl border p-4 text-left transition active:translate-y-px",
-                          state.frequencyId === frequency.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted hover:border-primary/40"
+                          "rounded-2xl border p-4 text-left transition active:translate-y-px sm:min-h-44 sm:p-5",
+                          state.serviceId === service.id
+                            ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(21,94,99,0.10)]"
+                            : "border-border bg-surface-muted hover:border-primary/40"
                         )}
                       >
-                        <span className="block font-bold">{frequency.label}</span>
-                        <span className={cn("mt-1 block text-sm", state.frequencyId === frequency.id ? "text-primary-foreground/85" : "text-text-secondary")}>
-                          {frequency.helper}
+                        <span className="flex items-start justify-between gap-3 sm:gap-4">
+                          <span className="min-w-0">
+                            <span className="block text-base font-bold text-text-primary sm:text-lg">{service.name}</span>
+                            <span className="mt-1 block text-sm leading-5 text-text-secondary sm:leading-6">{service.description}</span>
+                          </span>
+                          <span className="shrink-0 rounded-full bg-surface px-2.5 py-1 text-xs font-bold text-primary sm:px-3 sm:text-sm">${service.rate}/hr</span>
+                        </span>
+                        <span className="mt-2 block text-xs font-semibold text-primary sm:mt-3 sm:text-sm">
+                          {Math.ceil(service.minimumHours)}-{service.maxHours} visit hours
+                        </span>
+                        <span className="mt-4 hidden gap-2 text-sm text-text-secondary sm:grid">
+                          {service.included.map((item) => (
+                            <span key={item} className="flex gap-2">
+                              <Check className="mt-0.5 size-4 text-primary" aria-hidden="true" />
+                              {item}
+                            </span>
+                          ))}
                         </span>
                       </button>
                     ))}
                   </div>
 
-                  {state.frequencyId === "once" && (
-                    <div className="mt-6 border-t border-border/55 pt-6">
-                      <h3 className="mb-3 text-base font-bold text-text-primary">Visits quantity</h3>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            update("isMultiDate", false);
-                          }}
-                          className={cn(
-                            "min-h-16 rounded-2xl border p-4 text-left transition active:translate-y-px",
-                            !state.isMultiDate ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted hover:border-primary/40 text-text-primary"
+                  <div className="grid gap-3 rounded-[1.5rem] border border-border/80 bg-surface-muted/60 p-2 shadow-[0_8px_30px_rgba(21,94,99,0.03)] md:grid-cols-[1.2fr_0.8fr] md:rounded-[2rem] md:p-2.5">
+                    <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
+                      <div>
+                        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-lg font-bold tracking-tight text-text-primary">Visit hours</h3>
+                              {state.hours === recommendedHours && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary animate-fade-in">
+                                  Recommended
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm leading-relaxed text-text-secondary">
+                              {currentService.name} allows {hourOptions[0]}-{hourOptions[hourOptions.length - 1]} hours. Recommended: {recommendedHours} hours.
+                            </p>
+                          </div>
+                          {state.hours !== recommendedHours && (
+                            <button
+                              type="button"
+                              onClick={() => update("hours", recommendedHours)}
+                              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-primary/25 bg-surface px-4 py-1 text-xs font-bold text-primary transition-all duration-300 hover:border-primary hover:bg-primary/5 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 self-start sm:self-auto"
+                            >
+                              <Sparkles className="size-3" />
+                              Use recommended
+                            </button>
                           )}
-                        >
-                          <span className="block font-bold">Single Visit</span>
-                          <span className={cn("mt-1 block text-xs", !state.isMultiDate ? "text-primary-foreground/85" : "text-text-secondary")}>
-                            Just one cleaning visit
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            update("isMultiDate", true);
-                            if (!state.selectedDates || state.selectedDates.length === 0) {
-                              update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }]);
-                            }
-                          }}
-                          className={cn(
-                            "min-h-16 rounded-2xl border p-4 text-left transition active:translate-y-px",
-                            state.isMultiDate ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted hover:border-primary/40 text-text-primary"
-                          )}
-                        >
-                          <span className="block font-bold">Multiple Visits</span>
-                          <span className={cn("mt-1 block text-xs", state.isMultiDate ? "text-primary-foreground/85" : "text-text-secondary")}>
-                            Book multiple visits in one checkout
-                          </span>
-                        </button>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                          {hourOptions.map((hours) => {
+                            const isSelected = state.hours === hours;
+                            const isRec = hours === recommendedHours;
+                            return (
+                              <button
+                                key={hours}
+                                type="button"
+                                onClick={() => update("hours", hours)}
+                                className={cn(
+                                  "min-h-12 rounded-xl border text-sm font-bold transition-all duration-300 active:scale-95 cursor-pointer relative overflow-hidden",
+                                  isSelected
+                                    ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/10"
+                                    : "border-border bg-surface text-text-primary hover:border-primary/45 hover:bg-surface-muted/30"
+                                )}
+                              >
+                                <span>{hours} hr</span>
+                                {isRec && !isSelected && (
+                                  <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary animate-pulse" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
-                  )}
+
+                    <div className="flex flex-col justify-between gap-5 rounded-[1rem] border border-border/60 bg-surface p-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.85)] sm:p-6 md:rounded-[calc(2rem-0.625rem)]">
+                      <div className="flex h-full flex-col justify-between gap-5">
+                        <div>
+                          <h3 className="mb-1 text-lg font-bold tracking-tight text-text-primary">Cleaner count</h3>
+                          <p className="text-sm leading-relaxed text-text-secondary">
+                            Adjust the team size for this visit.
+                          </p>
+                        </div>
+
+                        <div className="grid gap-3">
+                          <Counter
+                            label="Cleaners"
+                            value={state.cleaners}
+                            min={cleanerOptions[0]}
+                            max={cleanerOptions[cleanerOptions.length - 1]}
+                            onChange={(cleaners) => update("cleaners", cleaners)}
+                          />
+                          <div className="rounded-xl bg-surface-muted px-4 py-3 text-sm text-text-secondary">
+                            <span className="font-semibold text-text-primary">
+                              {state.cleaners} {state.cleaners === 1 ? "cleaner" : "cleaners"}
+                            </span>{" "}
+                            gives {(state.hours * state.cleaners).toFixed(1).replace(".0", "")} labor hr for this visit.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <fieldset ref={addonsRef} className="scroll-mt-28">
+                    <legend className="mb-3 text-base font-bold text-text-primary">Extra tasks</legend>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {ADDONS.map((addon) => {
+                        const selected = state.addons.includes(addon.id);
+                        return (
+                          <button
+                            key={addon.id}
+                            type="button"
+                            onClick={() => toggleAddon(addon.id)}
+                            className={cn(
+                              "flex min-h-20 items-start justify-between gap-4 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                              selected ? "border-primary bg-primary/5" : "border-border bg-surface-muted hover:border-primary/40"
+                            )}
+                            aria-pressed={selected}
+                          >
+                            <span>
+                              <span className="block font-bold text-text-primary">{addon.label}</span>
+                              <span className="mt-1 block text-sm text-text-secondary">{addon.helper}</span>
+                            </span>
+                            <span className="shrink-0 rounded-full bg-surface px-3 py-1 text-sm font-bold text-primary">+${addon.price}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                </div>
+
+                {/* Mobile View */}
+                <div className="lg:hidden space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-text-primary">What should this visit cover?</h2>
+                    <p className="mt-2 text-sm leading-6 text-text-secondary">
+                      Configure your service details below. We will guide you step by step.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Sub-step 1: Cleaning Type */}
+                    <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => setActiveSubStep1("service")}
+                        className="w-full flex items-center justify-between p-4 bg-surface-muted/50 border-b border-border/50 text-left cursor-pointer"
+                      >
+                        <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                          <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">1</span>
+                          Cleaning Type
+                        </span>
+                        {state.serviceId && activeSubStep1 !== "service" && (
+                          <span className="text-xs font-bold text-primary flex items-center gap-1">
+                            {SERVICES.find(s => s.id === state.serviceId)?.name || ""} (Edit)
+                          </span>
+                        )}
+                      </button>
+                      {activeSubStep1 === "service" && (
+                        <div className="p-4 space-y-2.5 animate-fade-in">
+                          {SERVICES.map((service) => (
+                            <button
+                              key={service.id}
+                              type="button"
+                              onClick={() => {
+                                selectService(service.id);
+                                setActiveSubStep1("labor");
+                              }}
+                              className={cn(
+                                "w-full rounded-xl border p-3.5 text-left transition active:translate-y-px flex items-center justify-between gap-3 cursor-pointer",
+                                state.serviceId === service.id ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-surface hover:border-primary/40"
+                              )}
+                            >
+                              <span className="min-w-0">
+                                <span className="block text-sm font-bold text-text-primary">{service.name}</span>
+                                <span className="mt-0.5 block text-xs text-text-secondary leading-normal">{service.description}</span>
+                              </span>
+                              <span className="shrink-0 rounded-full bg-surface px-2.5 py-0.5 text-xs font-bold text-primary border border-border">${service.rate}/hr</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sub-step 2: Duration & Team */}
+                    <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (state.serviceId) setActiveSubStep1("labor");
+                        }}
+                        disabled={!state.serviceId}
+                        className={cn(
+                          "w-full flex items-center justify-between p-4 border-b border-border/50 text-left cursor-pointer",
+                          !state.serviceId ? "opacity-50 cursor-not-allowed" : "bg-surface-muted/50"
+                        )}
+                      >
+                        <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                          <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">2</span>
+                          Duration & Team Size
+                        </span>
+                        {state.serviceId && state.hours > 0 && activeSubStep1 !== "labor" && (
+                          <span className="text-xs font-bold text-primary flex items-center gap-1">
+                            {state.hours} hr • {state.cleaners} {state.cleaners === 1 ? "cleaner" : "cleaners"} (Edit)
+                          </span>
+                        )}
+                      </button>
+                      {activeSubStep1 === "labor" && state.serviceId && (
+                        <div className="p-4 space-y-5 animate-fade-in">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-bold text-text-primary">Visit Hours</label>
+                              {state.hours === recommendedHours && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                  Recommended
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                              {hourOptions.map((h) => (
+                                <button
+                                  key={h}
+                                  type="button"
+                                  onClick={() => update("hours", h)}
+                                  className={cn(
+                                    "min-h-11 rounded-xl border text-xs font-bold transition cursor-pointer relative overflow-hidden",
+                                    state.hours === h
+                                      ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                      : "border-border bg-surface text-text-primary hover:border-primary/45"
+                                  )}
+                                >
+                                  {h} hr
+                                  {h === recommendedHours && state.hours !== h && (
+                                    <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary animate-pulse" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <label className="block text-sm font-bold text-text-primary">Team Size</label>
+                            <Counter
+                              label="Cleaners"
+                              value={state.cleaners}
+                              min={cleanerOptions[0]}
+                              max={cleanerOptions[cleanerOptions.length - 1]}
+                              onChange={(cleaners) => update("cleaners", cleaners)}
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveSubStep1("extras")}
+                            className="w-full min-h-12 rounded-xl bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px cursor-pointer"
+                          >
+                            Next: Addons & Extras
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sub-step 3: Addons & Extras */}
+                    <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (state.serviceId && state.hours > 0) setActiveSubStep1("extras");
+                        }}
+                        disabled={!state.serviceId || state.hours === 0}
+                        className={cn(
+                          "w-full flex items-center justify-between p-4 border-b border-border/50 text-left cursor-pointer",
+                          (!state.serviceId || state.hours === 0) ? "opacity-50 cursor-not-allowed" : "bg-surface-muted/50"
+                        )}
+                      >
+                        <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                          <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">3</span>
+                          Extra Tasks
+                        </span>
+                        {state.serviceId && state.hours > 0 && activeSubStep1 !== "extras" && (
+                          <span className="text-xs font-bold text-primary flex items-center gap-1">
+                            {state.addons.length === 0 ? "No extras" : `${state.addons.length} selected`} (Edit)
+                          </span>
+                        )}
+                      </button>
+                      {activeSubStep1 === "extras" && state.serviceId && state.hours > 0 && (
+                        <div className="p-4 space-y-4 animate-fade-in">
+                          <div className="grid gap-2">
+                            {ADDONS.map((addon) => {
+                              const selected = state.addons.includes(addon.id);
+                              return (
+                                <button
+                                  key={addon.id}
+                                  type="button"
+                                  onClick={() => toggleAddon(addon.id)}
+                                  className={cn(
+                                    "flex min-h-14 items-center justify-between gap-3 rounded-xl border p-3 text-left transition active:translate-y-px cursor-pointer",
+                                    selected ? "border-primary bg-primary/5" : "border-border bg-surface hover:border-primary/40"
+                                  )}
+                                >
+                                  <span className="min-w-0">
+                                    <span className="block text-sm font-bold text-text-primary">{addon.label}</span>
+                                    <span className="mt-0.5 block text-xs text-text-secondary leading-normal">{addon.helper}</span>
+                                  </span>
+                                  <span className="shrink-0 rounded-full bg-surface px-2.5 py-0.5 text-xs font-bold text-primary border border-border">+${addon.price}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Popular items fast-toggle */}
+                  <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4" aria-labelledby="popular-addons-mobile-title">
+                    <div className="mb-3">
+                      <h3 id="popular-addons-mobile-title" className="text-base font-bold text-text-primary">Quick add-ons</h3>
+                      <p className="mt-1 text-xs text-text-secondary">Tap to toggle popular tasks quickly.</p>
+                    </div>
+                    <div className="-mx-4 flex flex-row flex-nowrap gap-2 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-none [&::-webkit-scrollbar]:hidden">
+                      {popularAddons.map((addon) => {
+                        const selected = state.addons.includes(addon.id);
+                        return (
+                          <button
+                            key={addon.id}
+                            type="button"
+                            onClick={() => toggleAddon(addon.id)}
+                            className={cn(
+                              "flex min-h-12 items-center justify-between gap-3 rounded-xl border px-3 text-left text-xs font-bold transition active:translate-y-px w-[190px] shrink-0 snap-start cursor-pointer",
+                              selected
+                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                : "border-primary/20 bg-surface text-text-primary hover:border-primary/45"
+                            )}
+                            aria-pressed={selected}
+                          >
+                            <span>{addon.label}</span>
+                            <span className={cn("shrink-0", selected ? "text-primary-foreground/80" : "text-primary")}>+${addon.price}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </div>
+              </div>
+            ) : null}
+
+            {step === 2 ? (
+              <div className="space-y-8">
+                {/* Desktop View */}
+                <div className="hidden lg:block space-y-8">
+                  <div>
+                    <h2 className="text-2xl font-bold text-text-primary">Choose frequency and schedule.</h2>
+                    <p className="mt-2 text-sm leading-6 text-text-secondary">
+                      Select how often you would like us to clean and set your arrival dates. Access and parking details come next on the same screen.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="mb-3 text-base font-bold text-text-primary">How often should we clean?</h3>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {FREQUENCIES.map((frequency) => (
+                        <button
+                          key={frequency.id}
+                          type="button"
+                          onClick={() => update("frequencyId", frequency.id)}
+                          className={cn(
+                            "min-h-20 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                            state.frequencyId === frequency.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted hover:border-primary/40"
+                          )}
+                        >
+                          <span className="block font-bold">{frequency.label}</span>
+                          <span className={cn("mt-1 block text-sm", state.frequencyId === frequency.id ? "text-primary-foreground/85" : "text-text-secondary")}>
+                            {frequency.helper}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {state.frequencyId === "once" && (
+                      <div className="mt-6 border-t border-border/55 pt-6">
+                        <h3 className="mb-3 text-base font-bold text-text-primary">Visits quantity</h3>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              update("isMultiDate", false);
+                            }}
+                            className={cn(
+                              "min-h-16 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                              !state.isMultiDate ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted hover:border-primary/40 text-text-primary"
+                            )}
+                          >
+                            <span className="block font-bold">Single Visit</span>
+                            <span className={cn("mt-1 block text-xs", !state.isMultiDate ? "text-primary-foreground/85" : "text-text-secondary")}>
+                              Just one cleaning visit
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              update("isMultiDate", true);
+                              if (!state.selectedDates || state.selectedDates.length === 0) {
+                                update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }]);
+                              }
+                            }}
+                            className={cn(
+                              "min-h-16 rounded-2xl border p-4 text-left transition active:translate-y-px",
+                              state.isMultiDate ? "border-primary bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.15)]" : "border-border bg-surface-muted hover:border-primary/40 text-text-primary"
+                            )}
+                          >
+                            <span className="block font-bold">Multiple Visits</span>
+                            <span className={cn("mt-1 block text-xs", state.isMultiDate ? "text-primary-foreground/85" : "text-text-secondary")}>
+                              Book multiple visits in one checkout
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Standard date and time selection — hidden for custom plans */}
                   {state.frequencyId !== "custom" && (
@@ -1578,14 +1810,12 @@ function BookingPageContent() {
                                   </div>
 
                                   <div className="mb-4 bg-surface-muted p-3 rounded-xl border border-border/50">
-                                    <span className="block text-xs font-bold text-text-secondary uppercase mb-2">Service Type (Product)</span>
+                                    <span className="block text-xs font-bold text-text-secondary uppercase mb-2">Service Type</span>
                                     <div className="flex flex-wrap gap-2">
                                       {SERVICES.map((s) => {
                                         const isSelected = (visit.serviceId || state.serviceId) === s.id;
                                         return (
                                           <button
-                                            key={s.id}
-                                            type="button"
                                             onClick={() => {
                                               const updated = (state.selectedDates || []).map((sd) =>
                                                 sd.date === visit.date ? { ...sd, serviceId: s.id } : sd
@@ -1791,7 +2021,6 @@ function BookingPageContent() {
                       )}
                     </div>
                   )}
-                </div>
 
 
                 {/* Cleaner Preference Section (Premium Cards) */}
@@ -1961,8 +2190,303 @@ function BookingPageContent() {
                     <textarea id="notes" value={state.notes} onChange={(event) => update("notes", event.target.value)} className="booking-input min-h-24 resize-y" placeholder="Please focus on the kitchen grout and guest bath." />
                   </Field>
                 </div>
+              </div> {/* Closes hidden lg:block */}
+
+              {/* Mobile View */}
+              <div className="lg:hidden space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-text-primary">Choose frequency and schedule</h2>
+                  <p className="mt-2 text-sm leading-6 text-text-secondary">
+                    Configure your visit timings, cleaner preference, and access details.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Sub-step 1: Timing & Schedule */}
+                  <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setActiveSubStep2("schedule")}
+                      className="w-full flex items-center justify-between p-4 bg-surface-muted/50 border-b border-border/50 text-left cursor-pointer"
+                    >
+                      <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">1</span>
+                        Timing & Schedule
+                      </span>
+                      {state.frequencyId && activeSubStep2 !== "schedule" && (
+                        <span className="text-xs font-bold text-primary flex items-center gap-1">
+                          {state.frequencyId === "custom" ? "Custom" : FREQUENCIES.find(f => f.id === state.frequencyId)?.label || ""} (Edit)
+                        </span>
+                      )}
+                    </button>
+                    {activeSubStep2 === "schedule" && (
+                      <div className="p-4 space-y-4 animate-fade-in">
+                        {/* Frequency Choice Dropdown */}
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-text-primary">Frequency</label>
+                          <select
+                            value={state.frequencyId}
+                            onChange={(e) => update("frequencyId", e.target.value as FrequencyId)}
+                            className="booking-input text-base"
+                          >
+                            <option value="">Select frequency</option>
+                            {FREQUENCIES.map((freq) => (
+                              <option key={freq.id} value={freq.id}>
+                                {freq.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Date & Time Selection */}
+                        {state.frequencyId && state.frequencyId !== "custom" && (
+                          <div className="space-y-4 border-t border-border/50 pt-4">
+                            {state.frequencyId === "once" && (
+                              <div className="space-y-1.5">
+                                <label className="block text-xs font-bold text-text-primary">Visits Type</label>
+                                <select
+                                  value={state.isMultiDate ? "multi" : "single"}
+                                  onChange={(e) => {
+                                    const isMulti = e.target.value === "multi";
+                                    update("isMultiDate", isMulti);
+                                    if (isMulti && (!state.selectedDates || state.selectedDates.length === 0)) {
+                                      update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }]);
+                                    }
+                                  }}
+                                  className="booking-input text-base"
+                                >
+                                  <option value="single">Single Visit</option>
+                                  <option value="multi">Multiple Visits</option>
+                                </select>
+                              </div>
+                            )}
+
+                            {state.isMultiDate && state.frequencyId === "once" ? (
+                              <div className="space-y-1.5">
+                                <label className="block text-xs font-bold text-text-primary">Select Dates (Scroll to choose)</label>
+                                <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto border border-border p-2 rounded-xl bg-surface-muted">
+                                  {dateOptions.map((option) => {
+                                    const currentSelected = state.selectedDates || [];
+                                    const isSelected = currentSelected.some((sd) => sd.date === option.iso);
+                                    const selectIndex = currentSelected.findIndex((sd) => sd.date === option.iso);
+                                    return (
+                                      <button
+                                        key={option.iso}
+                                        type="button"
+                                        onClick={() => {
+                                          if (isSelected) {
+                                            if (currentSelected.length > 1) {
+                                              update("selectedDates", currentSelected.filter((sd) => sd.date !== option.iso));
+                                            }
+                                          } else {
+                                            update("selectedDates", [...currentSelected, { date: option.iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }].sort((a, b) => a.date.localeCompare(b.date)));
+                                          }
+                                        }}
+                                        className={cn(
+                                          "relative p-3 rounded-xl border text-left flex flex-col justify-center cursor-pointer min-h-12",
+                                          isSelected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface hover:border-primary/40"
+                                        )}
+                                      >
+                                        <span className="text-[10px] uppercase font-bold opacity-80">{option.weekday}</span>
+                                        <span className="text-sm font-bold mt-0.5">{option.monthDay}</span>
+                                        {isSelected && (
+                                          <span className="absolute right-2.5 bottom-2.5 flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-primary">
+                                            {selectIndex + 1}
+                                          </span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                  <label className="block text-xs font-bold text-text-primary">
+                                    {state.frequencyId === "once" ? "Cleaning Date" : "Subscription Start Date"}
+                                  </label>
+                                  <input
+                                    type="date"
+                                    value={state.frequencyId === "once" ? state.date : state.startDate}
+                                    min={new Date().toISOString().split("T")[0]}
+                                    onChange={(e) => update(state.frequencyId === "once" ? "date" : "startDate", e.target.value)}
+                                    className="booking-input text-base h-11"
+                                  />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                  <label className="block text-xs font-bold text-text-primary">Arrival window</label>
+                                  <select
+                                    value={state.arrivalWindow}
+                                    onChange={(e) => update("arrivalWindow", e.target.value)}
+                                    className="booking-input text-base h-11"
+                                  >
+                                    <option value="">Select arrival window</option>
+                                    {ARRIVAL_WINDOWS.map((window) => (
+                                      <option key={window.id} value={window.id}>
+                                        {window.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {state.frequencyId === "custom" && (
+                          <div className="rounded-xl border border-border bg-surface p-3">
+                            <WeeklyScheduleBuilder
+                              value={state.customSchedules}
+                              onChange={(schedules) => update("customSchedules", schedules)}
+                            />
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveSubStep2("cleaner")}
+                          className="w-full min-h-12 rounded-xl bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px cursor-pointer"
+                        >
+                          Next: Cleaner Preference
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-step 2: Cleaner Preference */}
+                  <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (state.frequencyId) setActiveSubStep2("cleaner");
+                      }}
+                      disabled={!state.frequencyId}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 border-b border-border/50 text-left cursor-pointer",
+                        !state.frequencyId ? "opacity-50 cursor-not-allowed" : "bg-surface-muted/50"
+                      )}
+                    >
+                      <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">2</span>
+                        Cleaner Preference
+                      </span>
+                      {state.frequencyId && state.cleanerPreference && activeSubStep2 !== "cleaner" && (
+                        <span className="text-xs font-bold text-primary flex items-center gap-1 capitalize">
+                          {state.cleanerPreference.replace(/-/g, " ")} (Edit)
+                        </span>
+                      )}
+                    </button>
+                    {activeSubStep2 === "cleaner" && state.frequencyId && (
+                      <div className="p-4 space-y-3 animate-fade-in">
+                        {[
+                          { id: "best-match", label: "Best match available", helper: "Assigns our highest rated professional.", icon: <Sparkles className="size-4" /> },
+                          { id: "same-cleaner", label: "Request previous cleaner", helper: "Request someone who has cleaned your home before.", icon: <RefreshCw className="size-4" /> },
+                          { id: "female-cleaner", label: "Female cleaner preference", helper: "Request a female professional.", icon: <UserRound className="size-4" /> },
+                        ].map((pref) => (
+                          <button
+                            key={pref.id}
+                            type="button"
+                            onClick={() => {
+                              update("cleanerPreference", pref.id);
+                              setActiveSubStep2("access");
+                            }}
+                            className={cn(
+                              "relative flex w-full items-start gap-3 rounded-xl border p-3.5 text-left transition active:translate-y-px cursor-pointer",
+                              state.cleanerPreference === pref.id ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-surface hover:border-primary/40"
+                            )}
+                          >
+                            <div className={cn("flex size-8 shrink-0 items-center justify-center rounded-full font-bold text-xs", state.cleanerPreference === pref.id ? "bg-primary/15 text-primary" : "bg-surface-muted text-text-secondary")}>
+                              {pref.icon}
+                            </div>
+                            <div className="flex-1 min-w-0 pr-4">
+                              <span className="block font-bold text-text-primary text-xs">{pref.label}</span>
+                              <span className="mt-0.5 block text-[10px] text-text-secondary leading-normal">{pref.helper}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Sub-step 3: Access & Details */}
+                  <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (state.frequencyId && state.cleanerPreference) setActiveSubStep2("access");
+                      }}
+                      disabled={!state.frequencyId || !state.cleanerPreference}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 border-b border-border/50 text-left cursor-pointer",
+                        (!state.frequencyId || !state.cleanerPreference) ? "opacity-50 cursor-not-allowed" : "bg-surface-muted/50"
+                      )}
+                    >
+                      <span className="text-sm font-bold text-text-primary flex items-center gap-2">
+                        <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">3</span>
+                        Access & Details
+                      </span>
+                      {state.frequencyId && state.cleanerPreference && state.access && activeSubStep2 !== "access" && (
+                        <span className="text-xs font-bold text-primary flex items-center gap-1">
+                          {state.access} (Edit)
+                        </span>
+                      )}
+                    </button>
+                    {activeSubStep2 === "access" && state.frequencyId && state.cleanerPreference && (
+                      <div className="p-4 space-y-4 animate-fade-in">
+                        <div className="space-y-2">
+                          <label className="block text-xs font-bold text-text-primary">Entry instructions</label>
+                          <div className="grid gap-2">
+                            {["I will be home", "Leave a key", "Call/Text upon arrival"].map((accessOption) => (
+                              <button
+                                key={accessOption}
+                                type="button"
+                                onClick={() => update("access", accessOption)}
+                                className={cn(
+                                  "flex min-h-10 items-center gap-2.5 rounded-xl border px-3 text-left text-xs font-bold transition active:translate-y-px cursor-pointer",
+                                  state.access === accessOption ? "border-primary bg-primary/5 text-primary" : "border-border bg-surface hover:border-primary/40 text-text-primary"
+                                )}
+                              >
+                                {accessOption}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <Field label="Pets at home" htmlFor="sheet-pets">
+                            <select id="sheet-pets" value={state.pets} onChange={(event) => update("pets", event.target.value)} className="booking-input text-xs h-10 min-h-10 py-1.5 px-3">
+                              <option value="">Select option</option>
+                              <option>No pets</option>
+                              <option>Cats only</option>
+                              <option>Dogs only</option>
+                              <option>Other / mix</option>
+                            </select>
+                          </Field>
+
+                          <Field label="Parking details" htmlFor="sheet-parking" helper="Let us know where to park.">
+                            <input id="sheet-parking" value={state.parking} onChange={(event) => update("parking", event.target.value)} className="booking-input text-xs h-10 min-h-10 py-1.5 px-3" placeholder="e.g. Guest space #2, driveway" />
+                          </Field>
+
+                          <Field label="Cleaning supplies" htmlFor="sheet-supplies">
+                            <select id="sheet-supplies" value={state.supplies} onChange={(event) => update("supplies", event.target.value)} className="booking-input text-xs h-10 min-h-10 py-1.5 px-3">
+                              <option value="">Select option</option>
+                              <option>Bring professional supplies</option>
+                              <option>I will provide supplies</option>
+                            </select>
+                          </Field>
+
+                          <Field label="Priority notes" htmlFor="sheet-notes" helper="Mention fragile surfaces or rooms to skip.">
+                            <textarea id="sheet-notes" value={state.notes} onChange={(event) => update("notes", event.target.value)} className="booking-input text-xs min-h-16 py-2 px-3 resize-y" placeholder="Please focus on the kitchen grout and guest bath." />
+                          </Field>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            ) : null}
+            </div>
+          ) : null}
 
             {step === 3 ? (
               <div className="space-y-8 animate-fade-in">
@@ -2357,6 +2881,578 @@ function BookingPageContent() {
           </div>
         </div>
       </div>
+      {/* Mobile Bottom Sheets */}
+      <Sheet open={activeMobileSheet === "service"} onOpenChange={(open) => setActiveMobileSheet(open ? "service" : null)}>
+        <SheetContent className="flex flex-col max-h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Service & Labor Details</SheetTitle>
+            <SheetDescription>Select the cleaning type, visit duration, and team size.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-6">
+            {/* Service Options */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-text-primary">Cleaning Type</h4>
+              <div className="grid gap-2">
+                {SERVICES.map((service) => (
+                  <button
+                    key={service.id}
+                    type="button"
+                    onClick={() => selectService(service.id)}
+                    className={cn(
+                      "rounded-xl border p-3.5 text-left transition active:translate-y-px flex items-center justify-between gap-3",
+                      state.serviceId === service.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border bg-surface-muted hover:border-primary/40"
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-text-primary">{service.name}</span>
+                      <span className="mt-0.5 block text-xs text-text-secondary leading-normal">{service.description}</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-primary border border-border">${service.rate}/hr</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Visit Hours */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-text-primary">Visit Hours</h4>
+                {state.hours === recommendedHours && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary animate-fade-in">
+                    Recommended
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-text-secondary">
+                {currentService.name} allows {hourOptions[0]}-{hourOptions[hourOptions.length - 1]} hours.
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {hourOptions.map((hours) => {
+                  const isSelected = state.hours === hours;
+                  const isRec = hours === recommendedHours;
+                  return (
+                    <button
+                      key={hours}
+                      type="button"
+                      onClick={() => update("hours", hours)}
+                      className={cn(
+                        "min-h-11 rounded-xl border text-xs font-bold transition-all duration-300 relative overflow-hidden",
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : "border-border bg-surface text-text-primary hover:border-primary/45"
+                      )}
+                    >
+                      <span>{hours} hr</span>
+                      {isRec && !isSelected && (
+                        <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary animate-pulse" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Cleaner Count */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-text-primary">Team Size</h4>
+              <Counter
+                label="Cleaners"
+                value={state.cleaners}
+                min={cleanerOptions[0]}
+                max={cleanerOptions[cleanerOptions.length - 1]}
+                onChange={(cleaners) => update("cleaners", cleaners)}
+              />
+              <div className="rounded-xl bg-surface-muted px-3 py-2.5 text-xs text-text-secondary text-center">
+                <span className="font-semibold text-text-primary">
+                  {state.cleaners} {state.cleaners === 1 ? "cleaner" : "cleaners"}
+                </span>{" "}
+                gives {(state.hours * state.cleaners).toFixed(1).replace(".0", "")} labor hours total.
+              </div>
+            </div>
+          </div>
+          <SheetFooter className="mt-auto border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveMobileSheet(null)}
+              className="w-full inline-flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px"
+            >
+              Done
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={activeMobileSheet === "extras"} onOpenChange={(open) => setActiveMobileSheet(open ? "extras" : null)}>
+        <SheetContent className="flex flex-col max-h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Extra Tasks</SheetTitle>
+            <SheetDescription>Select any extra tasks you want us to perform.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="grid gap-2">
+              {ADDONS.map((addon) => {
+                const selected = state.addons.includes(addon.id);
+                return (
+                  <button
+                    key={addon.id}
+                    type="button"
+                    onClick={() => toggleAddon(addon.id)}
+                    className={cn(
+                      "flex min-h-16 items-center justify-between gap-4 rounded-xl border p-3.5 text-left transition active:translate-y-px",
+                      selected ? "border-primary bg-primary/5" : "border-border bg-surface-muted hover:border-primary/40"
+                    )}
+                    aria-pressed={selected}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold text-text-primary">{addon.label}</span>
+                      <span className="mt-0.5 block text-xs text-text-secondary leading-normal">{addon.helper}</span>
+                    </span>
+                    <span className="shrink-0 rounded-full bg-surface px-2.5 py-0.5 text-xs font-bold text-primary border border-border">+${addon.price}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <SheetFooter className="mt-auto border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveMobileSheet(null)}
+              className="w-full inline-flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px"
+            >
+              Done
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={activeMobileSheet === "schedule"} onOpenChange={(open) => setActiveMobileSheet(open ? "schedule" : null)}>
+        <SheetContent className="flex flex-col max-h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Frequency & Schedule</SheetTitle>
+            <SheetDescription>Configure how often you would like us to clean and set arrival dates.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-6">
+            <div>
+              <h4 className="text-sm font-bold text-text-primary mb-3">How often should we clean?</h4>
+              <div className="grid gap-2">
+                {FREQUENCIES.map((frequency) => (
+                  <button
+                    key={frequency.id}
+                    type="button"
+                    onClick={() => update("frequencyId", frequency.id)}
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition active:translate-y-px flex items-center justify-between gap-3",
+                      state.frequencyId === frequency.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted hover:border-primary/40"
+                    )}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold">{frequency.label}</span>
+                      <span className={cn("block text-xs mt-0.5", state.frequencyId === frequency.id ? "text-primary-foreground/80" : "text-text-secondary")}>
+                        {frequency.helper}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {state.frequencyId === "once" && (
+              <div className="border-t border-border pt-4">
+                <h4 className="text-sm font-bold text-text-primary mb-3">Visits quantity</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => update("isMultiDate", false)}
+                    className={cn(
+                      "min-h-12 rounded-xl border p-3 text-center transition active:translate-y-px text-xs font-bold",
+                      !state.isMultiDate ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
+                    )}
+                  >
+                    Single Visit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      update("isMultiDate", true);
+                      if (!state.selectedDates || state.selectedDates.length === 0) {
+                        update("selectedDates", [{ date: state.date || dateOptions[0].iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }]);
+                      }
+                    }}
+                    className={cn(
+                      "min-h-12 rounded-xl border p-3 text-center transition active:translate-y-px text-xs font-bold",
+                      state.isMultiDate ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-muted text-text-primary hover:border-primary/40"
+                    )}
+                  >
+                    Multiple Visits ({state.selectedDates?.length || 0})
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {state.frequencyId === "custom" ? (
+              <div className="rounded-xl border border-border bg-surface p-4">
+                <WeeklyScheduleBuilder
+                  value={state.customSchedules}
+                  onChange={(schedules) => update("customSchedules", schedules)}
+                />
+              </div>
+            ) : state.isMultiDate && state.frequencyId === "once" ? (
+              <div className="space-y-4 border-t border-border pt-4">
+                <div>
+                  <h4 className="text-sm font-bold text-text-primary">Configure cleaning dates</h4>
+                  <p className="text-xs text-text-secondary mt-0.5">Select dates and arrival windows for each visit.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-border p-2 rounded-xl bg-surface-muted">
+                  {dateOptions.map((option) => {
+                    const currentSelected = state.selectedDates || [];
+                    const isSelected = currentSelected.some((sd) => sd.date === option.iso);
+                    const selectIndex = currentSelected.findIndex((sd) => sd.date === option.iso);
+                    return (
+                      <button
+                        key={option.iso}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            if (currentSelected.length > 1) {
+                              update("selectedDates", currentSelected.filter((sd) => sd.date !== option.iso));
+                            }
+                          } else {
+                            update("selectedDates", [...currentSelected, { date: option.iso, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }].sort((a, b) => a.date.localeCompare(b.date)));
+                          }
+                        }}
+                        className={cn(
+                          "relative p-2.5 rounded-xl border text-left flex flex-col justify-center",
+                          isSelected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface hover:border-primary/40"
+                        )}
+                      >
+                        <span className="text-[10px] uppercase font-bold opacity-80">{option.weekday}</span>
+                        <span className="text-xs font-bold mt-0.5">{option.monthDay}</span>
+                        {isSelected && (
+                          <span className="absolute right-2 bottom-2 flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-black text-primary">
+                            {selectIndex + 1}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2 bg-surface-muted rounded-xl p-3 border border-border">
+                  <span className="text-xs font-bold text-text-primary shrink-0">Custom date:</span>
+                  <input
+                    type="date"
+                    min={tomorrowISO()}
+                    className="booking-input text-xs h-9 min-h-9 p-1"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val) {
+                        const currentSelected = state.selectedDates || [];
+                        if (!currentSelected.some((sd) => sd.date === val)) {
+                          update("selectedDates", [...currentSelected, { date: val, arrivalWindow: state.arrivalWindow || "10:00 AM", serviceId: state.serviceId, hours: state.hours }].sort((a, b) => a.date.localeCompare(b.date)));
+                        }
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {(state.selectedDates || []).map((visit, index) => (
+                    <div key={visit.date} className="rounded-xl border border-border bg-surface p-3 space-y-2">
+                      <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                        <span className="text-xs font-bold text-primary">Visit #{index + 1} - {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date(`${visit.date}T12:00:00`))}</span>
+                        {(state.selectedDates || []).length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => update("selectedDates", (state.selectedDates || []).filter((sd) => sd.date !== visit.date))}
+                            className="text-[10px] font-bold text-error hover:underline"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-text-primary mb-1">Arrival Window</label>
+                          <select
+                            value={visit.arrivalWindow}
+                            onChange={(e) => {
+                              const updated = (state.selectedDates || []).map((sd) =>
+                                sd.date === visit.date ? { ...sd, arrivalWindow: e.target.value } : sd
+                              );
+                              update("selectedDates", updated);
+                            }}
+                            className="booking-input text-xs h-9 min-h-9 py-1 px-2"
+                          >
+                            {ARRIVAL_WINDOWS.map((w) => (
+                              <option key={w.id} value={w.id}>{w.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-text-primary mb-1">Hours</label>
+                          <select
+                            value={visit.hours}
+                            onChange={(e) => {
+                              const updated = (state.selectedDates || []).map((sd) =>
+                                sd.date === visit.date ? { ...sd, hours: parseInt(e.target.value, 10) } : sd
+                              );
+                              update("selectedDates", updated);
+                            }}
+                            className="booking-input text-xs h-9 min-h-9 py-1 px-2"
+                          >
+                            {getHourOptions(
+                              SERVICES.find((s) => s.id === visit.serviceId)?.minimumHours || 2,
+                              SERVICES.find((s) => s.id === visit.serviceId)?.maxHours || 9
+                            ).map((h) => (
+                              <option key={h} value={h}>{h} hr</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Single date calendar choice */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-text-primary">
+                    {state.frequencyId === "once" ? "Which day should we clean?" : "First visit date"}
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {dateOptions.map((option) => {
+                      const isSelected = (state.frequencyId === "once" ? state.date : state.startDate) === option.iso;
+                      return (
+                        <button
+                          key={option.iso}
+                          type="button"
+                          onClick={() => update(state.frequencyId === "once" ? "date" : "startDate", option.iso)}
+                          className={cn(
+                            "flex min-h-[4rem] flex-col items-center justify-center rounded-xl border p-1 text-center transition active:translate-y-px",
+                            isSelected ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-surface hover:border-primary/45"
+                          )}
+                        >
+                          <span className="block text-[9px] font-semibold uppercase opacity-75">{option.weekday}</span>
+                          <span className="mt-0.5 block text-sm font-bold">{option.monthDay.split(" ")[1]}</span>
+                          <span className="block text-[9px] opacity-75">{option.monthDay.split(" ")[0]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {state.frequencyId !== "once" && (
+                    <div className="mt-2 flex items-center gap-2 bg-surface-muted rounded-xl p-3 border border-border">
+                      <span className="text-xs font-bold text-text-primary shrink-0">Custom start date:</span>
+                      <input
+                        type="date"
+                        min={tomorrowISO()}
+                        className="booking-input text-xs h-9 min-h-9 p-1"
+                        value={state.startDate}
+                        onChange={(e) => update("startDate", e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Arrival window grid */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-text-primary">Arrival window</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ARRIVAL_WINDOWS.map((window) => {
+                      const isSelected = state.arrivalWindow === window.id;
+                      return (
+                        <button
+                          key={window.id}
+                          type="button"
+                          onClick={() => update("arrivalWindow", window.id)}
+                          className={cn(
+                            "min-h-10 rounded-xl border text-xs font-semibold transition active:translate-y-px",
+                            isSelected ? "border-primary bg-primary text-primary-foreground shadow-sm" : "border-border bg-surface hover:border-primary/45"
+                          )}
+                        >
+                          {window.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <SheetFooter className="mt-auto border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveMobileSheet(null)}
+              className="w-full inline-flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px"
+            >
+              Done
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={activeMobileSheet === "access"} onOpenChange={(open) => setActiveMobileSheet(open ? "access" : null)}>
+        <SheetContent className="flex flex-col max-h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Access & Details</SheetTitle>
+            <SheetDescription>Provide key, pets, parking, and supplies instructions.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-5">
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-text-primary">Entry instructions</h4>
+              <div className="grid gap-2">
+                {["I will be home", "Leave a key", "Call/Text upon arrival"].map((accessOption) => (
+                  <button
+                    key={accessOption}
+                    type="button"
+                    onClick={() => update("access", accessOption)}
+                    className={cn(
+                      "flex min-h-12 items-center gap-3 rounded-xl border px-4 text-left text-xs font-bold transition active:translate-y-px",
+                      state.access === accessOption ? "border-primary bg-primary/5 text-primary" : "border-border bg-surface hover:border-primary/40 text-text-primary"
+                    )}
+                  >
+                    <span className={cn("flex size-4 shrink-0 items-center justify-center rounded-full border", state.access === accessOption ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface")}>
+                      {state.access === accessOption && <Check className="size-3" />}
+                    </span>
+                    {accessOption}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Field label="Pets at home" htmlFor="sheet-pets">
+                <select id="sheet-pets" value={state.pets} onChange={(event) => update("pets", event.target.value)} className="booking-input text-sm h-10 min-h-10 py-1.5 px-3">
+                  <option>No pets</option>
+                  <option>Cats only</option>
+                  <option>Dogs only</option>
+                  <option>Other / mix</option>
+                </select>
+              </Field>
+
+              <Field label="Parking details" htmlFor="sheet-parking" helper="Let us know where to park.">
+                <input id="sheet-parking" value={state.parking} onChange={(event) => update("parking", event.target.value)} className="booking-input text-sm h-10 min-h-10 py-1.5 px-3" placeholder="e.g. Guest space #2, driveway" />
+              </Field>
+
+              <Field label="Cleaning supplies" htmlFor="sheet-supplies">
+                <select id="sheet-supplies" value={state.supplies} onChange={(event) => update("supplies", event.target.value)} className="booking-input text-sm h-10 min-h-10 py-1.5 px-3">
+                  <option>Bring professional supplies</option>
+                  <option>I will provide supplies</option>
+                </select>
+              </Field>
+
+              <Field label="Priority notes" htmlFor="sheet-notes" helper="Mention fragile surfaces or rooms to skip.">
+                <textarea id="sheet-notes" value={state.notes} onChange={(event) => update("notes", event.target.value)} className="booking-input text-sm min-h-16 py-2 px-3 resize-y" placeholder="Please focus on the kitchen grout and guest bath." />
+              </Field>
+            </div>
+          </div>
+          <SheetFooter className="mt-auto border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveMobileSheet(null)}
+              className="w-full inline-flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px"
+            >
+              Done
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={activeMobileSheet === "cleaner"} onOpenChange={(open) => setActiveMobileSheet(open ? "cleaner" : null)}>
+        <SheetContent className="flex flex-col max-h-[85vh]">
+          <SheetHeader>
+            <SheetTitle>Cleaner Preference</SheetTitle>
+            <SheetDescription>Select who you would prefer to clean your home.</SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto py-4 space-y-3">
+            {/* Best Match */}
+            <button
+              type="button"
+              onClick={() => {
+                update("cleanerPreference", "best-match");
+              }}
+              className={cn(
+                "relative flex w-full items-start gap-4 rounded-xl border p-4 text-left transition active:translate-y-px",
+                state.cleanerPreference === "best-match" ? "border-primary bg-primary/5" : "border-border bg-surface hover:border-primary/40"
+              )}
+            >
+              <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full font-bold text-sm", state.cleanerPreference === "best-match" ? "bg-primary/15 text-primary" : "bg-surface-muted text-text-secondary")}>
+                <Sparkles className="size-5" />
+              </div>
+              <div className="flex-1 min-w-0 pr-4">
+                <span className="block font-bold text-text-primary text-sm">Best match available</span>
+                <span className="mt-1 block text-xs leading-normal text-text-secondary">We will assign our highest rated professional for your slot.</span>
+              </div>
+              {state.cleanerPreference === "best-match" && (
+                <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                  <Check className="size-3" strokeWidth={3} />
+                </span>
+              )}
+            </button>
+
+            {/* Same Cleaner */}
+            <button
+              type="button"
+              onClick={() => {
+                update("cleanerPreference", "same-cleaner");
+              }}
+              className={cn(
+                "relative flex w-full items-start gap-4 rounded-xl border p-4 text-left transition active:translate-y-px",
+                state.cleanerPreference === "same-cleaner" ? "border-primary bg-primary/5" : "border-border bg-surface hover:border-primary/40"
+              )}
+            >
+              <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full font-bold text-sm", state.cleanerPreference === "same-cleaner" ? "bg-primary/15 text-primary" : "bg-surface-muted text-text-secondary")}>
+                <RefreshCw className="size-5" />
+              </div>
+              <div className="flex-1 min-w-0 pr-4">
+                <span className="block font-bold text-text-primary text-sm">Request previous cleaner</span>
+                <span className="mt-1 block text-xs leading-normal text-text-secondary">We will match you with someone who has cleaned your home before.</span>
+              </div>
+              {state.cleanerPreference === "same-cleaner" && (
+                <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                  <Check className="size-3" strokeWidth={3} />
+                </span>
+              )}
+            </button>
+
+            {/* Female Cleaner */}
+            <button
+              type="button"
+              onClick={() => {
+                update("cleanerPreference", "female-cleaner");
+              }}
+              className={cn(
+                "relative flex w-full items-start gap-4 rounded-xl border p-4 text-left transition active:translate-y-px",
+                state.cleanerPreference === "female-cleaner" ? "border-primary bg-primary/5" : "border-border bg-surface hover:border-primary/40"
+              )}
+            >
+              <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full font-bold text-sm", state.cleanerPreference === "female-cleaner" ? "bg-primary/15 text-primary" : "bg-surface-muted text-text-secondary")}>
+                <UserRound className="size-5" />
+              </div>
+              <div className="flex-1 min-w-0 pr-4">
+                <span className="block font-bold text-text-primary text-sm">Female cleaner preference</span>
+                <span className="mt-1 block text-xs leading-normal text-text-secondary">Request a female professional, subject to scheduling availability.</span>
+              </div>
+              {state.cleanerPreference === "female-cleaner" && (
+                <span className="absolute right-3 top-3 flex size-5 items-center justify-center rounded-full bg-primary text-white">
+                  <Check className="size-3" strokeWidth={3} />
+                </span>
+              )}
+            </button>
+          </div>
+          <SheetFooter className="mt-auto border-t border-border pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveMobileSheet(null)}
+              className="w-full inline-flex min-h-12 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground transition hover:bg-primary-hover active:translate-y-px"
+            >
+              Done
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
       <MapPicker
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}

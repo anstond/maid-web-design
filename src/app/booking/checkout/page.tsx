@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck, CalendarDays } from "lucide-react";
+import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { saveBooking, saveOrder, type BookingRecord, type BookingOrder } from "@/lib/mock-account-data";
+import confetti from "canvas-confetti";
 
 type BookingData = {
   address: string;
@@ -91,6 +92,19 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [createdOrder, setCreatedOrder] = useState<BookingOrder | null>(null);
   const [createdBookingIds, setCreatedBookingIds] = useState<string[]>([]);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+
+  useEffect(() => {
+    if (confirmed) {
+      // Fire confetti!
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.5 },
+        colors: ["#155E63", "#22C55E", "#3B82F6", "#F59E0B", "#EF4444"],
+      });
+    }
+  }, [confirmed]);
 
   useEffect(() => {
     let active = true;
@@ -313,7 +327,7 @@ export default function CheckoutPage() {
                       <div key={index} className="py-2.5 flex items-center justify-between text-sm">
                         <span className="font-semibold text-text-primary">
                           Visit {index + 1}: {formatDate(visit.date)}
-                          <span className="ml-2 text-[10px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5 border border-primary/20">{visitServiceName} ({visitHours}h)</span>
+                          <span className="ml-2 inline-block whitespace-nowrap text-[10px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5 border border-primary/20">{visitServiceName} ({visitHours}h)</span>
                         </span>
                         <span className="text-text-secondary font-medium">{visit.arrivalWindow}</span>
                       </div>
@@ -402,7 +416,39 @@ export default function CheckoutPage() {
             Your card is charged after confirmation. If the cleaner finds the job needs more time, we ask before changing the price.
           </p>
 
-          <div className="mt-8 grid gap-4 rounded-2xl bg-surface-muted p-4 sm:grid-cols-2">
+          {/* Collapsible Overview for Mobile View */}
+          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-surface-muted p-4 sm:hidden">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">Booking Summary</p>
+                <p className="mt-1 text-sm font-bold text-text-primary">
+                  {booking.serviceName} ({booking.isMultiDate && booking.selectedDates ? `${booking.selectedDates.length} visits` : booking.frequencyName})
+                </p>
+                <p className="text-xs text-text-secondary font-medium mt-0.5">
+                  {booking.isMultiDate && booking.selectedDates ? "Multiple dates selected" : formatDate(booking.date)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                className="inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-xs font-bold text-primary border border-border shadow-sm hover:bg-surface-muted active:scale-95 transition"
+              >
+                {isSummaryExpanded ? (
+                  <>
+                    Hide details
+                    <ChevronUp className="size-3.5" />
+                  </>
+                ) : (
+                  <>
+                    Show details
+                    <ChevronDown className="size-3.5" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div className={cn("mt-6 gap-4 rounded-2xl bg-surface-muted p-4 sm:grid sm:grid-cols-2", isSummaryExpanded ? "grid" : "hidden")}>
             <SummaryLine label="Customer" value={`${booking.firstName} ${booking.lastName}`} />
             <SummaryLine label="Contact" value={`${booking.email}, ${booking.phone}`} />
             <SummaryLine label="Service" value={`${booking.serviceName}, ${booking.frequencyName}`} />
@@ -410,26 +456,28 @@ export default function CheckoutPage() {
             {booking.isMultiDate && booking.selectedDates ? (
               <div className="col-span-full border-t border-border/40 pt-3 mt-1">
                 <p className="text-xs font-bold text-primary mb-2">Visits Scheduled ({booking.selectedDates.length})</p>
-                <div className="grid gap-2 max-h-36 overflow-y-auto pr-1">
-                  {booking.selectedDates.map((visit, index) => {
-                    const serviceNames: Record<string, string> = {
-                      standard: "Standard clean",
-                      deep: "Deep clean",
-                      move: "Move clean",
-                      office: "Small office",
-                    };
-                    const visitServiceName = serviceNames[visit.serviceId || ""] || booking.serviceName;
-                    const visitHours = visit.hours || booking.estimate.visitHours;
-                    return (
-                      <div key={index} className="flex justify-between text-xs bg-surface p-2 rounded-xl border border-border items-center">
-                        <span className="font-bold text-text-primary">
-                          Visit {index + 1}: {formatDate(visit.date)}
-                          <span className="ml-2 text-[9px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5 border border-primary/20">{visitServiceName} ({visitHours}h)</span>
-                        </span>
-                        <span className="text-text-secondary">{visit.arrivalWindow}</span>
-                      </div>
-                    );
-                  })}
+                <div className="max-h-52 overflow-y-auto pr-1">
+                  <div className="grid gap-2">
+                    {booking.selectedDates.map((visit, index) => {
+                      const serviceNames: Record<string, string> = {
+                        standard: "Standard clean",
+                        deep: "Deep clean",
+                        move: "Move clean",
+                        office: "Small office",
+                      };
+                      const visitServiceName = serviceNames[visit.serviceId || ""] || booking.serviceName;
+                      const visitHours = visit.hours || booking.estimate.visitHours;
+                      return (
+                        <div key={index} className="flex justify-between text-xs bg-surface p-2 rounded-xl border border-border items-center">
+                          <span className="font-bold text-text-primary">
+                            Visit {index + 1}: {formatDate(visit.date)}
+                            <span className="ml-2 inline-block whitespace-nowrap text-[9px] font-bold text-primary bg-primary/10 rounded px-1.5 py-0.5 border border-primary/20">{visitServiceName} ({visitHours}h)</span>
+                          </span>
+                          <span className="text-text-secondary">{visit.arrivalWindow}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ) : (
