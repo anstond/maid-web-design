@@ -113,6 +113,22 @@ components:
   nav-link:
     textColor: "{colors.ink}"
     typography: "{typography.body-md-strong}"
+  navigation-profile-menu:
+    description: "Signed-in account control for the global navigation. Desktop uses a compact pill trigger with avatar, first name at xl, and chevron. Mobile uses a soft profile summary panel at the top of the menu."
+    triggerBackgroundColor: "{colors.canvas-soft}"
+    triggerTextColor: "{colors.ink}"
+    menuBackgroundColor: "{colors.canvas}"
+    menuHeaderBackgroundColor: "{colors.canvas-soft}"
+    borderColor: "{colors.hairline-mid}"
+    typography: "{typography.body-sm-strong}"
+    rounded: "{rounded.pill}"
+    menuRounded: "{rounded.xl}"
+    touchTargetMinHeight: 44px
+    logout:
+      description: "Logout is separated from normal account links by a border and uses the same text color as navigation until hover. Do not place logout beside primary booking actions."
+      icon: "LogOut"
+      textColor: "{colors.ink}"
+      hoverBackgroundColor: "{colors.canvas-soft}"
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
