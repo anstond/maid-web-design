@@ -1,34 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { notFound, useParams } from "next/navigation";
 import { ArrowLeft, CalendarDays, CreditCard, KeyRound, MapPin, MessageCircle, ShieldCheck, Sparkles, UsersRound } from "lucide-react";
 import { CommandCard, DetailRow, HeroPanel, Money, SecondaryButton, StatusPill, SummaryCard, Timeline } from "@/components/account/AccountPrimitives";
-import { getBooking, formatAccountDate, type BookingRecord } from "@/lib/mock-account-data";
+import { InlineNotificationCard } from "@/components/account/InlineNotificationCard";
+import { getBooking, formatAccountDate } from "@/lib/mock-account-data";
 
 export default function BookingDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const [booking, setBooking] = useState<BookingRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const b = getBooking(id);
-    if (b) {
-      setBooking(b);
-    }
-    setLoading(false);
-  }, [id]);
-
-  if (loading) {
-    return (
-      <div className="min-h-[300px] flex items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  const booking = getBooking(id);
 
   if (!booking) notFound();
 
@@ -131,13 +114,16 @@ export default function BookingDetailPage() {
           </SummaryCard>
 
           {booking.status === "needs_attention" ? (
-            <div className="rounded-2xl border border-error/25 bg-error/10 p-5">
-              <p className="text-sm font-bold text-error">Action needed</p>
-              <p className="mt-2 text-sm leading-6 text-text-secondary">{booking.notes}</p>
-              <button className="mt-4 min-h-11 rounded-full bg-error px-5 text-sm font-bold text-white">
-                Add access details
-              </button>
-            </div>
+            <InlineNotificationCard
+              tone="error"
+              title="Action needed"
+              message={booking.notes}
+              action={
+                <button className="min-h-11 rounded-full bg-error px-5 text-sm font-bold text-white transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:scale-95">
+                  Add access details
+                </button>
+              }
+            />
           ) : null}
         </aside>
       </div>

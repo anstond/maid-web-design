@@ -6,6 +6,7 @@ import { CalendarCheck, Home, RefreshCw, Settings, UserRound, Menu, X, ArrowLeft
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/account/NotificationBell";
 
 const accountNavItems = [
   { label: "Bookings", href: "/account/bookings", icon: CalendarCheck },
@@ -44,6 +45,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
 
             {/* Desktop: Full button row */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+              <NotificationBell />
               <Link href="/" className="min-h-11 items-center rounded-full bg-surface-muted px-4 text-sm font-bold text-text-primary transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft hover:scale-105 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 inline-flex active:scale-95">
                 Explore services
               </Link>
@@ -53,13 +55,16 @@ export function AccountShell({ children }: { children: ReactNode }) {
             </div>
 
             {/* Mobile: Menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="sm:hidden min-h-11 inline-flex items-center justify-center rounded-full bg-surface-muted px-3 text-text-primary transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft hover:scale-105 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 flex-shrink-0 active:scale-95"
-              aria-label="Toggle navigation"
-            >
-              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-            </button>
+            <div className="flex items-center gap-2 sm:hidden">
+              <NotificationBell />
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="min-h-11 inline-flex items-center justify-center rounded-full bg-surface-muted px-3 text-text-primary transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-accent-soft hover:scale-105 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 flex-shrink-0 active:scale-95"
+                aria-label="Toggle navigation"
+              >
+                {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+              </button>
+            </div>
           </div>
 
           {/* Desktop: Account nav pills (horizontal) */}

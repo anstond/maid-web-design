@@ -15,6 +15,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { ActionLink, Money, PageHeader } from "@/components/account/AccountPrimitives";
+import { InlineNotificationCard } from "@/components/account/InlineNotificationCard";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { bookings, formatAccountDate, subscriptions, type SubscriptionRecord, type VisitPaymentStatus } from "@/lib/mock-account-data";
 
@@ -60,24 +61,20 @@ export default function SubscriptionsPage() {
           <div className="px-4 py-5 sm:p-6">
             {/* Payment issue banner */}
             {hasPaymentIssue && (
-              <div className="mb-4 flex items-start gap-3 rounded-xl border border-error/25 bg-error/5 px-4 py-3">
-                <AlertCircle className="size-5 shrink-0 text-error mt-0.5" aria-hidden="true" />
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-error">Payment issue — action needed</p>
-                  <p className="mt-1 text-xs text-text-secondary leading-5">
+              <InlineNotificationCard
+                tone="error"
+                title="Payment issue - action needed"
+                message={
+                  <>
                     {nextVisitPayment?.paymentRetryAttempt
                       ? `Attempt ${nextVisitPayment.paymentRetryAttempt} of 3 failed.`
                       : "Payment could not be collected."}{" "}
                     Your booking is on hold until payment clears.
-                  </p>
-                  <Link
-                    href="/account/settings"
-                    className="mt-2 inline-flex items-center text-xs font-bold text-error underline-offset-2 hover:underline"
-                  >
-                    Update payment method →
-                  </Link>
-                </div>
-              </div>
+                  </>
+                }
+                action={{ label: "Update payment method", href: "/account/settings" }}
+                className="mb-4 py-3 sm:p-4"
+              />
             )}
 
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -140,7 +137,7 @@ export default function SubscriptionsPage() {
 
               {nextPlan.type !== "custom" && nextPlan.scope.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-primary-foreground/20">
-                  <p className="text-xs font-bold text-primary-foreground/70">What's included</p>
+                  <p className="text-xs font-bold text-primary-foreground/70">What is included</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {nextPlan.scope.slice(0, 3).map((item) => (
                       <span key={item} className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-bold text-primary-foreground">
@@ -390,7 +387,7 @@ function PlanCard({ subscription }: { subscription: SubscriptionRecord }) {
         <div className="mt-3 flex items-center gap-2 rounded-xl border border-error/20 bg-error/5 px-3 py-2">
           <AlertCircle className="size-4 shrink-0 text-error" aria-hidden="true" />
           <p className="text-xs font-bold text-error">
-            Payment issue — visit on hold
+            Payment issue - visit on hold
             {nextVisit?.paymentRetryAttempt ? ` (attempt ${nextVisit.paymentRetryAttempt}/3)` : ""}
           </p>
         </div>
@@ -421,7 +418,7 @@ function PlanCard({ subscription }: { subscription: SubscriptionRecord }) {
 
       {subscription.type !== "custom" && subscription.scope.length > 0 && (
         <div className="mt-3 sm:mt-4">
-          <p className="text-xs font-bold text-text-secondary mb-2">What's included</p>
+          <p className="text-xs font-bold text-text-secondary mb-2">What is included</p>
           <div className="flex flex-wrap gap-1 sm:gap-2">
             {subscription.scope.slice(0, 4).map((item) => (
               <span key={item} className="rounded-full bg-surface px-2 sm:px-3 py-1 text-xs font-bold text-text-secondary">{item}</span>

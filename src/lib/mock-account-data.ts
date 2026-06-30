@@ -2,6 +2,18 @@ export type BookingStatus = "scheduled" | "in_progress" | "completed" | "needs_a
 export type SubscriptionStatus = "active" | "paused" | "ending";
 export type SubscriptionType = "weekly" | "biweekly" | "monthly" | "custom";
 export type VisitPaymentStatus = "confirmed" | "pending" | "retrying" | "failed" | "cancelled";
+export type AccountNotificationType =
+  | "booking_confirmed"
+  | "booking_updated"
+  | "booking_cancelled"
+  | "cleaner_assigned"
+  | "visit_reminder"
+  | "payment_failed"
+  | "payment_method_updated"
+  | "subscription_renewed"
+  | "subscription_paused"
+  | "reschedule_required";
+export type AccountNotificationSeverity = "info" | "success" | "warning" | "error";
 
 /** A single recurring slot within a custom subscription schedule */
 export type SubscriptionScheduleSlot = {
@@ -121,6 +133,23 @@ export type AccountSettings = {
   communication: Array<{ label: string; value: string }>;
 };
 
+export type AccountNotification = {
+  id: string;
+  category: "updates";
+  type: AccountNotificationType;
+  severity: AccountNotificationSeverity;
+  title: string;
+  message: string;
+  createdAt: string;
+  readAt: string | null;
+  actionLabel?: string;
+  actionHref?: string;
+  source?: {
+    entityType: "booking" | "subscription" | "payment";
+    entityId: string;
+  };
+};
+
 export const accountProfile: AccountProfile = {
   name: "Avery Morgan",
   email: "avery.morgan@example.com",
@@ -162,6 +191,61 @@ export const accountSettings: AccountSettings = {
     { label: "Quiet hours", value: "Do not text after 8:00 PM" },
   ],
 };
+
+export const accountNotifications: AccountNotification[] = [
+  {
+    id: "NT-1004",
+    category: "updates",
+    type: "payment_failed",
+    severity: "error",
+    title: "Payment needs attention",
+    message: "Your Monday cleaning is on hold until the card is updated.",
+    createdAt: "2026-07-01T09:20:00Z",
+    readAt: null,
+    actionLabel: "Update payment",
+    actionHref: "/account/subscriptions",
+    source: { entityType: "payment", entityId: "SUB-custom-01" },
+  },
+  {
+    id: "NT-1003",
+    category: "updates",
+    type: "visit_reminder",
+    severity: "info",
+    title: "Visit reminder",
+    message: "Maya R. and team arrive Jul 2 between 10:00 AM and 12:00 PM.",
+    createdAt: "2026-07-01T08:00:00Z",
+    readAt: null,
+    actionLabel: "View booking",
+    actionHref: "/account/bookings/BK-1048",
+    source: { entityType: "booking", entityId: "BK-1048" },
+  },
+  {
+    id: "NT-1002",
+    category: "updates",
+    type: "reschedule_required",
+    severity: "warning",
+    title: "Access details needed",
+    message: "Add the lockbox code before we can finalize the move clean.",
+    createdAt: "2026-06-30T17:35:00Z",
+    readAt: null,
+    actionLabel: "Complete booking",
+    actionHref: "/account/bookings/BK-1029",
+    source: { entityType: "booking", entityId: "BK-1029" },
+  },
+  {
+    id: "NT-1001",
+    category: "updates",
+    type: "cleaner_assigned",
+    severity: "success",
+    title: "Cleaner assigned",
+    message: "Daniel P. is confirmed for your standard clean.",
+    createdAt: "2026-06-28T14:10:00Z",
+    readAt: "2026-06-28T14:24:00Z",
+    actionLabel: "View details",
+    actionHref: "/account/bookings/BK-1036",
+    source: { entityType: "booking", entityId: "BK-1036" },
+  },
+];
 
 export const bookings: BookingRecord[] = [
   {

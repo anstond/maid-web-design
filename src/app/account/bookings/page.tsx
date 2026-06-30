@@ -2,18 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ActionLink, PageHeader, StatusPill, SummaryCard } from "@/components/account/AccountPrimitives";
+import { InlineNotificationCard } from "@/components/account/InlineNotificationCard";
 import { getSavedBookings, formatAccountDate, type BookingRecord } from "@/lib/mock-account-data";
-import { useEffect } from "react";
 
 export default function BookingsPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "upcoming" | "past">("all");
-  const [allBookings, setAllBookings] = useState<BookingRecord[]>([]);
-
-  useEffect(() => {
-    setAllBookings(getSavedBookings());
-  }, []);
+  const allBookings = getSavedBookings();
 
   const upcoming = allBookings.filter((booking) => booking.status !== "completed" && booking.status !== "cancelled");
   const past = allBookings.filter((booking) => booking.status === "completed" || booking.status === "cancelled");
@@ -87,23 +83,13 @@ export default function BookingsPage() {
       )}
 
       {needsAttention && (
-        <div className="mb-6 sm:mb-8 rounded-2xl border border-error/25 bg-error/5 px-4 py-5 sm:p-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="mt-0.5 size-5 flex-shrink-0 text-error" />
-            <div className="flex-1">
-              <p className="text-sm sm:text-base font-bold text-error">We need some details</p>
-              <p className="mt-1 text-xs sm:text-sm leading-6 text-text-secondary">{needsAttention.notes}</p>
-              <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                <Link
-                  href={`/account/bookings/${needsAttention.id}`}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-error px-4 text-sm font-bold text-white transition hover:bg-error/90 active:scale-95"
-                >
-                  Complete booking
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        <InlineNotificationCard
+          tone="error"
+          title="We need some details"
+          message={needsAttention.notes}
+          action={{ label: "Complete booking", href: `/account/bookings/${needsAttention.id}` }}
+          className="mb-6 sm:mb-8"
+        />
       )}
 
       <div className="mb-6 sm:mb-8 flex flex-wrap gap-2">
