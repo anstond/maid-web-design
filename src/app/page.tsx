@@ -178,18 +178,21 @@ const blogPosts = [
     title: "5 Smart Cleaning Hacks For Busy Renters",
     excerpt: "Discover time-saving tricks that make your daily routine easier and more effective.",
     seed: "cleaning-tips-apartment-bright",
+    slug: "5-smart-cleaning-hacks-for-busy-renters",
   },
   {
     category: "Guides",
     title: "Choosing The Right Service",
     excerpt: "Not all cleaning services are the same. Here's what to look for when hiring professionals.",
     seed: "apartment-guide-modern",
+    slug: "choosing-the-right-service",
   },
   {
     category: "Move-In / Out",
     title: "How To Get Your Full Deposit Back",
     excerpt: "A complete checklist to ensure your landlord is impressed, not disappointed.",
     seed: "move-out-checklist-apartment",
+    slug: "how-to-get-your-full-deposit-back",
   },
 ];
 
@@ -1847,7 +1850,7 @@ export default function Home() {
             }}>
               Our Latest Blog
             </h2>
-            <a href="#" style={{
+            <Link href="/blog" style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
@@ -1858,18 +1861,19 @@ export default function Home() {
             }}>
               View all posts
               <ArrowRight size={14} strokeWidth={2.5} />
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: 20 }}>
             {blogPosts.map((post) => (
-              <a key={post.title} href="#" style={{ textDecoration: "none", display: "block" }}>
+              <Link key={post.title} href={`/blog/${post.slug}`} style={{ textDecoration: "none", display: "block" }} className="group">
                 <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 16 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`https://picsum.photos/seed/${post.seed}/420/240`}
                     alt={post.title}
                     style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
+                    className="transition-transform duration-300 group-hover:scale-[1.03]"
                   />
                 </div>
                 <span style={{
@@ -1892,7 +1896,7 @@ export default function Home() {
                   lineHeight: "24px",
                   letterSpacing: "-0.02em",
                   margin: "0 0 8px",
-                }}>
+                }} className="group-hover:text-primary transition-colors">
                   {post.title}
                 </h3>
                 <p style={{ fontSize: 14, lineHeight: "22px", color: T.body, margin: "0 0 14px" }}>
@@ -1907,9 +1911,9 @@ export default function Home() {
                   color: T.primary,
                 }}>
                   Learn More
-                  <ArrowUpRight size={13} strokeWidth={2.5} />
+                  <ArrowUpRight size={13} strokeWidth={2.5} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
