@@ -7,6 +7,8 @@ import {
   Check,
   Phone,
   Mail,
+  X,
+  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -99,6 +101,7 @@ const featuredPlan = {
   price: "$89",
   period: "per visit",
   badge: "Most Popular",
+  savings: "Save 40% ($60/visit)",
   description: "Our best per-visit rate. A spotless home, every single week — guaranteed.",
   features: [
     "Weekly visit guaranteed",
@@ -114,6 +117,7 @@ const sidePlans = [
     name: "One-Time",
     price: "$149",
     period: "/ visit",
+    savings: "",
     description: "Perfect for a deep clean or special occasion.",
     features: ["Standard clean", "Up to 10-hour session", "Vetted pro"],
     cta: "Book Now",
@@ -122,6 +126,7 @@ const sidePlans = [
     name: "Monthly",
     price: "$129",
     period: "/ visit",
+    savings: "Save 13% ($20/visit)",
     description: "One thorough cleaning per month at a reduced rate.",
     features: ["Priority scheduling", "Same-day availability", "Dedicated pro"],
     cta: "Start Monthly",
@@ -130,6 +135,7 @@ const sidePlans = [
     name: "Biweekly",
     price: "$109",
     period: "/ visit",
+    savings: "Save 27% ($40/visit)",
     description: "Two cleanings per month — a steady routine.",
     features: ["Everything in Monthly", "Flexible rescheduling", "Dedicated pro"],
     cta: "Start Biweekly",
@@ -138,6 +144,7 @@ const sidePlans = [
     name: "Custom",
     price: "Flexible",
     period: "your schedule",
+    savings: "Save up to 40%",
     description: "Pick any number of days per week. We build around you.",
     features: ["2–5 days/week", "Mixed session lengths", "Tailored checklist"],
     cta: "Get a Quote",
@@ -195,6 +202,19 @@ const footerLinks: Record<string, string[]> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [mobileZipCode, setMobileZipCode] = useState("");
+
+  useEffect(() => {
+    if (isMobileDrawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileDrawerOpen]);
 
   useEffect(() => {
     setIntercomContext({
@@ -218,6 +238,15 @@ export default function Home() {
     });
     trackIntercomEvent("chat_prompt_clicked", { prompt_id: "homepage_hero_manual", route: "/" });
     openIntercomComposer("Hi, I need help choosing the right cleaning service.");
+  }
+
+  function openFooterChat() {
+    setIntercomContext({
+      funnelStage: "footer_contact",
+      currentRoute: "/",
+    });
+    trackIntercomEvent("chat_prompt_clicked", { prompt_id: "footer_chat_manual", route: "/" });
+    openIntercomComposer("Hi, I would like to chat with someone about booking a cleaning.");
   }
 
   function markServicesIntent(planName: string) {
@@ -493,31 +522,61 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Mobile layout (stacked, full-screen dark) ─────────────────── */}
+        {/* ── Mobile layout (stacked, left-aligned, high-end editorial) ─────── */}
         <div
           className="flex lg:hidden"
           style={{
             flexDirection:  "column",
-            alignItems:     "center",
-            justifyContent: "flex-start",
-            padding:        "48px 20px 64px",
+            alignItems:     "flex-start",
+            justifyContent: "center",
+            padding:        "72px 24px 80px",
             position:       "relative",
             zIndex:         1,
             width:          "100%",
-            overflowY:      "auto",
+            minHeight:      "calc(100svh - 66px)",
+            background:     "linear-gradient(to bottom, rgba(8,20,23,0.88) 0%, rgba(8,20,23,0.65) 45%, rgba(8,20,23,0.88) 100%)",
           }}
         >
+          {/* Eyebrow */}
+          <div
+            style={{
+              display:      "inline-flex",
+              alignItems:   "center",
+              gap:          6,
+              background:   "rgba(255,255,255,0.08)",
+              border:       "1px solid rgba(255,255,255,0.16)",
+              borderRadius: 999,
+              padding:      "4px 10px 4px 6px",
+              marginBottom: 18,
+            }}
+          >
+            <div style={{
+              background:    T.primary,
+              borderRadius:  "50%",
+              width:         16,
+              height:        16,
+              display:       "flex",
+              alignItems:    "center",
+              justifyContent:"center",
+            }}>
+              <span style={{ color: "#fff", fontSize: 9, fontWeight: 700 }}>✓</span>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.85)", letterSpacing: "0.04em" }}>
+              150k+ cleanings delivered
+            </span>
+          </div>
+
           {/* Mobile headline */}
-          <div style={{ textAlign: "center", marginBottom: 32, width: "100%" }}>
+          <div style={{ textAlign: "left", marginBottom: 28, width: "100%" }}>
             <h1
               className="hero-headline"
               style={{
-                fontSize:      "clamp(34px, 9vw, 48px)",
+                fontSize:      "clamp(34px, 8.5vw, 44px)",
                 fontWeight:    700,
-                lineHeight:    "1.08",
-                letterSpacing: "-0.03em",
+                lineHeight:    "1.06",
+                letterSpacing: "-0.035em",
                 color:         "#fff",
-                margin:        "0 0 14px",
+                margin:        "0 0 16px",
               }}
             >
               Your home cleaning<br />
@@ -527,33 +586,165 @@ export default function Home() {
               className="hero-subtext"
               style={{
                 fontSize:   15,
-                lineHeight: "1.6",
-                color:      "rgba(255,255,255,0.65)",
-                margin:     "0 auto 20px",
-                maxWidth:   320,
+                lineHeight: "1.55",
+                color:      "rgba(255,255,255,0.72)",
+                margin:     "0 0 24px",
+                maxWidth:   340,
               }}
             >
               Trusted cleaner. Transparent pricing. Book under a minute. If there's any problem with our cleaning, we will re-clean it for free.
             </p>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              <div style={{ display: "flex", gap: 2 }}>
-                {[1,2,3,4,5].map((i) => (
-                  <Star key={i} size={12} fill="#E4B44B" color="#E4B44B" strokeWidth={0} />
-                ))}
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)" }}>
-                4.8 · 150k+ cleaned
-              </span>
-            </div>
+          </div>
+ 
+          {/* Mobile ZIP code action bar */}
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 380,
+              display: "flex",
+              flexDirection: "row",
+              background: "#FCFBF8",
+              borderRadius: 999,
+              padding: "4px",
+              boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.35)",
+              marginBottom: 16,
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Enter ZIP code"
+              value={mobileZipCode}
+              onChange={(e) => setMobileZipCode(e.target.value)}
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                padding: "12px 18px",
+                color: T.ink,
+                fontSize: 15,
+                fontWeight: 500,
+                fontFamily: "inherit",
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setIsMobileDrawerOpen(true);
+                }
+              }}
+            />
+            <button
+              onClick={() => setIsMobileDrawerOpen(true)}
+              style={{
+                background: T.primary,
+                color: "#fff",
+                border: "none",
+                borderRadius: 999,
+                padding: "0 22px",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                transition: "background 0.2s ease",
+              }}
+            >
+              Get Price
+              <ArrowRight size={14} strokeWidth={2.5} />
+            </button>
           </div>
 
-          {/* Mobile interactive card */}
-          <div
-            className="hero-card"
-            style={{ width: "100%", maxWidth: 420 }}
-          >
-            <HeroInteractiveQuote />
-          </div>
+          {/* Unified Double-Bezel Proof & Review Card */}
+          {(() => {
+            const t = testimonials[0];
+            return (
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 380,
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: 24,
+                  padding: 6,
+                  boxShadow: "0 12px 40px rgba(0, 0, 0, 0.25)",
+                }}
+              >
+                <div
+                  style={{
+                    background: "rgba(20, 20, 20, 0.45)",
+                    backdropFilter: "blur(20px)",
+                    WebkitBackdropFilter: "blur(20px)",
+                    borderRadius: 18,
+                    padding: 18,
+                  }}
+                >
+                  {/* Stats Grid */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "16px 12px",
+                    }}
+                  >
+                    {/* Google reviews */}
+                    <div>
+                      <div style={{ display: "flex", gap: 2, marginBottom: 4 }}>
+                        {[1,2,3,4,5].map((i) => (
+                          <Star key={i} size={10} fill="#E4B44B" color="#E4B44B" strokeWidth={0} />
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: "1.2" }}>4.8 Rating</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)" }}>on Google</div>
+                    </div>
+
+                    {/* Cleanings */}
+                    <div>
+                      <div style={{ height: 14 }} /> {/* alignment offset */}
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: "1.2" }}>150k+</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)" }}>cleanings done</div>
+                    </div>
+
+                    {/* Pros */}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: "1.2" }}>1,460+</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)" }}>vetted pros</div>
+                    </div>
+
+                    {/* Cost */}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: "1.2" }}>20% cheaper</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.40)" }}>vs competitors</div>
+                    </div>
+                  </div>
+
+                  {/* Hairline Divider */}
+                  <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.08)", margin: "16px 0" }} />
+
+                  {/* Testimonial Quote */}
+                  <div>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        lineHeight: "18px",
+                        color: "rgba(255,255,255,0.80)",
+                        margin: "0 0 12px",
+                        fontWeight: 400,
+                        fontStyle: "italic",
+                      }}
+                    >
+                      &ldquo;{t.text}&rdquo;
+                    </p>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", lineHeight: "1" }}>
+                      {t.name}
+                      <span style={{ color: "rgba(255,255,255,0.45)", fontWeight: 400, marginLeft: 6 }}>
+                        {t.role}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </section>
 
@@ -595,134 +786,236 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4" style={{ gap: 16 }}>
+          {/* Cards - Bento list on mobile, standard grid on desktop */}
+          <div
+            className="flex flex-col lg:grid lg:grid-cols-4 gap-4"
+            style={{ width: "100%" }}
+          >
             {services.map((svc) => (
-              <div
-                key={svc.num}
-                className="col-span-1 group"
-                style={{
-                  position: "relative",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  aspectRatio: "3/4",
-                  cursor: "pointer",
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 32px rgba(0,0,0,0.16)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://picsum.photos/seed/${svc.seed}/300/400`}
-                  alt={svc.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                />
-                {/* Dark overlay */}
-                <div style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.9) 100%)",
-                }} />
-
-                {/* Top badge with service number */}
-                <div style={{
-                  position: "absolute",
-                  top: 16,
-                  left: 16,
-                  background: "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(8px)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  borderRadius: 999,
-                  padding: "6px 14px",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "#fff",
-                  letterSpacing: "0.05em",
-                }}>
-                  SERVICE {svc.num}
-                </div>
-
-                {/* Bottom content container */}
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
-                  {/* Title */}
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: "22px", marginBottom: 6 }}>
-                      {svc.title}
+              <div key={svc.num} className="group relative">
+                {/* Mobile horizontal card layout */}
+                <div
+                  className="flex lg:hidden"
+                  style={{
+                    background: "#FCFBF8",
+                    border: `1.5px solid ${T.border}`,
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    height: 124,
+                    width: "100%",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                  }}
+                >
+                  {/* Left: Text Content */}
+                  <div style={{ flex: 1, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.primary, letterSpacing: "0.06em", marginBottom: 2, textTransform: "uppercase" }}>
+                        SERVICE {svc.num}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: T.ink, lineHeight: "18px", marginBottom: 4 }}>
+                        {svc.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: T.body, lineHeight: "16px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {svc.description}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.70)", fontWeight: 400, lineHeight: "18px" }}>
-                      {svc.description}
+                    
+                    {/* Price / Action */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                      <span style={{ color: T.body }}>Starting at</span>
+                      <span style={{ fontWeight: 700, color: T.primary }}>{svc.price}{svc.period}</span>
                     </div>
                   </div>
 
-                  {/* Pricing card */}
+                  {/* Right: Cropped Image with gradient fade */}
+                  <div style={{ width: "30%", minWidth: 90, position: "relative", height: "100%" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`https://picsum.photos/seed/${svc.seed}/200/200`}
+                      alt={svc.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    <div style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      width: "12px",
+                      background: "linear-gradient(to right, #FCFBF8 0%, rgba(252,251,248,0) 100%)",
+                    }} />
+                  </div>
+                </div>
+
+                {/* Desktop vertical card layout */}
+                <div
+                  className="hidden lg:block"
+                  style={{
+                    position: "relative",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    aspectRatio: "3/4",
+                    cursor: "pointer",
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                  }}
+                  onMouseEnter={(e) => {
+                    const current = e.currentTarget as HTMLElement;
+                    current.style.transform = "translateY(-6px)";
+                    current.style.boxShadow = "0 16px 32px rgba(0,0,0,0.16)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const current = e.currentTarget as HTMLElement;
+                    current.style.transform = "translateY(0)";
+                    current.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://picsum.photos/seed/${svc.seed}/300/400`}
+                    alt={svc.title}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                  {/* Dark overlay */}
                   <div style={{
-                    background: T.accentW,
-                    borderRadius: 12,
-                    padding: "10px 14px",
-                    display: "flex",
-                    alignItems: "baseline",
-                    justifyContent: "space-between",
-                    gap: 8,
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.9) 100%)",
+                  }} />
+
+                  {/* Top badge with service number */}
+                  <div style={{
+                    position: "absolute",
+                    top: 16,
+                    left: 16,
+                    background: "rgba(255,255,255,0.15)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: 999,
+                    padding: "6px 14px",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#fff",
+                    letterSpacing: "0.05em",
                   }}>
+                    SERVICE {svc.num}
+                  </div>
+
+                  {/* Bottom content container */}
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14 }}>
+                    {/* Title */}
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 500, color: T.body, lineHeight: "14px", marginBottom: 2 }}>
-                        Starting at
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", lineHeight: "22px", marginBottom: 6 }}>
+                        {svc.title}
                       </div>
-                      <div style={{
-                        fontSize: 22,
-                        fontWeight: 700,
-                        color: T.ink,
-                        lineHeight: 1,
-                        letterSpacing: "-0.02em",
-                      }}>
-                        {svc.price}
-                        <span style={{ fontSize: 13, fontWeight: 500, marginLeft: 4 }}>
-                          {svc.period}
-                        </span>
+                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.70)", fontWeight: 400, lineHeight: "18px" }}>
+                        {svc.description}
                       </div>
                     </div>
+
+                    {/* Pricing card */}
                     <div style={{
+                      background: T.accentW,
+                      borderRadius: 12,
+                      padding: "10px 14px",
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 36,
-                      height: 36,
-                      borderRadius: 999,
-                      background: T.primary,
-                      color: "#fff",
-                      flexShrink: 0,
-                      transition: "transform 0.2s ease",
-                    }}
-                    className="group-hover:scale-110"
-                    >
-                      <ArrowUpRight size={18} strokeWidth={2.5} />
+                      alignItems: "baseline",
+                      justifyContent: "space-between",
+                      gap: 8,
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 500, color: T.body, lineHeight: "14px", marginBottom: 2 }}>
+                          Starting at
+                        </div>
+                        <div style={{
+                          fontSize: 22,
+                          fontWeight: 700,
+                          color: T.ink,
+                          lineHeight: 1,
+                          letterSpacing: "-0.02em",
+                        }}>
+                          {svc.price}
+                          <span style={{ fontSize: 13, fontWeight: 500, marginLeft: 4 }}>
+                            {svc.period}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 36,
+                        height: 36,
+                        borderRadius: 999,
+                        background: T.primary,
+                        color: "#fff",
+                        flexShrink: 0,
+                        transition: "transform 0.2s ease",
+                      }}
+                      className="group-hover:scale-110"
+                      >
+                        <ArrowUpRight size={18} strokeWidth={2.5} />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
 
-            {/* CTA tile */}
-            <div style={{
-              borderRadius: 16,
-              background: T.accentW,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              aspectRatio: "3/4",
-              padding: 24,
-              gap: 20,
-              cursor: "pointer",
-            }}>
+            {/* CTA tile - Mobile Horizontal Row */}
+            <div
+              className="flex lg:hidden"
+              style={{
+                borderRadius: 16,
+                background: T.accentW,
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "18px 20px",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                border: "1.5px solid rgba(0,0,0,0.05)",
+                marginTop: 4,
+              }}
+            >
+              <p style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: T.ink,
+                lineHeight: "18px",
+                margin: 0,
+              }}>
+                Explore 20+ other cleanings we offer
+              </p>
+              <div style={{
+                width: 34,
+                height: 34,
+                borderRadius: "50%",
+                background: T.ink,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}>
+                <ArrowUpRight size={16} color="#fff" strokeWidth={2.5} />
+              </div>
+            </div>
+
+            {/* CTA tile - Desktop Vertical Card */}
+            <div
+              className="hidden lg:flex"
+              style={{
+                borderRadius: 16,
+                background: T.accentW,
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                aspectRatio: "3/4",
+                padding: 24,
+                gap: 20,
+                cursor: "pointer",
+              }}
+            >
               <p style={{
                 fontSize: 17,
                 fontWeight: 700,
@@ -995,11 +1288,35 @@ export default function Home() {
                     {featuredPlan.name}
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
                     <span style={{ fontSize: "clamp(52px, 5vw, 72px)", fontWeight: 700, letterSpacing: "-0.05em", lineHeight: 1, color: "#fff" }}>
                       {featuredPlan.price}
                     </span>
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.40)" }}>{featuredPlan.period}</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.40)", marginRight: 4 }}>{featuredPlan.period}</span>
+                    
+                    {/* Struck-through base price */}
+                    <span style={{
+                      fontSize: 22,
+                      fontWeight: 600,
+                      color: "rgba(255, 255, 255, 0.35)",
+                      textDecoration: "line-through",
+                      marginRight: 6,
+                    }}>
+                      $149
+                    </span>
+
+                    <span style={{
+                      display: "inline-block",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: T.accentW,
+                      background: "rgba(255, 255, 255, 0.08)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                    }}>
+                      {featuredPlan.savings}
+                    </span>
                   </div>
 
                   <p style={{ fontSize: 15, lineHeight: "24px", color: "rgba(255,255,255,0.55)", margin: "0 0 32px", maxWidth: 320 }}>
@@ -1065,12 +1382,41 @@ export default function Home() {
                   <div style={{ fontSize: 12, fontWeight: 600, color: T.body, letterSpacing: "0.04em", marginBottom: 8 }}>
                     {plan.name}
                   </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: plan.savings ? 6 : 12, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: T.ink }}>
                       {plan.price}
                     </span>
-                    <span style={{ fontSize: 12, color: T.muted }}>{plan.period}</span>
+                    <span style={{ fontSize: 12, color: T.muted, marginRight: plan.savings && plan.name !== "Custom" ? 6 : 0 }}>{plan.period}</span>
+                    
+                    {/* Struck-through base price for Monthly/Biweekly */}
+                    {plan.savings && plan.name !== "Custom" && (
+                      <span style={{
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: T.muted,
+                        textDecoration: "line-through",
+                      }}>
+                        $149
+                      </span>
+                    )}
                   </div>
+
+                  {plan.savings && (
+                    <div style={{
+                      display: "inline-block",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: T.primary,
+                      background: "rgba(21, 94, 99, 0.08)",
+                      border: "1px solid rgba(21, 94, 99, 0.12)",
+                      padding: "3px 10px",
+                      borderRadius: 999,
+                      marginBottom: 12,
+                      width: "fit-content",
+                    }}>
+                      {plan.savings}
+                    </div>
+                  )}
                   <p style={{ fontSize: 13, lineHeight: "20px", color: T.body, margin: "0 0 18px" }}>
                     {plan.description}
                   </p>
@@ -1387,6 +1733,27 @@ export default function Home() {
               <Mail size={14} />
               Email Us
             </a>
+            <button
+              onClick={openFooterChat}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                fontSize: 15,
+                fontWeight: 600,
+                color: "#fff",
+                background: "transparent",
+                padding: "14px 24px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.20)",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontFamily: "inherit",
+              }}
+            >
+              <MessageSquare size={14} />
+              Chat with Us
+            </button>
             <a href="#quote-generator" style={{
               background: T.primary,
               color: T.onPrimary,
@@ -1479,6 +1846,94 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* ── Mobile Bottom Sheet Drawer ─────────────────────────────────── */}
+      {isMobileDrawerOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+            background: "rgba(0, 0, 0, 0.65)",
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)",
+            animation: "fadeIn 0.25s ease-out both",
+          }}
+          onClick={() => setIsMobileDrawerOpen(false)}
+        >
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes slideUpDrawer {
+              from { transform: translateY(100%); }
+              to { transform: translateY(0); }
+            }
+          `}</style>
+          <div
+            style={{
+              background: "#FCFBF8",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              maxHeight: "85vh",
+              overflowY: "auto",
+              padding: "24px 20px 40px",
+              boxShadow: "0 -8px 32px rgba(0, 0, 0, 0.15)",
+              animation: "slideUpDrawer 0.3s cubic-bezier(0.16, 1, 0.3, 1) both",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Grabber handle */}
+            <div
+              style={{
+                width: 48,
+                height: 5,
+                background: "#E5DFD3",
+                borderRadius: 999,
+                margin: "0 auto 20px",
+              }}
+            />
+
+            {/* Close Button */}
+            <button
+              onClick={() => setIsMobileDrawerOpen(false)}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: "#F7F5F1",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "#1F2937",
+                zIndex: 10,
+              }}
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
+
+            {/* Mobile-adapted Quote Component */}
+            <HeroInteractiveQuote
+              initialZipCode={mobileZipCode}
+              onZipCodeChange={setMobileZipCode}
+              isMobileDrawer={true}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

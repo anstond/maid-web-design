@@ -86,10 +86,31 @@ function useCountUp(target: number | null, duration = 650) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function HeroInteractiveQuote() {
+interface HeroInteractiveQuoteProps {
+  initialZipCode?: string;
+  onZipCodeChange?: (zip: string) => void;
+  isMobileDrawer?: boolean;
+}
+
+export default function HeroInteractiveQuote({
+  initialZipCode = "",
+  onZipCodeChange,
+  isMobileDrawer = false,
+}: HeroInteractiveQuoteProps) {
   const [service, setService] = useState<Service>("standard");
   const [duration, setDuration] = useState<Duration | null>(null);
-  const [zipCode, setZipCode] = useState("");
+  const [zipCode, setZipCode] = useState(initialZipCode);
+
+  useEffect(() => {
+    setZipCode(initialZipCode);
+  }, [initialZipCode]);
+
+  const handleZipChange = (val: string) => {
+    setZipCode(val);
+    if (onZipCodeChange) {
+      onZipCodeChange(val);
+    }
+  };
 
   const selectedPrice = zipCode && duration ? PRICES[service][duration] : null;
   const startingPrice = zipCode ? 31 : null; // Cheapest across all options (recurring 2h)
@@ -117,19 +138,19 @@ export default function HeroInteractiveQuote() {
     <>
       <style>{styles}</style>
       <div style={{
-        background:           "rgba(252,251,248,0.97)",
-        backdropFilter:       "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderRadius:         20,
-        boxShadow:            "rgba(0,0,0,0.22) 0px 12px 56px 0px, rgba(0,0,0,0.06) 0px 2px 8px 0px",
+        background:           isMobileDrawer ? "transparent" : "rgba(252,251,248,0.97)",
+        backdropFilter:       isMobileDrawer ? "none" : "blur(24px)",
+        WebkitBackdropFilter: isMobileDrawer ? "none" : "blur(24px)",
+        borderRadius:         isMobileDrawer ? 0 : 20,
+        boxShadow:            isMobileDrawer ? "none" : "rgba(0,0,0,0.22) 0px 12px 56px 0px, rgba(0,0,0,0.06) 0px 2px 8px 0px",
         overflow:             "hidden",
         fontFamily:           "var(--font-sans)",
         width:                "100%",
-        border:               "1px solid rgba(255,255,255,0.55)",
+        border:               isMobileDrawer ? "none" : "1px solid rgba(255,255,255,0.55)",
       }}>
 
         {/* ── Header ────────────────────────────────────────────────────── */}
-        <div style={{ padding: "20px 20px 15px", borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ padding: isMobileDrawer ? "0px 0px 15px" : "20px 20px 15px", borderBottom: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 17, fontWeight: 700, color: T.ink, letterSpacing: "-0.02em", marginBottom: 3 }}>
             Your instant quote
           </div>
@@ -138,7 +159,7 @@ export default function HeroInteractiveQuote() {
           </div>
         </div>
 
-        <div style={{ padding: "18px 18px" }}>
+        <div style={{ padding: isMobileDrawer ? "18px 0px 0px" : "18px 18px" }}>
 
           {/* ── Step 1: ZIP Code ────────────────────────────────────────── */}
           <div style={{ marginBottom: 18 }}>
@@ -176,7 +197,7 @@ export default function HeroInteractiveQuote() {
               type="text"
               placeholder="Enter ZIP code"
               value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
+              onChange={(e) => handleZipChange(e.target.value)}
               style={{
                 width:          "100%",
                 padding:        "12px 14px",
