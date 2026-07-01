@@ -51,6 +51,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
   const [internalSlots, setInternalSlots] = useState<SlotConfig[]>(
     value?.map((s) => ({ dayOfWeek: s.dayOfWeek, time: s.time, product: s.product })) ?? []
   );
+  const [highlightKey, setHighlightKey] = useState(0);
 
   const slots = value
     ? value.map((s) => ({ dayOfWeek: s.dayOfWeek, time: s.time, product: s.product }))
@@ -59,6 +60,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
   function updateSlots(next: SlotConfig[]) {
     setInternalSlots(next);
     onChange?.(next);
+    setHighlightKey((prev) => prev + 1);
   }
 
   function toggleDay(dayOfWeek: number) {
@@ -105,7 +107,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
     <div className="space-y-5">
       {/* Day selector */}
       <div>
-        <p className="mb-3 text-sm font-bold text-text-primary">Pick your cleaning days</p>
+        <p className="mb-3 text-sm font-medium text-text-primary">Pick your cleaning days</p>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Select recurring days of the week">
           {DAYS.map((day) => {
             const isSelected = selectedDays.has(day.dayOfWeek);
@@ -117,11 +119,11 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                 aria-pressed={isSelected}
                 aria-label={`${day.label} — ${isSelected ? "selected, click to remove" : "click to add"}`}
                 className={[
-                  "flex min-h-11 min-w-[3.25rem] items-center justify-center rounded-full px-4 text-sm font-bold transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30 active:scale-95",
+                  "flex min-h-11 min-w-[3.25rem] items-center justify-center rounded-full px-4 text-sm font-medium transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-105 active:scale-95",
+                  "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30",
                   isSelected
-                    ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)]"
-                    : "bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary",
+                    ? "bg-primary text-primary-foreground shadow-[0_4px_12px_rgba(21,94,99,0.24)] ring-2 ring-primary/20 scale-105"
+                    : "bg-surface-muted text-text-secondary hover:bg-accent-soft hover:text-text-primary hover:shadow-sm",
                 ].join(" ")}
               >
                 {day.label}
@@ -134,20 +136,23 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
       {/* Per-slot configuration */}
       {slots.length > 0 && (
         <div className="space-y-3">
-          <p className="text-sm font-bold text-text-primary">Set time and service per day</p>
+          <p className="text-sm font-medium text-text-primary">Set time and service per day</p>
           <div className="space-y-2">
             {slots.map((slot) => {
               const dayLabel = DAYS.find((d) => d.dayOfWeek === slot.dayOfWeek)?.label ?? "";
               return (
-                <div key={slot.dayOfWeek} className="grid gap-3 rounded-xl bg-surface-muted px-4 py-3 sm:grid-cols-[2.5rem_1fr_2fr_1fr_2.75rem] sm:items-center">
-                  <span className="text-sm font-bold text-primary sm:w-10">{dayLabel}</span>
+                <div 
+                  key={slot.dayOfWeek} 
+                  className="animate-slot-entry grid gap-3 rounded-xl bg-surface-muted px-4 py-3 sm:grid-cols-[2.5rem_1fr_2fr_1fr_2.75rem] sm:items-center border border-transparent hover:border-border hover:bg-surface-muted/80 transition-all duration-300"
+                >
+                  <span className="text-sm font-medium text-primary sm:w-10">{dayLabel}</span>
 
                   <label className="sr-only" htmlFor={`time-${slot.dayOfWeek}`}>Arrival time for {dayLabel}</label>
                   <select
                     id={`time-${slot.dayOfWeek}`}
                     value={slot.time}
                     onChange={(e) => updateSlot(slot.dayOfWeek, "time", e.target.value)}
-                    className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                    className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-medium text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                   >
                     {TIME_SLOTS.map((t) => (<option key={t} value={t}>{t}</option>))}
                   </select>
@@ -161,7 +166,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                           id={`service-${slot.dayOfWeek}`}
                           value={service}
                           onChange={(e) => updateSlot(slot.dayOfWeek, "service", e.target.value)}
-                          className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                          className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-medium text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                         >
                           {SERVICES.map((s) => (<option key={s} value={s}>{s}</option>))}
                         </select>
@@ -171,7 +176,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                           id={`hours-${slot.dayOfWeek}`}
                           value={hours}
                           onChange={(e) => updateSlot(slot.dayOfWeek, "hours", e.target.value)}
-                          className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-bold text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
+                          className="min-h-11 w-full rounded-lg bg-surface px-3 py-2 text-sm font-medium text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 cursor-pointer"
                         >
                           {HOURS.map((h) => (<option key={h} value={h}>{h}</option>))}
                         </select>
@@ -183,7 +188,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
                     type="button"
                     onClick={() => toggleDay(slot.dayOfWeek)}
                     aria-label={`Remove ${dayLabel}`}
-                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary transition hover:bg-surface hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary transition-all duration-300 hover:rotate-90 hover:scale-110 hover:bg-surface hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/30 active:scale-95"
                   >
                     <X className="size-4" aria-hidden="true" />
                   </button>
@@ -196,14 +201,14 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
 
       {/* Summary */}
       {slots.length > 0 ? (
-        <div className="rounded-xl border border-border bg-primary/5 px-4 py-3">
-          <p className="text-xs font-bold text-primary mb-2">
+        <div key={highlightKey} className="animate-update-highlight rounded-xl border border-border bg-primary/5 px-4 py-3 transition-all duration-300">
+          <p className="text-xs font-medium text-primary mb-2">
             YOUR SCHEDULE — {slots.length} {slots.length === 1 ? "cleaning" : "cleanings"} per week
           </p>
           <div className="space-y-1">
             {Object.entries(productGroups).map(([product, days]) => (
               <p key={product} className="text-sm text-text-secondary">
-                <span className="font-bold text-text-primary">{days.join(", ")}</span>
+                <span className="font-medium text-text-primary">{days.join(", ")}</span>
                 {" — "}{product}
               </p>
             ))}
@@ -216,7 +221,7 @@ export function WeeklyScheduleBuilder({ value, onChange }: Props) {
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-border bg-surface-muted px-4 py-5 text-center">
-          <p className="text-sm font-bold text-text-secondary">No days selected yet</p>
+          <p className="text-sm font-medium text-text-secondary">No days selected yet</p>
           <p className="mt-1 text-xs text-text-secondary">Pick the days above to build your schedule.</p>
         </div>
       )}

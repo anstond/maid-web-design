@@ -123,13 +123,13 @@ const sidePlans = [
     cta: "Book Now",
   },
   {
-    name: "Monthly",
+    name: "Every 4 Weeks",
     price: "$129",
     period: "/ visit",
     savings: "Save 13% ($20/visit)",
-    description: "One thorough cleaning per month at a reduced rate.",
+    description: "One thorough cleaning every 4 weeks at a reduced rate.",
     features: ["Priority scheduling", "Same-day availability", "Dedicated pro"],
-    cta: "Start Monthly",
+    cta: "Start Every 4 Weeks",
   },
   {
     name: "Biweekly",
@@ -953,7 +953,11 @@ export default function Home() {
                       }}
                       className="group-hover:scale-110"
                       >
-                        <ArrowUpRight size={18} strokeWidth={2.5} />
+                        <ArrowUpRight
+                          size={18}
+                          strokeWidth={2.5}
+                          className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        />
                       </div>
                     </div>
                   </div>
@@ -963,11 +967,10 @@ export default function Home() {
 
             {/* CTA tile - Mobile Horizontal Row */}
             <div
-              className="flex lg:hidden"
+              className="flex lg:hidden group"
               style={{
                 borderRadius: 16,
                 background: T.accentW,
-                display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -997,13 +1000,18 @@ export default function Home() {
                 justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <ArrowUpRight size={16} color="#fff" strokeWidth={2.5} />
+                <ArrowUpRight
+                  size={16}
+                  color="#fff"
+                  strokeWidth={2.5}
+                  className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
               </div>
             </div>
 
             {/* CTA tile - Desktop Vertical Card */}
             <div
-              className="hidden lg:flex"
+              className="hidden lg:flex group"
               style={{
                 borderRadius: 16,
                 background: T.accentW,
@@ -1036,7 +1044,12 @@ export default function Home() {
                 justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <ArrowUpRight size={18} color="#fff" strokeWidth={2.5} />
+                <ArrowUpRight
+                  size={18}
+                  color="#fff"
+                  strokeWidth={2.5}
+                  className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
               </div>
             </div>
           </div>
@@ -1249,12 +1262,24 @@ export default function Home() {
 
             {/* Featured — Weekly */}
             <div
-              className="lg:col-span-2 lg:row-span-2"
+              className="lg:col-span-2 lg:row-span-2 group"
               style={{
                 borderRadius: 20,
                 background: T.primary,
                 padding: 2,
                 boxShadow: "0 24px 64px rgba(21,94,99,0.24)",
+                transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(-6px)";
+                el.style.boxShadow = "0 32px 72px rgba(21,94,99,0.38)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.transform = "translateY(0)";
+                el.style.boxShadow = "0 24px 64px rgba(21,94,99,0.24)";
               }}
             >
               <div style={{
@@ -1362,100 +1387,149 @@ export default function Home() {
                   width: "fit-content",
                 }}>
                   {featuredPlan.cta}
-                  <ArrowRight size={14} strokeWidth={2.5} />
+                  <ArrowRight size={14} strokeWidth={2.5} className="transition-transform duration-300 group-hover:translate-x-1" />
                 </a>
               </div>
             </div>
 
-            {/* Four side plans */}
-            {sidePlans.map((plan) => (
-              <div key={plan.name} style={{
-                borderRadius: 16,
-                background: T.surface,
-                border: `1px solid ${T.border}`,
-                padding: "24px 22px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: T.body, letterSpacing: "0.04em", marginBottom: 8 }}>
-                    {plan.name}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: plan.savings ? 6 : 12, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: T.ink }}>
-                      {plan.price}
-                    </span>
-                    <span style={{ fontSize: 12, color: T.muted, marginRight: plan.savings && plan.name !== "Custom" ? 6 : 0 }}>{plan.period}</span>
-                    
-                    {/* Struck-through base price for Monthly/Biweekly */}
-                    {plan.savings && plan.name !== "Custom" && (
-                      <span style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: T.muted,
-                        textDecoration: "line-through",
-                      }}>
-                        $149
-                      </span>
-                    )}
-                  </div>
+             {/* Four side plans */}
+             {sidePlans.map((plan) => {
+               const isCustom = plan.name === "Custom";
+               return (
+                 <div
+                   key={plan.name}
+                   className="group"
+                   style={{
+                     borderRadius: 16,
+                     background: isCustom ? "#163037" : T.surface,
+                     border: isCustom ? "1.5px solid #D9C7A3" : `1px solid ${T.border}`,
+                     padding: "24px 22px",
+                     display: "flex",
+                     flexDirection: "column",
+                     justifyContent: "space-between",
+                     transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                     cursor: "pointer",
+                     boxShadow: isCustom ? "0 12px 32px rgba(22, 48, 55, 0.15)" : "none",
+                   }}
+                   onMouseEnter={(e) => {
+                     const el = e.currentTarget as HTMLElement;
+                     el.style.transform = "translateY(-6px)";
+                     if (isCustom) {
+                       el.style.boxShadow = "0 16px 40px rgba(22, 48, 55, 0.3)";
+                       el.style.borderColor = "#fff";
+                     } else {
+                       el.style.boxShadow = "0 12px 32px rgba(0,0,0,0.08)";
+                       el.style.borderColor = T.primary;
+                     }
+                   }}
+                   onMouseLeave={(e) => {
+                     const el = e.currentTarget as HTMLElement;
+                     el.style.transform = "translateY(0)";
+                     if (isCustom) {
+                       el.style.boxShadow = "0 12px 32px rgba(22, 48, 55, 0.15)";
+                       el.style.borderColor = "#D9C7A3";
+                     } else {
+                       el.style.boxShadow = "none";
+                       el.style.borderColor = T.border;
+                     }
+                   }}
+                 >
+                   <div>
+                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                       <div style={{ fontSize: 12, fontWeight: 600, color: isCustom ? "#D9C7A3" : T.body, letterSpacing: "0.04em" }}>
+                         {plan.name}
+                       </div>
+                       {isCustom && (
+                         <span style={{
+                           fontSize: 9,
+                           fontWeight: 700,
+                           letterSpacing: "0.08em",
+                           color: T.ink,
+                           background: "#D9C7A3",
+                           padding: "3px 8px",
+                           borderRadius: 999,
+                           textTransform: "uppercase",
+                         }}>
+                           Flagship
+                         </span>
+                       )}
+                     </div>
 
-                  {plan.savings && (
-                    <div style={{
-                      display: "inline-block",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: T.primary,
-                      background: "rgba(21, 94, 99, 0.08)",
-                      border: "1px solid rgba(21, 94, 99, 0.12)",
-                      padding: "3px 10px",
-                      borderRadius: 999,
-                      marginBottom: 12,
-                      width: "fit-content",
-                    }}>
-                      {plan.savings}
-                    </div>
-                  )}
-                  <p style={{ fontSize: 13, lineHeight: "20px", color: T.body, margin: "0 0 18px" }}>
-                    {plan.description}
-                  </p>
-                  <div style={{ height: 1, background: T.border, marginBottom: 16 }} />
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {plan.features.map((f) => (
-                      <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: "50%",
-                          background: T.accentS,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}>
-                          <Check size={9} color={T.primary} strokeWidth={2.5} />
-                        </div>
-                        <span style={{ fontSize: 13, color: T.ink, lineHeight: "20px" }}>{f}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <a href="#quote-generator" onMouseEnter={() => markServicesIntent(plan.name)} onFocus={() => markServicesIntent(plan.name)} style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 22,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: T.primary,
-                  textDecoration: "none",
-                }}>
-                  {plan.cta}
-                  <ArrowRight size={13} strokeWidth={2.5} />
-                </a>
-              </div>
-            ))}
+                     <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: plan.savings ? 6 : 12, flexWrap: "wrap" }}>
+                       <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: isCustom ? "#fff" : T.ink }}>
+                         {plan.price}
+                       </span>
+                       <span style={{ fontSize: 12, color: isCustom ? "rgba(255,255,255,0.4)" : T.muted, marginRight: plan.savings && plan.name !== "Custom" ? 6 : 0 }}>{plan.period}</span>
+                       
+                       {/* Struck-through base price for Monthly/Biweekly */}
+                       {plan.savings && plan.name !== "Custom" && (
+                         <span style={{
+                           fontSize: 16,
+                           fontWeight: 600,
+                           color: T.muted,
+                           textDecoration: "line-through",
+                         }}>
+                           $149
+                         </span>
+                       )}
+                     </div>
+ 
+                     {plan.savings && (
+                       <div style={{
+                         display: "inline-block",
+                         fontSize: 11,
+                         fontWeight: 600,
+                         color: isCustom ? "#D9C7A3" : T.primary,
+                         background: isCustom ? "rgba(217, 199, 163, 0.12)" : "rgba(21, 94, 99, 0.08)",
+                         border: isCustom ? "1px solid rgba(217, 199, 163, 0.2)" : "1px solid rgba(21, 94, 99, 0.12)",
+                         padding: "3px 10px",
+                         borderRadius: 999,
+                         marginBottom: 12,
+                         width: "fit-content",
+                       }}>
+                         {plan.savings}
+                       </div>
+                     )}
+                     <p style={{ fontSize: 13, lineHeight: "20px", color: isCustom ? "rgba(255,255,255,0.6)" : T.body, margin: "0 0 18px" }}>
+                       {plan.description}
+                     </p>
+                     <div style={{ height: 1, background: isCustom ? "rgba(255,255,255,0.08)" : T.border, marginBottom: 16 }} />
+                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                       {plan.features.map((f) => (
+                         <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                           <div style={{
+                             width: 16,
+                             height: 16,
+                             borderRadius: "50%",
+                             background: isCustom ? "rgba(255,255,255,0.1)" : T.accentS,
+                             display: "flex",
+                             alignItems: "center",
+                             justifyContent: "center",
+                             flexShrink: 0,
+                           }}>
+                             <Check size={9} color={isCustom ? "#D9C7A3" : T.primary} strokeWidth={2.5} />
+                           </div>
+                           <span style={{ fontSize: 13, color: isCustom ? "rgba(255,255,255,0.8)" : T.ink, lineHeight: "20px" }}>{f}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                   <a href="#quote-generator" onMouseEnter={() => markServicesIntent(plan.name)} onFocus={() => markServicesIntent(plan.name)} style={{
+                     display: "inline-flex",
+                     alignItems: "center",
+                     gap: 6,
+                     marginTop: 22,
+                     fontSize: 13,
+                     fontWeight: 600,
+                     color: isCustom ? "#D9C7A3" : T.primary,
+                     textDecoration: "none",
+                   }}>
+                     {plan.cta}
+                     <ArrowRight size={13} strokeWidth={2.5} className="transition-transform duration-300 group-hover:translate-x-1" />
+                   </a>
+                 </div>
+               );
+             })}
           </div>
 
           <p style={{ fontSize: 13, color: T.muted, marginTop: 28 }}>
