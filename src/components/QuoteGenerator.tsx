@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles,
   Snowflake,
@@ -11,6 +11,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
+import { openIntercomComposer, setIntercomContext, trackIntercomEvent } from "@/lib/intercom-conversion";
 
 // ─── Design Tokens (DESIGN.md) ────────────────────────────────────────────────
 const T = {
@@ -72,6 +73,7 @@ export default function QuoteGenerator() {
   const [hours, setHours] = useState<number>(3);
   const [maids, setMaids] = useState<number>(2);
   const [selectedAddons, setSelectedAddons] = useState<string[]>(["deep_clean"]);
+  const quoteStartedTracked = useRef(false);
 
   // ─── Add-on options definition ──────────────────────────────────────────────
   const addonOptions = useMemo<AddonOption[]>(() => [
@@ -150,10 +152,78 @@ export default function QuoteGenerator() {
   }, [service, location, hours, maids, selectedAddons, addonOptions]);
 
   const toggleAddon = (id: string) => {
+    markQuoteStarted();
     setSelectedAddons((prev) =>
       prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
     );
   };
+
+  function getQuotePriceBand(total: number) {
+    if (total < 150) return "under_150";
+    if (total < 300) return "150_299";
+    return "300_plus";
+  }
+
+  function markQuoteStarted() {
+    setIntercomContext({
+      funnelStage: "quote",
+      selectedService: service,
+      quotePriceBand: getQuotePriceBand(pricing.total),
+      city: pricing.locationName,
+      currentRoute: "/",
+    });
+
+    if (!quoteStartedTracked.current) {
+      quoteStartedTracked.current = true;
+      trackIntercomEvent("quote_started", {
+        source: "quote_generator",
+        service,
+        city: pricing.locationName,
+      });
+    }
+  }
+
+  function completeQuote() {
+    setIntercomContext({
+      funnelStage: "quote",
+      selectedService: service,
+      quotePriceBand: getQuotePriceBand(pricing.total),
+      city: pricing.locationName,
+      currentRoute: "/",
+    });
+    trackIntercomEvent("quote_completed", {
+      service,
+      city: pricing.locationName,
+      total: pricing.total,
+    });
+    window.location.href = `/booking?service=${service}`;
+  }
+
+  function askAboutQuote() {
+    setIntercomContext({
+      funnelStage: "quote",
+      selectedService: service,
+      quotePriceBand: getQuotePriceBand(pricing.total),
+      city: pricing.locationName,
+      currentRoute: "/",
+    });
+    trackIntercomEvent("chat_prompt_clicked", {
+      prompt_id: "quote_manual",
+      service,
+    });
+    openIntercomComposer("Hi, can you help me understand this cleaning quote before I book?");
+  }
+
+  useEffect(() => {
+    if (!quoteStartedTracked.current) return;
+    setIntercomContext({
+      funnelStage: "quote",
+      selectedService: service,
+      quotePriceBand: getQuotePriceBand(pricing.total),
+      city: pricing.locationName,
+      currentRoute: "/",
+    });
+  }, [service, pricing.total, pricing.locationName]);
 
   return (
     <div id="quote-generator" style={{ background: T.canvas, padding: "88px 32px", borderTop: `1px solid ${T.border}`, fontFamily: "var(--font-sans)" }}>
@@ -214,7 +284,10 @@ export default function QuoteGenerator() {
                     return (
                       <button
                         key={opt.id}
-                        onClick={() => setService(opt.id)}
+                        onClick={() => {
+                          markQuoteStarted();
+                          setService(opt.id);
+                        }}
                         style={{
                           padding: "10px 22px",
                           borderRadius: 999, // Canonical rounded.pill
@@ -250,7 +323,10 @@ export default function QuoteGenerator() {
                     return (
                       <button
                         key={opt.id}
-                        onClick={() => setLocation(opt.id)}
+                        onClick={() => {
+                          markQuoteStarted();
+                          setLocation(opt.id);
+                        }}
                         style={{
                           padding: "10px 22px",
                           borderRadius: 999, // Canonical rounded.pill
@@ -293,7 +369,10 @@ export default function QuoteGenerator() {
                   {HOUR_OPTIONS.map((num) => (
                     <button
                       key={num}
-                      onClick={() => setHours(num)}
+                      onClick={() => {
+                        markQuoteStarted();
+                        setHours(num);
+                      }}
                       style={{
                         padding: "10px 22px",
                         borderRadius: 999, // Canonical rounded.pill
@@ -323,7 +402,10 @@ export default function QuoteGenerator() {
                   {MAID_OPTIONS.map((num) => (
                     <button
                       key={num}
-                      onClick={() => setMaids(num)}
+                      onClick={() => {
+                        markQuoteStarted();
+                        setMaids(num);
+                      }}
                       style={{
                         padding: "10px 22px",
                         borderRadius: 999, // Canonical rounded.pill
@@ -492,6 +574,8 @@ export default function QuoteGenerator() {
 
               {/* CTA Booking Button (Pill shaped, flat, zero shadow) */}
               <button
+                type="button"
+                onClick={completeQuote}
                 style={{
                   width: "100%",
                   background: T.primary,
@@ -512,6 +596,24 @@ export default function QuoteGenerator() {
               >
                 Proceed to booking
                 <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+              <button
+                type="button"
+                onClick={askAboutQuote}
+                style={{
+                  width: "100%",
+                  marginTop: 10,
+                  background: T.soft,
+                  color: T.primary,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 999,
+                  padding: "13px 20px",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Questions about this quote?
               </button>
 
               {/* Guarantee info */}

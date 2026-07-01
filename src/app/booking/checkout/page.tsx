@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { ArrowLeft, Check, CreditCard, Lock, ShieldCheck, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
 import { saveBooking, saveOrder, type BookingRecord, type BookingOrder } from "@/lib/mock-account-data";
+import { openIntercomComposer, setIntercomContext, trackIntercomEvent } from "@/lib/intercom-conversion";
 import confetti from "canvas-confetti";
 
 type BookingData = {
@@ -122,6 +123,31 @@ export default function CheckoutPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!booking) return;
+
+    setIntercomContext({
+      funnelStage: "checkout",
+      selectedService: booking.serviceName,
+      quotePriceBand: booking.estimate.total < 150 ? "under_150" : booking.estimate.total < 300 ? "150_299" : "300_plus",
+      city: booking.city,
+      zip: booking.zip,
+      currentRoute: "/booking/checkout",
+    });
+    trackIntercomEvent("checkout_started", {
+      service: booking.serviceName,
+      total: booking.estimate.total,
+    });
+  }, [booking]);
+
+  function askCheckoutQuestion() {
+    trackIntercomEvent("chat_prompt_clicked", {
+      prompt_id: "checkout_manual",
+      route: "/booking/checkout",
+    });
+    openIntercomComposer("Hi, I have a question before paying for my cleaning.");
+  }
 
   const formValid = useMemo(() => {
     return (
@@ -415,6 +441,13 @@ export default function CheckoutPage() {
           <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary">
             Your card is charged after confirmation. If the cleaner finds the job needs more time, we ask before changing the price.
           </p>
+          <button
+            type="button"
+            onClick={askCheckoutQuestion}
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-5 text-sm font-bold text-primary transition hover:border-primary/40 hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/30"
+          >
+            Questions before paying?
+          </button>
 
           {/* Collapsible Overview for Mobile View */}
           <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-surface-muted p-4 sm:hidden">

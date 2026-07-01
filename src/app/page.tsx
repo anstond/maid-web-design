@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import QuoteGenerator from "@/components/QuoteGenerator";
 import HeroInteractiveQuote from "@/components/HeroInteractiveQuote";
 import Navigation from "@/components/Navigation";
+import { openIntercomComposer, setIntercomContext, trackIntercomEvent } from "@/lib/intercom-conversion";
 
 
 const heroStyles = `
@@ -196,11 +197,36 @@ export default function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   useEffect(() => {
+    setIntercomContext({
+      funnelStage: "homepage_hero",
+      currentRoute: "/",
+    });
+    trackIntercomEvent("quote_started", { source: "homepage_hero" });
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 8000);
     return () => clearInterval(timer);
   }, []);
+
+  function askHeroQuestion() {
+    setIntercomContext({
+      funnelStage: "homepage_hero",
+      currentRoute: "/",
+    });
+    trackIntercomEvent("chat_prompt_clicked", { prompt_id: "homepage_hero_manual", route: "/" });
+    openIntercomComposer("Hi, I need help choosing the right cleaning service.");
+  }
+
+  function markServicesIntent(planName: string) {
+    setIntercomContext({
+      funnelStage: "services",
+      selectedService: planName,
+      currentRoute: "/",
+    });
+  }
 
   return (
     <div style={{ fontFamily: "var(--font-sans)", background: T.canvas, color: T.ink }}>
@@ -386,6 +412,27 @@ export default function Home() {
               >
                 Book now
                 <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+              <button
+                type="button"
+                onClick={askHeroQuestion}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(252,251,248,0.12)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.32)",
+                  borderRadius: 999,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "12px 22px",
+                  minHeight: 44,
+                  cursor: "pointer",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Need help choosing?
               </button>
             </div>
 
@@ -983,7 +1030,7 @@ export default function Home() {
                 </div>
 
                 {/* CTA */}
-                <a href="#quote-generator" style={{
+                <a href="#quote-generator" onMouseEnter={() => markServicesIntent(featuredPlan.name)} onFocus={() => markServicesIntent(featuredPlan.name)} style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
@@ -1048,7 +1095,7 @@ export default function Home() {
                     ))}
                   </div>
                 </div>
-                <a href="#quote-generator" style={{
+                <a href="#quote-generator" onMouseEnter={() => markServicesIntent(plan.name)} onFocus={() => markServicesIntent(plan.name)} style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,

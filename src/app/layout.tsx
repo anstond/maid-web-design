@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { IntercomProvider } from "@/components/IntercomProvider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -25,6 +26,7 @@ export default function RootLayout({
     <html lang="en" className={`${outfit.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
+        <IntercomProvider />
         <Toaster position="top-center" richColors closeButton />
       </body>
     </html>

@@ -6,6 +6,7 @@ import { WeeklyScheduleBuilder } from "@/components/WeeklyScheduleBuilder";
 import { bookings, accountProfile } from "@/lib/mock-account-data";
 import { MapPicker } from "@/components/MapPicker";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { setIntercomContext, trackIntercomEvent } from "@/lib/intercom-conversion";
 import type { ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -388,6 +389,7 @@ function BookingPageContent() {
   const [addonNudgeDismissed, setAddonNudgeDismissed] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchSuggestions, setSearchSuggestions] = useState<typeof SUGGESTED_PLACES>([]);
+  const bookingStartedTracked = useRef(false);
 
   const handleAddressChange = (val: string) => {
     update("address", val);
@@ -738,6 +740,38 @@ function BookingPageContent() {
       visitsCount: 1,
     };
   })();
+
+  function getBookingPriceBand(total: number) {
+    if (total < 150) return "under_150";
+    if (total < 300) return "150_299";
+    return "300_plus";
+  }
+
+  useEffect(() => {
+    setIntercomContext({
+      funnelStage: "booking",
+      bookingStep: step,
+      selectedService: currentService.name,
+      quotePriceBand: getBookingPriceBand(estimate.total),
+      city: state.city,
+      zip: state.zip,
+      currentRoute: "/booking",
+    });
+
+    if (!bookingStartedTracked.current) {
+      bookingStartedTracked.current = true;
+      trackIntercomEvent("booking_started", {
+        step,
+        service: currentService.name,
+      });
+    }
+
+    trackIntercomEvent("booking_step_viewed", {
+      step,
+      service: currentService.name,
+      total: estimate.total,
+    });
+  }, [currentService.name, estimate.total, state.city, state.zip, step]);
 
   const isSavedAddressActive = useMemo(() => {
     if (isEditingCustomAddress) return false;
