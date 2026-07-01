@@ -242,5 +242,119 @@ body {
   .animate-update-highlight {
     animation: updateHighlight 0.6s ease-out;
   }
+
+  /* Premium Card Animations & Effects */
+  @keyframes gold-breath {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 2px 8px rgba(217, 199, 163, 0.15);
+    }
+    50% {
+      transform: scale(1.04);
+      box-shadow: 0 4px 14px rgba(217, 199, 163, 0.35);
+    }
+  }
+
+  .animate-gold-breath {
+    animation: gold-breath 3s ease-in-out infinite;
+  }
+
+  @keyframes ambient-glow {
+    0%, 100% {
+      opacity: 0.15;
+      transform: scale(1) translate(0px, 0px);
+    }
+    33% {
+      opacity: 0.22;
+      transform: scale(1.08) translate(10px, -8px);
+    }
+    66% {
+      opacity: 0.18;
+      transform: scale(0.95) translate(-6px, 12px);
+    }
+  }
+
+  .animate-ambient-glow {
+    animation: ambient-glow 8s ease-in-out infinite;
+  }
+
+  /* Sweep shimmer on hover */
+  .premium-shimmer-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .premium-shimmer-container::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 220%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(217, 199, 163, 0.14) 45%,
+      rgba(255, 255, 255, 0.22) 50%,
+      rgba(217, 199, 163, 0.14) 55%,
+      rgba(255, 255, 255, 0) 70%
+    );
+    transform: rotate(35deg) translateX(-100%);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .premium-shimmer-container:hover::after {
+    transform: rotate(35deg) translateX(100%);
+  }
+
+  /* Teal Shimmer and Badge Pulse for Weekly Card */
+  @keyframes teal-breath {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 2px 8px rgba(21, 94, 99, 0.15);
+    }
+    50% {
+      transform: scale(1.04);
+      box-shadow: 0 4px 14px rgba(21, 94, 99, 0.35);
+    }
+  }
+
+  .animate-teal-breath {
+    animation: teal-breath 3s ease-in-out infinite;
+  }
+
+  .teal-shimmer-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .teal-shimmer-container::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 220%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(52, 181, 164, 0.12) 45%,
+      rgba(255, 255, 255, 0.20) 50%,
+      rgba(52, 181, 164, 0.12) 55%,
+      rgba(255, 255, 255, 0) 70%
+    );
+    transform: rotate(35deg) translateX(-100%);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .teal-shimmer-container:hover::after {
+    transform: rotate(35deg) translateX(100%);
+  }
 }
+
+
 

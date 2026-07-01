@@ -10,7 +10,7 @@ export type IntercomConversionEventName =
 
 export type IntercomConversionContext = {
   currentRoute?: string;
-  funnelStage?: "homepage_hero" | "quote" | "services" | "booking" | "checkout" | "account";
+  funnelStage?: "homepage_hero" | "quote" | "services" | "booking" | "checkout" | "account" | "footer_contact";
   selectedService?: string;
   quotePriceBand?: string;
   bookingStep?: number;

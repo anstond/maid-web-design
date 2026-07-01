@@ -1262,50 +1262,81 @@ export default function Home() {
 
             {/* Featured — Weekly */}
             <div
-              className="lg:col-span-2 lg:row-span-2 group"
+              className="lg:col-span-2 lg:row-span-2 group teal-shimmer-container"
               style={{
-                borderRadius: 20,
-                background: T.primary,
-                padding: 2,
+                borderRadius: 24,
+                background: "linear-gradient(135deg, rgba(52, 181, 164, 0.25) 0%, rgba(21, 94, 99, 0.2) 50%, rgba(52, 181, 164, 0.05) 100%)",
+                border: "1px solid rgba(52, 181, 164, 0.25)",
+                padding: 3,
                 boxShadow: "0 24px 64px rgba(21,94,99,0.24)",
-                transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
                 cursor: "pointer",
+                position: "relative",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "stretch",
               }}
               onMouseEnter={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.transform = "translateY(-6px)";
-                el.style.boxShadow = "0 32px 72px rgba(21,94,99,0.38)";
+                el.style.boxShadow = "0 32px 72px rgba(52, 181, 164, 0.18), 0 24px 64px rgba(21, 94, 99, 0.35)";
+                el.style.borderColor = "rgba(52, 181, 164, 0.8)";
               }}
               onMouseLeave={(e) => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.transform = "translateY(0)";
                 el.style.boxShadow = "0 24px 64px rgba(21,94,99,0.24)";
+                el.style.borderColor = "rgba(52, 181, 164, 0.25)";
               }}
             >
+              {/* Ambient Glow Orb */}
+              <div
+                className="animate-ambient-glow"
+                style={{
+                  position: "absolute",
+                  bottom: "-15%",
+                  right: "-15%",
+                  width: 260,
+                  height: 260,
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle, rgba(52, 181, 164, 0.18) 0%, rgba(52, 181, 164, 0) 70%)",
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+              />
+
               <div style={{
-                borderRadius: 18,
+                borderRadius: 21,
                 background: "#0e4247",
                 padding: "36px 32px",
                 height: "100%",
+                width: "100%",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
                 boxSizing: "border-box",
+                boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)",
+                position: "relative",
+                zIndex: 2,
               }}>
                 {/* Top */}
                 <div>
-                  <span style={{
-                    display: "inline-block",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    letterSpacing: "0.10em",
-                    textTransform: "uppercase",
-                    color: T.ink,
-                    background: T.accentW,
-                    padding: "5px 14px",
-                    borderRadius: 999,
-                    marginBottom: 32,
-                  }}>
+                  <span 
+                    className="animate-teal-breath"
+                    style={{
+                      display: "inline-block",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: "0.10em",
+                      textTransform: "uppercase",
+                      color: T.ink,
+                      background: T.accentW,
+                      padding: "5px 14px",
+                      borderRadius: 999,
+                      marginBottom: 32,
+                    }}
+                  >
                     {featuredPlan.badge}
                   </span>
 
@@ -1395,74 +1426,205 @@ export default function Home() {
              {/* Four side plans */}
              {sidePlans.map((plan) => {
                const isCustom = plan.name === "Custom";
+               if (isCustom) {
+                 return (
+                   <div
+                     key={plan.name}
+                     className="group premium-shimmer-container"
+                     style={{
+                       borderRadius: 24,
+                       background: "linear-gradient(135deg, rgba(217, 199, 163, 0.22) 0%, rgba(22, 48, 55, 0.2) 50%, rgba(217, 199, 163, 0.05) 100%)",
+                       border: "1px solid rgba(217, 199, 163, 0.25)",
+                       padding: 3,
+                       display: "flex",
+                       flexDirection: "column",
+                       justifyContent: "stretch",
+                       transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+                       cursor: "pointer",
+                       boxShadow: "0 12px 32px rgba(22, 48, 55, 0.15)",
+                       position: "relative",
+                       overflow: "hidden",
+                     }}
+                     onMouseEnter={(e) => {
+                       const el = e.currentTarget as HTMLElement;
+                       el.style.transform = "translateY(-6px)";
+                       el.style.boxShadow = "0 20px 40px rgba(217, 199, 163, 0.18), 0 12px 32px rgba(22, 48, 55, 0.3)";
+                       el.style.borderColor = "rgba(217, 199, 163, 0.8)";
+                     }}
+                     onMouseLeave={(e) => {
+                       const el = e.currentTarget as HTMLElement;
+                       el.style.transform = "translateY(0)";
+                       el.style.boxShadow = "0 12px 32px rgba(22, 48, 55, 0.15)";
+                       el.style.borderColor = "rgba(217, 199, 163, 0.25)";
+                     }}
+                   >
+                     {/* Ambient Glow Orb */}
+                     <div
+                       className="animate-ambient-glow"
+                       style={{
+                         position: "absolute",
+                         bottom: "-20%",
+                         right: "-20%",
+                         width: 180,
+                         height: 180,
+                         borderRadius: "50%",
+                         background: "radial-gradient(circle, rgba(217, 199, 163, 0.18) 0%, rgba(217, 199, 163, 0) 70%)",
+                         pointerEvents: "none",
+                         zIndex: 1,
+                       }}
+                     />
+
+                     {/* Inner Core */}
+                     <div style={{
+                       borderRadius: 21,
+                       background: "#163037",
+                       padding: "24px 22px",
+                       height: "100%",
+                       width: "100%",
+                       display: "flex",
+                       flexDirection: "column",
+                       justifyContent: "space-between",
+                       boxSizing: "border-box",
+                       boxShadow: "inset 0 1px 1px rgba(255, 255, 255, 0.05)",
+                       position: "relative",
+                       zIndex: 2,
+                     }}>
+                       <div>
+                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                           <div style={{ fontSize: 12, fontWeight: 600, color: "#D9C7A3", letterSpacing: "0.04em" }}>
+                             {plan.name}
+                           </div>
+                           <span 
+                             className="animate-gold-breath"
+                             style={{
+                               fontSize: 9,
+                               fontWeight: 700,
+                               letterSpacing: "0.08em",
+                               color: T.ink,
+                               background: "#D9C7A3",
+                               padding: "3px 8px",
+                               borderRadius: 999,
+                               textTransform: "uppercase",
+                               display: "inline-block",
+                             }}
+                           >
+                             Flagship
+                           </span>
+                         </div>
+
+                         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+                           <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: "#fff" }}>
+                             {plan.price}
+                           </span>
+                           <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{plan.period}</span>
+                         </div>
+
+                         {plan.savings && (
+                           <div style={{
+                             display: "inline-block",
+                             fontSize: 11,
+                             fontWeight: 600,
+                             color: "#D9C7A3",
+                             background: "rgba(217, 199, 163, 0.12)",
+                             border: "1px solid rgba(217, 199, 163, 0.2)",
+                             padding: "3px 10px",
+                             borderRadius: 999,
+                             marginBottom: 12,
+                             width: "fit-content",
+                           }}>
+                             {plan.savings}
+                           </div>
+                         )}
+
+                         <p style={{ fontSize: 13, lineHeight: "20px", color: "rgba(255,255,255,0.6)", margin: "0 0 18px" }}>
+                           {plan.description}
+                         </p>
+
+                         <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 16 }} />
+
+                         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                           {plan.features.map((f) => (
+                             <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                               <div style={{
+                                 width: 16,
+                                 height: 16,
+                                 borderRadius: "50%",
+                                 background: "rgba(217, 199, 163, 0.15)",
+                                 border: "1px solid rgba(217, 199, 163, 0.2)",
+                                 display: "flex",
+                                 alignItems: "center",
+                                 justifyContent: "center",
+                                 flexShrink: 0,
+                               }}>
+                                 <Check size={9} color="#D9C7A3" strokeWidth={2.5} />
+                               </div>
+                               <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", lineHeight: "20px" }}>{f}</span>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+
+                       <a href="#quote-generator" onMouseEnter={() => markServicesIntent(plan.name)} onFocus={() => markServicesIntent(plan.name)} style={{
+                         display: "inline-flex",
+                         alignItems: "center",
+                         gap: 6,
+                         marginTop: 22,
+                         fontSize: 13,
+                         fontWeight: 600,
+                         color: "#D9C7A3",
+                         textDecoration: "none",
+                       }}>
+                         {plan.cta}
+                         <ArrowRight size={13} strokeWidth={2.5} className="transition-transform duration-300 group-hover:translate-x-1" />
+                       </a>
+                     </div>
+                   </div>
+                 );
+               }
+
                return (
                  <div
                    key={plan.name}
                    className="group"
                    style={{
                      borderRadius: 16,
-                     background: isCustom ? "#163037" : T.surface,
-                     border: isCustom ? "1.5px solid #D9C7A3" : `1px solid ${T.border}`,
+                     background: T.surface,
+                     border: `1px solid ${T.border}`,
                      padding: "24px 22px",
                      display: "flex",
                      flexDirection: "column",
                      justifyContent: "space-between",
                      transition: "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                      cursor: "pointer",
-                     boxShadow: isCustom ? "0 12px 32px rgba(22, 48, 55, 0.15)" : "none",
                    }}
                    onMouseEnter={(e) => {
                      const el = e.currentTarget as HTMLElement;
                      el.style.transform = "translateY(-6px)";
-                     if (isCustom) {
-                       el.style.boxShadow = "0 16px 40px rgba(22, 48, 55, 0.3)";
-                       el.style.borderColor = "#fff";
-                     } else {
-                       el.style.boxShadow = "0 12px 32px rgba(0,0,0,0.08)";
-                       el.style.borderColor = T.primary;
-                     }
+                     el.style.boxShadow = "0 12px 32px rgba(0,0,0,0.08)";
+                     el.style.borderColor = T.primary;
                    }}
                    onMouseLeave={(e) => {
                      const el = e.currentTarget as HTMLElement;
                      el.style.transform = "translateY(0)";
-                     if (isCustom) {
-                       el.style.boxShadow = "0 12px 32px rgba(22, 48, 55, 0.15)";
-                       el.style.borderColor = "#D9C7A3";
-                     } else {
-                       el.style.boxShadow = "none";
-                       el.style.borderColor = T.border;
-                     }
+                     el.style.boxShadow = "none";
+                     el.style.borderColor = T.border;
                    }}
                  >
                    <div>
                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                       <div style={{ fontSize: 12, fontWeight: 600, color: isCustom ? "#D9C7A3" : T.body, letterSpacing: "0.04em" }}>
+                       <div style={{ fontSize: 12, fontWeight: 600, color: T.body, letterSpacing: "0.04em" }}>
                          {plan.name}
                        </div>
-                       {isCustom && (
-                         <span style={{
-                           fontSize: 9,
-                           fontWeight: 700,
-                           letterSpacing: "0.08em",
-                           color: T.ink,
-                           background: "#D9C7A3",
-                           padding: "3px 8px",
-                           borderRadius: 999,
-                           textTransform: "uppercase",
-                         }}>
-                           Flagship
-                         </span>
-                       )}
                      </div>
 
                      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: plan.savings ? 6 : 12, flexWrap: "wrap" }}>
-                       <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: isCustom ? "#fff" : T.ink }}>
+                       <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.04em", lineHeight: 1, color: T.ink }}>
                          {plan.price}
                        </span>
-                       <span style={{ fontSize: 12, color: isCustom ? "rgba(255,255,255,0.4)" : T.muted, marginRight: plan.savings && plan.name !== "Custom" ? 6 : 0 }}>{plan.period}</span>
+                       <span style={{ fontSize: 12, color: T.muted, marginRight: plan.savings ? 6 : 0 }}>{plan.period}</span>
                        
                        {/* Struck-through base price for Monthly/Biweekly */}
-                       {plan.savings && plan.name !== "Custom" && (
+                       {plan.savings && (
                          <span style={{
                            fontSize: 16,
                            fontWeight: 600,
@@ -1479,9 +1641,9 @@ export default function Home() {
                          display: "inline-block",
                          fontSize: 11,
                          fontWeight: 600,
-                         color: isCustom ? "#D9C7A3" : T.primary,
-                         background: isCustom ? "rgba(217, 199, 163, 0.12)" : "rgba(21, 94, 99, 0.08)",
-                         border: isCustom ? "1px solid rgba(217, 199, 163, 0.2)" : "1px solid rgba(21, 94, 99, 0.12)",
+                         color: T.primary,
+                         background: "rgba(21, 94, 99, 0.08)",
+                         border: "1px solid rgba(21, 94, 99, 0.12)",
                          padding: "3px 10px",
                          borderRadius: 999,
                          marginBottom: 12,
@@ -1490,10 +1652,10 @@ export default function Home() {
                          {plan.savings}
                        </div>
                      )}
-                     <p style={{ fontSize: 13, lineHeight: "20px", color: isCustom ? "rgba(255,255,255,0.6)" : T.body, margin: "0 0 18px" }}>
+                     <p style={{ fontSize: 13, lineHeight: "20px", color: T.body, margin: "0 0 18px" }}>
                        {plan.description}
                      </p>
-                     <div style={{ height: 1, background: isCustom ? "rgba(255,255,255,0.08)" : T.border, marginBottom: 16 }} />
+                     <div style={{ height: 1, background: T.border, marginBottom: 16 }} />
                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                        {plan.features.map((f) => (
                          <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1501,15 +1663,15 @@ export default function Home() {
                              width: 16,
                              height: 16,
                              borderRadius: "50%",
-                             background: isCustom ? "rgba(255,255,255,0.1)" : T.accentS,
+                             background: T.accentS,
                              display: "flex",
                              alignItems: "center",
                              justifyContent: "center",
                              flexShrink: 0,
                            }}>
-                             <Check size={9} color={isCustom ? "#D9C7A3" : T.primary} strokeWidth={2.5} />
+                             <Check size={9} color={T.primary} strokeWidth={2.5} />
                            </div>
-                           <span style={{ fontSize: 13, color: isCustom ? "rgba(255,255,255,0.8)" : T.ink, lineHeight: "20px" }}>{f}</span>
+                           <span style={{ fontSize: 13, color: T.ink, lineHeight: "20px" }}>{f}</span>
                          </div>
                        ))}
                      </div>
@@ -1521,7 +1683,7 @@ export default function Home() {
                      marginTop: 22,
                      fontSize: 13,
                      fontWeight: 600,
-                     color: isCustom ? "#D9C7A3" : T.primary,
+                     color: T.primary,
                      textDecoration: "none",
                    }}>
                      {plan.cta}
