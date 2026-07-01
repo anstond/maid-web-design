@@ -513,6 +513,26 @@ The pill `button-primary` renders at ~44 px tall (10 px vertical padding + 24 px
 
 Profile page edit, add, default, and close-account actions should use a shadcn-style Radix sheet instead of inline fixed overlays. On mobile the surface slides from the bottom with rounded top corners, a portaled overlay, stacked footer actions, and 44 px minimum touch targets. From the `sm` breakpoint upward, the same component resolves to a centered dialog. Use `{colors.surface}`, `{colors.border}`, `{colors.primary}`, `{colors.text-primary}`, and `{colors.text-secondary}` tokens.
 
+### Intercom Messenger Provider
+
+The Intercom Messenger integration is a client-only provider mounted from the root layout. It must not force public App Router pages into client rendering. Anonymous visitor sessions boot with only the workspace ID and brand messenger styling; known signed-in account routes identify the mock account profile until a real auth session is available. Route changes call the Messenger update method so SPA navigation records the current page, and identity boundary changes call shutdown before booting the next visitor or user session.
+
+Messenger chrome should stay aligned to the brand system: right aligned, 24 px bottom/right padding, system theme mode, Deep Teal (`{colors.primary}`) action/background color, and z-index 60 so it sits above page content without competing with modal/dialog layers. The default Intercom launcher remains visible for customer-initiated support, while automatic Intercom notification surfaces stay hidden on every viewport; proactive conversion UI must use the custom brand nudge, and the Messenger composer opens only after an explicit customer action.
+
+### Booking Help Nudge
+
+The `/booking` flow may show one session-capped Intercom nudge after 45 seconds of inactivity. It should never open chat automatically, never appear on checkout, and must include an explicit dismiss control. The surface uses `{colors.surface}`, `{colors.border}`, `{colors.primary}`, `{rounded.xl}`, a 44 px close target, and one primary pill labeled "Ask a question." Activating the CTA opens a prefilled Messenger composer so hesitant customers can ask about pricing, timing, supplies, or cleaner preferences without abandoning the booking flow.
+
+### Intercom Conversion Orchestration
+
+Contextual assist is the Intercom posture across public conversion surfaces. Messenger should help visitors speak to us before a lead goes cold, but it must not replace the self-serve booking path or behave like an aggressive popup system. Prompts are session-capped by family (`quote`, `services`, and `booking_step`) and must always include an explicit dismiss control before opening the composer. On mobile, use the same custom bottom nudge rather than Intercom notification cards or automatic Messenger modals, preserving the native launcher for customer-initiated support.
+
+Track high-intent funnel events through the shared helper surface: `quote_started`, `quote_completed`, `booking_started`, `booking_step_viewed`, `booking_step_idle`, `chat_prompt_shown`, `chat_prompt_clicked`, and `checkout_started`. Each event should include lightweight context when available: current route, funnel stage, selected service, quote price band, booking step, city/ZIP, and visitor/signed-in status.
+
+Homepage and quote surfaces may show "Need help choosing?" or "Questions about this quote?" actions that call the prefilled Messenger composer only after user action. Services and pricing sections may set Intercom context on plan/service intent so delayed help can ask about pricing or timing. Booking nudges must be step-aware: address and availability on step 0, supplies/add-ons on scope, timing and cleaner preferences on schedule, and review help before payment.
+
+Checkout must not show proactive popups. It may expose a subtle "Questions before paying?" button that opens a prefilled composer after the customer clicks it.
+
 ### Customer Account Pages
 
 Bookings and subscriptions are customer-facing service surfaces, not operator dashboards. They should lead with the next visit or next recurring visit, then show only the actions a customer can take now. Avoid KPI grids, monthly rollups as page anchors, account-standing panels, and dense support modules on list pages.
@@ -685,6 +705,10 @@ Latest iteration: regular-cleaning pages should feel like consumer service pages
 
 Editorial resource pages use the warm `{colors.canvas}` base with a static semantic topic list, one two-column featured article, and a three-column guide grid. Follow with a deep-teal booking CTA; cards use `{rounded.xl}` (16 px), while every interactive control uses `{rounded.pill}`.
 
+### Single blog article pattern
+
+Single article pages extend the editorial resource system with a warm `{colors.canvas}` base, a two-column hero that pairs article metadata and headline with a 4:3 editorial image, and a narrow reading column for the body. Desktop may add a sticky desktop sidebar for table of contents and related guide context; hide it on smaller screens to keep the reading flow direct. Inline and footer booking CTAs use deep teal, article/checklist/aside containers use `{rounded.xl}` (16 px), and every navigational or conversion control uses `{rounded.pill}`.
+
 ### Booking flow mobile pattern
 
 The `/booking` flow keeps the desktop two-column estimate rail at `lg` and above. Below `lg`, show a compact teal live-estimate card near the top of the flow and a fixed bottom action bar with the current total and primary continue/payment action. This keeps price and progression visible on phones without forcing users to scroll past the full estimate panel.
@@ -696,3 +720,23 @@ Each booking step should make the required customer action explicit before the p
 For horizontally scrollable choice rails on phones, use a contextual floating hint instead of a popup. The saved-address rail uses a small pill over the right edge ("Swipe for more" + chevron), paired with the fade edge. Hide the hint after the customer scrolls, taps an arrow, selects a card, or starts adding a new address.
 
 On phone, booking selection cards should privilege quick scanning over full detail. Service cards show name, short description, price, and visit-hour range only; included-task bullets appear from the `sm` breakpoint upward where the card can breathe.
+
+### Premium Custom Subscription Card (Flagship)
+
+The Custom Subscription card on the homepage serves as the flagship option and utilizes a premium **Double-Bezel (Doppelrand)** design system to elevate its visual weight.
+- **Outer Shell**: Large rounded corner (`24px`), gradient background blending champagne gold highlights (`rgba(217, 199, 163, 0.22)`) and deep teal, and a semi-transparent golden border.
+- **Inner Core**: concentric inner card with a dark teal `#163037` background, inset highlights, and concentric `21px` rounded corners.
+- **Animations**:
+  - A glowing slow-pulsing ambient orb (`animate-ambient-glow`) animates in the background.
+  - Hovering the card triggers a golden shine sweep (`premium-shimmer-container::after`) across the surface.
+  - The "Flagship" badge breathes gently with a scale/shadow pulse (`animate-gold-breath`).
+
+### Featured Weekly Subscription Card (Best Value)
+
+The Weekly Subscription card on the homepage is the primary bento grid featured item and mirrors the premium animations using the primary **Teal** color palette.
+- **Outer Shell**: Large rounded corner (`24px`), gradient background blending bright teal highlights (`rgba(52, 181, 164, 0.25)`) and deep teal, and a semi-transparent bright teal border.
+- **Inner Core**: concentric inner card with a dark teal `#0e4247` background, inset highlights, and concentric `21px` rounded corners.
+- **Animations**:
+  - A glowing slow-pulsing ambient orb (`animate-ambient-glow`) with a teal radial gradient animates in the background.
+  - Hovering the card triggers a teal shine sweep (`teal-shimmer-container::after`) across the surface.
+  - The "Best Value" badge breathes gently with a scale/shadow pulse (`animate-teal-breath`).
