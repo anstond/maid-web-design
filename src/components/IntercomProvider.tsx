@@ -8,7 +8,6 @@ import {
   INTERCOM_CONTEXT_EVENT,
   INTERCOM_OPEN_COMPOSER_EVENT,
   INTERCOM_TRACK_EVENT,
-  setIntercomContext,
   type IntercomConversionContext,
 } from "@/lib/intercom-conversion";
 import { accountProfile } from "@/lib/mock-account-data";
@@ -24,6 +23,8 @@ type IntercomSettings = {
   alignment?: "left" | "right";
   vertical_padding?: number;
   horizontal_padding?: number;
+  hide_default_launcher?: boolean;
+  hide_notifications?: boolean;
   z_index?: number;
   theme_mode?: "light" | "dark" | "system";
   action_color?: string;
@@ -60,12 +61,22 @@ function isKnownSignedInRoute(pathname: string) {
   return pathname.startsWith("/account") || pathname.startsWith("/orders");
 }
 
+function getRouteFunnelStage(pathname: string): IntercomConversionContext["funnelStage"] {
+  if (pathname === "/") return "homepage_hero";
+  if (pathname === "/booking/checkout") return "checkout";
+  if (pathname === "/booking") return "booking";
+  if (isKnownSignedInRoute(pathname)) return "account";
+  return undefined;
+}
+
 function getBaseSettings(): IntercomSettings {
   return {
     app_id: INTERCOM_APP_ID,
     alignment: "right",
     vertical_padding: 24,
     horizontal_padding: 24,
+    hide_default_launcher: false,
+    hide_notifications: true,
     z_index: 60,
     theme_mode: "system",
     action_color: "#155E63",
@@ -199,6 +210,10 @@ function getContextualPrompt(pathname: string, context: IntercomConversionContex
   return null;
 }
 
+function shouldResetNudgeOnActivity(pathname: string) {
+  return pathname === "/booking";
+}
+
 export function IntercomProvider() {
   const pathname = usePathname();
   const hasInitialized = useRef(false);
@@ -207,15 +222,20 @@ export function IntercomProvider() {
   const [activePrompt, setActivePrompt] = useState<ConversionPrompt | null>(null);
 
   const session = useMemo(() => getIntercomSession(pathname), [pathname]);
-  const settingsContext = useMemo(() => contextToSettings(pathname, context), [pathname, context]);
-
-  useEffect(() => {
-    setIntercomContext({
+  const routeContext = useMemo<IntercomConversionContext>(
+    () => ({
       currentRoute: pathname,
-      funnelStage: pathname === "/booking/checkout" ? "checkout" : pathname === "/booking" ? "booking" : undefined,
+      funnelStage: getRouteFunnelStage(pathname),
       returningStatus: isKnownSignedInRoute(pathname) ? "signed_in" : "visitor",
-    });
-  }, [pathname]);
+    }),
+    [pathname],
+  );
+  const activeContext = useMemo(
+    () => (context.currentRoute === pathname ? { ...routeContext, ...context } : routeContext),
+    [context, pathname, routeContext],
+  );
+  const settingsContext = useMemo(() => contextToSettings(pathname, activeContext), [pathname, activeContext]);
+
 
   useEffect(() => {
     if (!INTERCOM_APP_ID) return;
@@ -277,7 +297,7 @@ export function IntercomProvider() {
   }, [pathname]);
 
   useEffect(() => {
-    const prompt = getContextualPrompt(pathname, context);
+    const prompt = getContextualPrompt(pathname, activeContext);
     if (!prompt) {
       queueMicrotask(() => setActivePrompt(null));
       return;
@@ -286,14 +306,15 @@ export function IntercomProvider() {
     if (hasSeenPrompt(prompt.id)) return;
 
     let timeoutId: number | undefined;
-    const delay = pathname === "/booking" ? BOOKING_NUDGE_IDLE_DELAY_MS : CONTEXTUAL_NUDGE_DELAY_MS;
+    const isIdleNudge = shouldResetNudgeOnActivity(pathname);
+    const delay = isIdleNudge ? BOOKING_NUDGE_IDLE_DELAY_MS : CONTEXTUAL_NUDGE_DELAY_MS;
 
     const markSeenAndShow = () => {
       if (hasSeenPrompt(prompt.id)) return;
       markPrompt(prompt.id, "shown");
       setActivePrompt(prompt);
       if (pathname === "/booking") {
-        trackEvent("booking_step_idle", { prompt_id: prompt.id, booking_step: context.bookingStep ?? -1 });
+        trackEvent("booking_step_idle", { prompt_id: prompt.id, booking_step: activeContext.bookingStep ?? -1 });
       }
       trackEvent("chat_prompt_shown", { prompt_id: prompt.id, route: pathname });
     };
@@ -307,19 +328,23 @@ export function IntercomProvider() {
 
     scheduleNudge();
 
-    window.addEventListener("pointerdown", scheduleNudge);
-    window.addEventListener("keydown", scheduleNudge);
-    window.addEventListener("scroll", scheduleNudge, { passive: true });
+    if (isIdleNudge) {
+      window.addEventListener("pointerdown", scheduleNudge);
+      window.addEventListener("keydown", scheduleNudge);
+      window.addEventListener("scroll", scheduleNudge, { passive: true });
+    }
 
     return () => {
       if (timeoutId !== undefined) {
         window.clearTimeout(timeoutId);
       }
-      window.removeEventListener("pointerdown", scheduleNudge);
-      window.removeEventListener("keydown", scheduleNudge);
-      window.removeEventListener("scroll", scheduleNudge);
+      if (isIdleNudge) {
+        window.removeEventListener("pointerdown", scheduleNudge);
+        window.removeEventListener("keydown", scheduleNudge);
+        window.removeEventListener("scroll", scheduleNudge);
+      }
     };
-  }, [context, pathname]);
+  }, [activeContext, pathname]);
 
   const dismissPrompt = useCallback(() => {
     if (!activePrompt) return;

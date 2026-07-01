@@ -31,7 +31,10 @@ test("Intercom remains isolated in the root client provider", () => {
   assert.match(providerSource, /"use client"/);
   assert.match(providerSource, /trackEvent/);
   assert.match(providerSource, /showNewMessage/);
-  assert.match(providerSource, /setIntercomContext/);
+  assert.match(providerSource, /getRouteFunnelStage/);
+  assert.match(providerSource, /if \(pathname === "\/"\) return "homepage_hero"/);
+  assert.match(providerSource, /hide_default_launcher: false/);
+  assert.match(providerSource, /hide_notifications: true/);
 });
 
 test("homepage quote and pricing surfaces track intent and offer user-triggered chat", () => {
@@ -41,6 +44,14 @@ test("homepage quote and pricing surfaces track intent and offer user-triggered 
   assert.match(quoteSource, /trackIntercomEvent\("quote_completed"/);
   assert.match(quoteSource, /setIntercomContext\(\{[\s\S]*funnelStage: "quote"/);
   assert.match(quoteSource, /openIntercomComposer\("Hi, can you help me understand this cleaning quote before I book\?"/);
+});
+
+test("homepage contextual prompts are delayed without mobile scroll idle resets", () => {
+  assert.match(providerSource, /CONTEXTUAL_NUDGE_DELAY_MS = 30_000/);
+  assert.match(providerSource, /function shouldResetNudgeOnActivity\(pathname: string\)/);
+  assert.match(providerSource, /return pathname === "\/booking"/);
+  assert.match(providerSource, /const isIdleNudge = shouldResetNudgeOnActivity\(pathname\)/);
+  assert.match(providerSource, /if \(isIdleNudge\) \{[\s\S]*window\.addEventListener\("scroll", scheduleNudge/);
 });
 
 test("booking prompts are step-aware, session-capped, and explicitly dismissed", () => {
